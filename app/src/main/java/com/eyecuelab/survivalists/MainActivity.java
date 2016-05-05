@@ -1,6 +1,7 @@
 package com.eyecuelab.survivalists;
 
 import android.content.Context;
+import android.content.SharedPreferences;
 import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
@@ -21,6 +22,10 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
 
     private SensorManager sensorManager;
     boolean activityRunning;
+    private int stepsInSensor = 0;
+    private int dailySteps;
+    private SharedPreferences mSharedPreferences;
+    private SharedPreferences.Editor mEditor;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -35,6 +40,9 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         sensorManager = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
 
         ButterKnife.bind(this);
+
+        mSharedPreferences = getSharedPreferences(getString(R.string.preference_file_key), Context.MODE_PRIVATE);
+        mEditor = mSharedPreferences.edit();
 
     }
 
@@ -60,6 +68,15 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
     public void onSensorChanged(SensorEvent event) {
         if (activityRunning) {
             counter.setText(String.valueOf(event.values[0]));
+            stepsInSensor = Math.round(event.values[0]);
+        }
+
+        if (activityRunning && (event.values[0] == 100) ) {
+            Toast.makeText(MainActivity.this, "Day One Completed", Toast.LENGTH_LONG).show();
+        } else if (activityRunning && (event.values[0] == 200) ) {
+            Toast.makeText(MainActivity.this, "Day Two Completed", Toast.LENGTH_LONG).show();
+        } else if ( activityRunning && (event.values[0] == 300) ) {
+            Toast.makeText(MainActivity.this, "Day Three Completed", Toast.LENGTH_LONG).show();
         }
     }
 

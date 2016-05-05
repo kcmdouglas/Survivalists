@@ -1,3 +1,4 @@
 <resources>
     <string name="app_name">Survivalists</string>
+    <string name="preference_file_key">com.eyecuelab.survivalists.PREFERENCE_FILE_KEY</string>
 </resources>
