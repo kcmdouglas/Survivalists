@@ -212,7 +212,7 @@ public class MainActivity extends AppCompatActivity
 
     @Override
     public void onRoomCreated(int i, Room room) {
-        Toast.makeText(this, room.getCreationTimestamp() + "", Toast.LENGTH_LONG).show();
+//        Toast.makeText(this, room.getCreationTimestamp() + "", Toast.LENGTH_LONG).show();
 
     }
 
