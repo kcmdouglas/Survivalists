@@ -20,12 +20,23 @@ import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.SignInButton;
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.games.Games;
+import com.google.android.gms.games.multiplayer.Invitation;
+import com.google.android.gms.games.multiplayer.OnInvitationReceivedListener;
+import com.google.android.gms.games.multiplayer.realtime.RealTimeMessage;
+import com.google.android.gms.games.multiplayer.realtime.RealTimeMessageReceivedListener;
+import com.google.android.gms.games.multiplayer.realtime.Room;
+import com.google.android.gms.games.multiplayer.realtime.RoomConfig;
+import com.google.android.gms.games.multiplayer.realtime.RoomStatusUpdateListener;
+import com.google.android.gms.games.multiplayer.realtime.RoomUpdateListener;
 import com.google.example.games.basegameutils.BaseGameUtils;
+
+import java.util.List;
 
 import butterknife.Bind;
 import butterknife.ButterKnife;
 
-public class MainActivity extends AppCompatActivity implements View.OnClickListener, SensorEventListener, GoogleApiClient.ConnectionCallbacks, GoogleApiClient.OnConnectionFailedListener {
+public class MainActivity extends AppCompatActivity
+        implements View.OnClickListener, SensorEventListener, GoogleApiClient.ConnectionCallbacks, GoogleApiClient.OnConnectionFailedListener, RealTimeMessageReceivedListener, RoomUpdateListener, OnInvitationReceivedListener, RoomStatusUpdateListener {
 
     @Bind(R.id.stepTextView) TextView counter;
     @Bind(R.id.dailyStepsTextView) TextView dailyCounter;
@@ -36,6 +47,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private SharedPreferences.Editor mEditor;
     @Bind(R.id.sign_in_button) SignInButton signInButton;
     @Bind(R.id.sign_out_button) Button signOutButton;
+    @Bind(R.id.quickGameButton) Button quickGameButton;
 
     private SensorManager sensorManager;
 
@@ -80,6 +92,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         ButterKnife.bind(this);
         signInButton.setOnClickListener(this);
         signOutButton.setOnClickListener(this);
+        quickGameButton.setOnClickListener(this);
     }
 
     @Override
@@ -163,6 +176,116 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             mSignInCLicked = false;
             signInButton.setVisibility(View.VISIBLE);
             signOutButton.setVisibility(View.GONE);
+        } else if (view == quickGameButton) {
+            startQuickGame();
         }
+    }
+
+    public void startQuickGame() {
+        final int MIN_OPPONENTS = 1, MAX_OPPONENTS = 1;
+        Bundle automatchCriteria = RoomConfig.createAutoMatchCriteria(MIN_OPPONENTS, MAX_OPPONENTS, 0);
+
+        RoomConfig.Builder rtmConfigBuilder = RoomConfig.builder(this);
+        rtmConfigBuilder.setMessageReceivedListener(this);
+        rtmConfigBuilder.setRoomStatusUpdateListener(this);
+        rtmConfigBuilder.setAutoMatchCriteria(automatchCriteria);
+        Games.RealTimeMultiplayer.create(mGoogleApiClient, rtmConfigBuilder.build());
+        getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+    }
+
+    @Override
+    public void onInvitationReceived(Invitation invitation) {
+
+    }
+
+    @Override
+    public void onInvitationRemoved(String s) {
+
+    }
+
+    @Override
+    public void onRealTimeMessageReceived(RealTimeMessage realTimeMessage) {
+
+    }
+
+    @Override
+    public void onRoomCreated(int i, Room room) {
+        Toast.makeText(this, room.getCreationTimestamp() + "", Toast.LENGTH_LONG).show();
+
+    }
+
+    @Override
+    public void onJoinedRoom(int i, Room room) {
+
+    }
+
+    @Override
+    public void onLeftRoom(int i, String s) {
+
+    }
+
+    @Override
+    public void onRoomConnected(int i, Room room) {
+
+    }
+
+    @Override
+    public void onRoomConnecting(Room room) {
+
+    }
+
+    @Override
+    public void onRoomAutoMatching(Room room) {
+
+    }
+
+    @Override
+    public void onPeerInvitedToRoom(Room room, List<String> list) {
+
+    }
+
+    @Override
+    public void onPeerDeclined(Room room, List<String> list) {
+
+    }
+
+    @Override
+    public void onPeerJoined(Room room, List<String> list) {
+
+    }
+
+    @Override
+    public void onPeerLeft(Room room, List<String> list) {
+
+    }
+
+    @Override
+    public void onConnectedToRoom(Room room) {
+
+    }
+
+    @Override
+    public void onDisconnectedFromRoom(Room room) {
+
+    }
+
+    @Override
+    public void onPeersConnected(Room room, List<String> list) {
+
+    }
+
+    @Override
+    public void onPeersDisconnected(Room room, List<String> list) {
+
+    }
+
+    @Override
+    public void onP2PConnected(String s) {
+
+    }
+
+    @Override
+    public void onP2PDisconnected(String s) {
+
     }
 }
