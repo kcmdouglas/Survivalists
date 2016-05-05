@@ -13,14 +13,40 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="Steps:"
-        android:id="@+id/textView2" />
+        android:id="@+id/textView2"
+        android:textColor="@color/abc_primary_text_material_dark"
+        android:textSize="30sp" />
 
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="0"
+        android:text=" 0"
         android:id="@+id/stepTextView"
+        android:textColor="@color/abc_primary_text_material_dark"
+        android:textSize="30sp"
         android:layout_alignParentTop="true"
         android:layout_toRightOf="@+id/textView2"
         android:layout_toEndOf="@+id/textView2" />
+
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="80dp"
+        android:layout_alignParentBottom="true"
+        android:layout_centerHorizontal="true">
+
+        <!-- sign-in button -->
+        <com.google.android.gms.common.SignInButton
+            android:id="@+id/sign_in_button"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content" />
+
+        <!-- sign-out button -->
+        <Button
+            android:id="@+id/sign_out_button"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Sign Out"
+            android:visibility="gone" />
+    </RelativeLayout>
+
 </RelativeLayout>
