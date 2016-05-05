@@ -19,9 +19,9 @@ import butterknife.ButterKnife;
 public class MainActivity extends AppCompatActivity implements SensorEventListener {
 
     @Bind(R.id.stepTextView) TextView counter;
+    @Bind(R.id.dailyStepsTextView) TextView dailyCounter;
 
     private SensorManager sensorManager;
-    boolean activityRunning;
     private int stepsInSensor = 0;
     private int dailySteps;
     private SharedPreferences mSharedPreferences;
@@ -49,7 +49,6 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
     @Override
     protected void onResume() {
         super.onResume();
-        activityRunning = true;
         Sensor countSensor = sensorManager.getDefaultSensor(Sensor.TYPE_STEP_COUNTER);
         if (countSensor != null) {
             sensorManager.registerListener(this, countSensor, SensorManager.SENSOR_DELAY_UI);
@@ -61,23 +60,13 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
     @Override
     protected void onPause() {
         super.onPause();
-        activityRunning = false;
     }
 
     @Override
     public void onSensorChanged(SensorEvent event) {
-        if (activityRunning) {
-            counter.setText(String.valueOf(event.values[0]));
-            stepsInSensor = Math.round(event.values[0]);
-        }
-
-        if (activityRunning && (event.values[0] == 100) ) {
-            Toast.makeText(MainActivity.this, "Day One Completed", Toast.LENGTH_LONG).show();
-        } else if (activityRunning && (event.values[0] == 200) ) {
-            Toast.makeText(MainActivity.this, "Day Two Completed", Toast.LENGTH_LONG).show();
-        } else if ( activityRunning && (event.values[0] == 300) ) {
-            Toast.makeText(MainActivity.this, "Day Three Completed", Toast.LENGTH_LONG).show();
-        }
+        dailySteps++;
+        dailyCounter.setText(Integer.toString(dailySteps));
+        counter.setText(Integer.toString(Math.round(event.values[0])));
     }
 
     @Override
