@@ -30,7 +30,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     @Bind(R.id.stepTextView) TextView counter;
     @Bind(R.id.dailyStepsTextView) TextView dailyCounter;
 
-    private SensorManager sensorManager;
     private int stepsInSensor = 0;
     private int dailySteps;
     private SharedPreferences mSharedPreferences;
