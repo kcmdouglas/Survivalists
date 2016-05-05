@@ -45,7 +45,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
     private boolean mResolvingConnectionFailure = false;
     private boolean mAutoStartSignInFlow = true;
-    private boolean mSignInCLicked = false;
+    private boolean mSignInClicked = false;
     private boolean mExplicitSignOut = false;
     private boolean mInSignInFlow = false;
 
@@ -54,7 +54,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     protected void onStart() {
         super.onStart();
         if (!mInSignInFlow && !mExplicitSignOut) {
-            mGoogleApiClient.connect();
+           mGoogleApiClient.connect();
         }
     }
 
@@ -130,9 +130,9 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             return;
         }
 
-        if (mSignInCLicked || mAutoStartSignInFlow) {
+        if (mSignInClicked || mAutoStartSignInFlow) {
             mAutoStartSignInFlow = false;
-            mSignInCLicked = false;
+            mSignInClicked = false;
             mResolvingConnectionFailure = true;
         }
 
@@ -150,19 +150,22 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     @Override
     public void onClick(View view) {
         if (view == signInButton) {
-            mSignInCLicked = true;
-            mGoogleApiClient.reconnect();
+            mSignInClicked = true;
+            mGoogleApiClient.connect();
             signInButton.setVisibility(View.GONE);
             signOutButton.setVisibility(View.VISIBLE);
+            mExplicitSignOut = false;
+
         } else if (view == signOutButton) {
             mExplicitSignOut = true;
             if (mGoogleApiClient != null && mGoogleApiClient.isConnected()) {
                 Games.signOut(mGoogleApiClient);
-                mGoogleApiClient.clearDefaultAccountAndReconnect();
+                mGoogleApiClient.disconnect();
             }
-            mSignInCLicked = false;
-            signInButton.setVisibility(View.VISIBLE);
+            mSignInClicked = false;
             signOutButton.setVisibility(View.GONE);
+            signInButton.setVisibility(View.VISIBLE);
+
         }
     }
 }
