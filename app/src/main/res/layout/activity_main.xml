@@ -13,14 +13,19 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="Steps:"
-        android:id="@+id/textView2" />
+        android:id="@+id/textView2"
+        android:textColor="@color/abc_primary_text_material_dark"
+        android:textSize="30sp" />
 
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="0"
+        android:text=" 0"
         android:id="@+id/stepTextView"
+        android:textColor="@color/abc_primary_text_material_dark"
+        android:textSize="30sp"
         android:layout_alignParentTop="true"
         android:layout_toRightOf="@+id/textView2"
         android:layout_toEndOf="@+id/textView2" />
+
 </RelativeLayout>
