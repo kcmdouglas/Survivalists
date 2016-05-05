@@ -1,5 +1,6 @@
 package com.eyecuelab.survivalists;
 
+import android.app.Activity;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.content.Intent;
@@ -8,6 +9,7 @@ import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
 import android.os.Bundle;
+import android.support.v4.app.DialogFragment;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.View;
@@ -20,7 +22,9 @@ import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.SignInButton;
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.games.Games;
+import com.google.android.gms.games.GamesStatusCodes;
 import com.google.android.gms.games.multiplayer.Invitation;
+import com.google.android.gms.games.multiplayer.Multiplayer;
 import com.google.android.gms.games.multiplayer.OnInvitationReceivedListener;
 import com.google.android.gms.games.multiplayer.realtime.RealTimeMessage;
 import com.google.android.gms.games.multiplayer.realtime.RealTimeMessageReceivedListener;
@@ -30,6 +34,7 @@ import com.google.android.gms.games.multiplayer.realtime.RoomStatusUpdateListene
 import com.google.android.gms.games.multiplayer.realtime.RoomUpdateListener;
 import com.google.example.games.basegameutils.BaseGameUtils;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import butterknife.Bind;
@@ -52,6 +57,8 @@ public class MainActivity extends AppCompatActivity
     private SensorManager sensorManager;
 
     private static final int RC_SIGN_IN = 9001;
+    private static final int RC_SELECT_PLAYERS = 101;
+    private static final int RC_WAITING_ROOM = 10002;
 
     private GoogleApiClient mGoogleApiClient;
 
@@ -211,13 +218,26 @@ public class MainActivity extends AppCompatActivity
     }
 
     @Override
-    public void onRoomCreated(int i, Room room) {
-//        Toast.makeText(this, room.getCreationTimestamp() + "", Toast.LENGTH_LONG).show();
+    public void onRoomCreated(int statusCode, Room room) {
+        Toast.makeText(this, "Room created", Toast.LENGTH_SHORT).show();
 
+        Intent intent = Games.RealTimeMultiplayer.getWaitingRoomIntent(mGoogleApiClient, room, Integer.MAX_VALUE);
+        startActivityForResult(intent, RC_WAITING_ROOM);
+
+
+//        Intent intent = Games.RealTimeMultiplayer.getSelectOpponentsIntent(mGoogleApiClient, 1, 3);
+//        startActivityForResult(intent, RC_SELECT_PLAYERS);
     }
 
     @Override
-    public void onJoinedRoom(int i, Room room) {
+    public void onJoinedRoom(int statusCode, Room room) {
+        if (statusCode != GamesStatusCodes.STATUS_OK) {
+            Toast.makeText(this, "You broke it!", Toast.LENGTH_LONG).show();
+            return;
+        }
+
+        Intent intent = Games.RealTimeMultiplayer.getWaitingRoomIntent(mGoogleApiClient, room, Integer.MAX_VALUE);
+        startActivityForResult(intent, RC_WAITING_ROOM);
 
     }
 
@@ -228,22 +248,24 @@ public class MainActivity extends AppCompatActivity
 
     @Override
     public void onRoomConnected(int i, Room room) {
+        Toast.makeText(this, "Room connected", Toast.LENGTH_SHORT).show();
 
     }
 
     @Override
     public void onRoomConnecting(Room room) {
-
+        Toast.makeText(this, "Room connecting", Toast.LENGTH_SHORT).show();
     }
 
     @Override
     public void onRoomAutoMatching(Room room) {
+        Toast.makeText(this, "Room auto matching", Toast.LENGTH_SHORT).show();
 
     }
 
     @Override
     public void onPeerInvitedToRoom(Room room, List<String> list) {
-
+        Toast.makeText(this, "Kassidy invited", Toast.LENGTH_SHORT).show();
     }
 
     @Override
@@ -253,6 +275,7 @@ public class MainActivity extends AppCompatActivity
 
     @Override
     public void onPeerJoined(Room room, List<String> list) {
+        Toast.makeText(this, "Other player joined", Toast.LENGTH_SHORT).show();
 
     }
 
@@ -263,7 +286,7 @@ public class MainActivity extends AppCompatActivity
 
     @Override
     public void onConnectedToRoom(Room room) {
-
+        Toast.makeText(this, "connected to room", Toast.LENGTH_SHORT).show();
     }
 
     @Override
@@ -273,7 +296,7 @@ public class MainActivity extends AppCompatActivity
 
     @Override
     public void onPeersConnected(Room room, List<String> list) {
-
+        Toast.makeText(this, "Other player connected", Toast.LENGTH_SHORT).show();
     }
 
     @Override
@@ -289,5 +312,16 @@ public class MainActivity extends AppCompatActivity
     @Override
     public void onP2PDisconnected(String s) {
 
+    }
+
+    @Override
+    public void onActivityResult(int request, int response, Intent data) {
+        super.onActivityResult(request, response, data);
+        if (data != null) {
+            String playerId = data.getStringArrayListExtra(Games.EXTRA_STATUS).toString();
+            if (playerId != null) {
+                Toast.makeText(this, "result called", Toast.LENGTH_LONG).show();
+            }
+        }
     }
 }
