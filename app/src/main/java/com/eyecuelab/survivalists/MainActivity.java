@@ -1,6 +1,7 @@
 package com.eyecuelab.survivalists;
 
 import android.content.Context;
+import android.content.SharedPreferences;
 import android.content.Intent;
 import android.hardware.Sensor;
 import android.hardware.SensorEvent;
@@ -27,6 +28,12 @@ import butterknife.ButterKnife;
 public class MainActivity extends AppCompatActivity implements View.OnClickListener, SensorEventListener, GoogleApiClient.ConnectionCallbacks, GoogleApiClient.OnConnectionFailedListener {
 
     @Bind(R.id.stepTextView) TextView counter;
+    @Bind(R.id.dailyStepsTextView) TextView dailyCounter;
+
+    private int stepsInSensor = 0;
+    private int dailySteps;
+    private SharedPreferences mSharedPreferences;
+    private SharedPreferences.Editor mEditor;
     @Bind(R.id.sign_in_button) SignInButton signInButton;
     @Bind(R.id.sign_out_button) Button signOutButton;
 
@@ -68,7 +75,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 .addOnConnectionFailedListener(this)
                 .addApi(Games.API).addScope(Games.SCOPE_GAMES)
                 .build();
-
+        mSharedPreferences = getSharedPreferences(getString(R.string.preference_file_key), Context.MODE_PRIVATE);
+        mEditor = mSharedPreferences.edit();
         ButterKnife.bind(this);
         signInButton.setOnClickListener(this);
         signOutButton.setOnClickListener(this);
@@ -92,6 +100,9 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
     @Override
     public void onSensorChanged(SensorEvent event) {
+        dailySteps++;
+        dailyCounter.setText(Integer.toString(dailySteps));
+        counter.setText(Integer.toString(Math.round(event.values[0])));
         counter.setText(String.valueOf(event.values[0]));
     }
 

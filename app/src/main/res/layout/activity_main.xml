@@ -7,33 +7,42 @@
     android:paddingLeft="@dimen/activity_horizontal_margin"
     android:paddingRight="@dimen/activity_horizontal_margin"
     android:paddingTop="@dimen/activity_vertical_margin"
-    tools:context="com.eyecuelab.survivalists.MainActivity">
+    tools:context="com.eyecuelab.survivalists.MainActivity"
+    android:background="@color/accent_material_dark">
 
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Steps:"
+        android:text="System Steps:"
         android:id="@+id/textView2"
-        android:textColor="@color/abc_primary_text_material_dark"
-        android:textSize="30sp" />
+        android:layout_alignParentTop="true"
+        android:layout_centerHorizontal="true"
+        android:layout_marginTop="123dp" />
 
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text=" 0"
         android:id="@+id/stepTextView"
-        android:textColor="@color/abc_primary_text_material_dark"
-        android:textSize="30sp"
-        android:layout_alignParentTop="true"
-        android:layout_toRightOf="@+id/textView2"
-        android:layout_toEndOf="@+id/textView2" />
+        android:layout_below="@+id/textView2"
+        android:layout_centerHorizontal="true" />
 
-    <RelativeLayout
-        android:layout_width="match_parent"
-        android:layout_height="80dp"
-        android:layout_alignParentBottom="true"
-        android:layout_centerHorizontal="true">
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Daily Steps:"
+        android:id="@+id/textView"
+        android:layout_below="@+id/stepTextView"
+        android:layout_centerHorizontal="true"
+        android:layout_marginTop="33dp" />
 
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="0"
+        android:id="@+id/dailyStepsTextView"
+        android:layout_below="@+id/textView"
+        android:layout_centerHorizontal="true" />
         <!-- sign-in button -->
         <com.google.android.gms.common.SignInButton
             android:id="@+id/sign_in_button"
@@ -47,6 +56,5 @@
             android:layout_height="wrap_content"
             android:text="Sign Out"
             android:visibility="gone" />
-    </RelativeLayout>
 
 </RelativeLayout>
