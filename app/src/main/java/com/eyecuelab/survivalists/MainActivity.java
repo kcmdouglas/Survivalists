@@ -16,6 +16,7 @@ import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.fasterxml.jackson.databind.type.ArrayType;
 import com.firebase.client.Firebase;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.SignInButton;
@@ -32,6 +33,7 @@ import com.google.android.gms.games.multiplayer.realtime.RoomStatusUpdateListene
 import com.google.android.gms.games.multiplayer.realtime.RoomUpdateListener;
 import com.google.example.games.basegameutils.BaseGameUtils;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import butterknife.Bind;
@@ -78,6 +80,7 @@ public class MainActivity extends AppCompatActivity
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        Firebase.setAndroidContext(this);
 
         //Remove notification bar
         this.getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN, WindowManager.LayoutParams.FLAG_FULLSCREEN);
@@ -274,8 +277,13 @@ public class MainActivity extends AppCompatActivity
 
     @Override
     public void onPeersConnected(Room room, List<String> list) {
+        ArrayList<String> playersIdList = room.getParticipantIds();
+        String roomId = room.getRoomId();
+        Firebase firebaseRef = new Firebase(Constants.FIREBASE_URL_TEAM);
+        firebaseRef.child(roomId).setValue(playersIdList);
         playersText.setText(room.getParticipantIds().toString());
         roomText.setText(room.getRoomId());
+
     }
 
     @Override
