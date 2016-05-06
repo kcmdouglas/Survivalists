@@ -1,6 +1,8 @@
 package com.eyecuelab.survivalists;
 
 import android.app.Activity;
+import android.app.AlarmManager;
+import android.app.PendingIntent;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.content.Intent;
@@ -35,6 +37,7 @@ import com.google.android.gms.games.multiplayer.realtime.RoomUpdateListener;
 import com.google.example.games.basegameutils.BaseGameUtils;
 
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.List;
 
 import butterknife.Bind;
@@ -46,7 +49,8 @@ public class MainActivity extends AppCompatActivity
     @Bind(R.id.stepTextView) TextView counter;
     @Bind(R.id.dailyStepsTextView) TextView dailyCounter;
 
-    private int stepsInSensor = 0;
+    private int stepsInSensor;
+    private int previousDayStepCount;
     private int dailySteps;
     private SharedPreferences mSharedPreferences;
     private SharedPreferences.Editor mEditor;
@@ -56,24 +60,26 @@ public class MainActivity extends AppCompatActivity
 
     private SensorManager sensorManager;
 
-    private static final int RC_SIGN_IN = 9001;
-    private static final int RC_SELECT_PLAYERS = 101;
-    private static final int RC_WAITING_ROOM = 10002;
+    private static final int RC_SIGN_IN =  (int) Math.round(Math.random() * 99999);
+    private static final int RC_SELECT_PLAYERS = (int) Math.round(Math.random() * 99999);
+    private static final int RC_WAITING_ROOM = (int) Math.round(Math.random() * 99999);
 
     private GoogleApiClient mGoogleApiClient;
 
     private boolean mResolvingConnectionFailure = false;
     private boolean mAutoStartSignInFlow = true;
-    private boolean mSignInClicked = false;
+    private boolean mSignInCLicked = false;
     private boolean mExplicitSignOut = false;
     private boolean mInSignInFlow = false;
+
+    private Context mContext;
 
 
     @Override
     protected void onStart() {
         super.onStart();
         if (!mInSignInFlow && !mExplicitSignOut) {
-           mGoogleApiClient.connect();
+            mGoogleApiClient.connect();
         }
     }
 
@@ -86,13 +92,12 @@ public class MainActivity extends AppCompatActivity
 
         //set content view AFTER ABOVE sequence (to avoid crash)
         setContentView(R.layout.activity_main);
+        mContext = this;
 
         sensorManager = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
 
-        mGoogleApiClient = new GoogleApiClient.Builder(this)
-                .addConnectionCallbacks(this)
-                .addOnConnectionFailedListener(this)
-                .addApi(Games.API).addScope(Games.SCOPE_GAMES)
+        mGoogleApiClient = new GoogleApiClient.Builder(this, this, this)
+                .addApi(Games.API)
                 .build();
         mSharedPreferences = getSharedPreferences(getString(R.string.preference_file_key), Context.MODE_PRIVATE);
         mEditor = mSharedPreferences.edit();
@@ -100,6 +105,27 @@ public class MainActivity extends AppCompatActivity
         signInButton.setOnClickListener(this);
         signOutButton.setOnClickListener(this);
         quickGameButton.setOnClickListener(this);
+        initiateDailyCountResetService();
+    }
+
+    public void initiateDailyCountResetService() {
+        Intent intent = new Intent(mContext, DailyCountResetService.class);
+        intent.putExtra("endOfDaySteps", stepsInSensor);
+
+        Calendar calendar = Calendar.getInstance();
+        calendar.set(Calendar.HOUR_OF_DAY, 14);
+        calendar.set(Calendar.MINUTE, 13);
+        calendar.set(Calendar.SECOND, 0);
+        calendar.set(Calendar.MILLISECOND, 0);
+        PendingIntent pi = PendingIntent.getService(mContext, 0,
+                intent, PendingIntent.FLAG_UPDATE_CURRENT);
+        AlarmManager am = (AlarmManager) mContext.getSystemService(Context.ALARM_SERVICE);
+        am.setRepeating(AlarmManager.RTC_WAKEUP, calendar.getTimeInMillis(), AlarmManager.INTERVAL_DAY, pi);
+
+        Intent receivedIntent = getIntent();
+        previousDayStepCount = receivedIntent.getIntExtra("resetRecordedStepsCount", 0);
+        dailySteps = receivedIntent.getIntExtra("resetDailySteps", 0);
+
     }
 
     @Override
@@ -120,7 +146,8 @@ public class MainActivity extends AppCompatActivity
 
     @Override
     public void onSensorChanged(SensorEvent event) {
-        dailySteps++;
+        stepsInSensor = Math.round(event.values[0]);
+        dailySteps = Math.round(event.values[0] - previousDayStepCount);
         dailyCounter.setText(Integer.toString(dailySteps));
         counter.setText(Integer.toString(Math.round(event.values[0])));
         counter.setText(String.valueOf(event.values[0]));
@@ -150,9 +177,9 @@ public class MainActivity extends AppCompatActivity
             return;
         }
 
-        if (mSignInClicked || mAutoStartSignInFlow) {
+        if (mSignInCLicked || mAutoStartSignInFlow) {
             mAutoStartSignInFlow = false;
-            mSignInClicked = false;
+            mSignInCLicked = false;
             mResolvingConnectionFailure = true;
         }
 
@@ -170,21 +197,19 @@ public class MainActivity extends AppCompatActivity
     @Override
     public void onClick(View view) {
         if (view == signInButton) {
-            mSignInClicked = true;
-            mGoogleApiClient.connect();
+            mSignInCLicked = true;
+            mGoogleApiClient.reconnect();
             signInButton.setVisibility(View.GONE);
             signOutButton.setVisibility(View.VISIBLE);
-            mExplicitSignOut = false;
-
         } else if (view == signOutButton) {
             mExplicitSignOut = true;
             if (mGoogleApiClient != null && mGoogleApiClient.isConnected()) {
                 Games.signOut(mGoogleApiClient);
-                mGoogleApiClient.disconnect();
+                mGoogleApiClient.clearDefaultAccountAndReconnect();
             }
-            mSignInClicked = false;
-            signOutButton.setVisibility(View.GONE);
+            mSignInCLicked = false;
             signInButton.setVisibility(View.VISIBLE);
+            signOutButton.setVisibility(View.GONE);
         } else if (view == quickGameButton) {
             startQuickGame();
         }
@@ -227,6 +252,7 @@ public class MainActivity extends AppCompatActivity
 
 //        Intent intent = Games.RealTimeMultiplayer.getSelectOpponentsIntent(mGoogleApiClient, 1, 3);
 //        startActivityForResult(intent, RC_SELECT_PLAYERS);
+
     }
 
     @Override

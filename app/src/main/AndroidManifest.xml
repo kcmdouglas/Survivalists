@@ -14,7 +14,12 @@
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
 
+        <service
+            android:name=".DailyCountResetService"
+            android:exported="false"/>
 
+        <receiver
+            android:name=".receiver.StepResetAlarmReceiver"/>
 
         <meta-data android:name="com.google.android.gms.games.APP_ID"
             android:value="@string/app_id"/>
