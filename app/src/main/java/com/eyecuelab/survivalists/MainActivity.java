@@ -1,6 +1,5 @@
 package com.eyecuelab.survivalists;
 
-import android.app.Activity;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.content.Intent;
@@ -9,7 +8,6 @@ import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
 import android.os.Bundle;
-import android.support.v4.app.DialogFragment;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.View;
@@ -18,13 +16,13 @@ import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.firebase.client.Firebase;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.SignInButton;
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.games.Games;
 import com.google.android.gms.games.GamesStatusCodes;
 import com.google.android.gms.games.multiplayer.Invitation;
-import com.google.android.gms.games.multiplayer.Multiplayer;
 import com.google.android.gms.games.multiplayer.OnInvitationReceivedListener;
 import com.google.android.gms.games.multiplayer.realtime.RealTimeMessage;
 import com.google.android.gms.games.multiplayer.realtime.RealTimeMessageReceivedListener;
@@ -34,40 +32,40 @@ import com.google.android.gms.games.multiplayer.realtime.RoomStatusUpdateListene
 import com.google.android.gms.games.multiplayer.realtime.RoomUpdateListener;
 import com.google.example.games.basegameutils.BaseGameUtils;
 
-import java.util.ArrayList;
 import java.util.List;
 
 import butterknife.Bind;
 import butterknife.ButterKnife;
 
 public class MainActivity extends AppCompatActivity
-        implements View.OnClickListener, SensorEventListener, GoogleApiClient.ConnectionCallbacks, GoogleApiClient.OnConnectionFailedListener, RealTimeMessageReceivedListener, RoomUpdateListener, OnInvitationReceivedListener, RoomStatusUpdateListener {
+        implements View.OnClickListener, SensorEventListener, GoogleApiClient.ConnectionCallbacks,
+                   GoogleApiClient.OnConnectionFailedListener, RealTimeMessageReceivedListener,
+                   RoomUpdateListener, OnInvitationReceivedListener, RoomStatusUpdateListener {
 
     @Bind(R.id.stepTextView) TextView counter;
     @Bind(R.id.dailyStepsTextView) TextView dailyCounter;
+    @Bind(R.id.sign_in_button) SignInButton signInButton;
+    @Bind(R.id.sign_out_button) Button signOutButton;
+    @Bind(R.id.findPlayersButton) Button findPlayersButton;
+    @Bind(R.id.playersTextView) TextView playersText;
+    @Bind(R.id.roomTextView) TextView roomText;
 
     private int stepsInSensor = 0;
     private int dailySteps;
     private SharedPreferences mSharedPreferences;
     private SharedPreferences.Editor mEditor;
-    @Bind(R.id.sign_in_button) SignInButton signInButton;
-    @Bind(R.id.sign_out_button) Button signOutButton;
-    @Bind(R.id.quickGameButton) Button quickGameButton;
-
     private SensorManager sensorManager;
+    private GoogleApiClient mGoogleApiClient;
 
     private static final int RC_SIGN_IN = 9001;
     private static final int RC_SELECT_PLAYERS = 101;
     private static final int RC_WAITING_ROOM = 10002;
-
-    private GoogleApiClient mGoogleApiClient;
 
     private boolean mResolvingConnectionFailure = false;
     private boolean mAutoStartSignInFlow = true;
     private boolean mSignInCLicked = false;
     private boolean mExplicitSignOut = false;
     private boolean mInSignInFlow = false;
-
 
     @Override
     protected void onStart() {
@@ -92,24 +90,26 @@ public class MainActivity extends AppCompatActivity
         mGoogleApiClient = new GoogleApiClient.Builder(this)
                 .addConnectionCallbacks(this)
                 .addOnConnectionFailedListener(this)
-                .addApi(Games.API).addScope(Games.SCOPE_GAMES)
+                .addApi(Games.API)
                 .build();
+
         mSharedPreferences = getSharedPreferences(getString(R.string.preference_file_key), Context.MODE_PRIVATE);
         mEditor = mSharedPreferences.edit();
+
         ButterKnife.bind(this);
+
         signInButton.setOnClickListener(this);
         signOutButton.setOnClickListener(this);
-        quickGameButton.setOnClickListener(this);
+        findPlayersButton.setOnClickListener(this);
     }
 
     @Override
     protected void onResume() {
         super.onResume();
+        mGoogleApiClient.reconnect();
         Sensor countSensor = sensorManager.getDefaultSensor(Sensor.TYPE_STEP_COUNTER);
         if (countSensor != null) {
             sensorManager.registerListener(this, countSensor, SensorManager.SENSOR_DELAY_UI);
-        } else {
-            Log.d("Bug", "Hardware pedometer didn't work");
         }
     }
 
@@ -163,10 +163,6 @@ public class MainActivity extends AppCompatActivity
         }
     }
 
-//    protected void onActivityResult(int requestCode, int resultCode, Intent intent) {
-//        BaseGameUtils.showActivityResultError(this, requestCode,resultCode, R.string.sign_in_failed);
-//    }
-
     @Override
     public void onClick(View view) {
         if (view == signInButton) {
@@ -178,54 +174,50 @@ public class MainActivity extends AppCompatActivity
             mExplicitSignOut = true;
             if (mGoogleApiClient != null && mGoogleApiClient.isConnected()) {
                 Games.signOut(mGoogleApiClient);
-                mGoogleApiClient.clearDefaultAccountAndReconnect();
+                mGoogleApiClient.disconnect();
             }
             mSignInCLicked = false;
             signInButton.setVisibility(View.VISIBLE);
             signOutButton.setVisibility(View.GONE);
-        } else if (view == quickGameButton) {
-            startQuickGame();
+        } else if (view == findPlayersButton) {
+            findPlayers();
         }
     }
 
-    public void startQuickGame() {
-        final int MIN_OPPONENTS = 1, MAX_OPPONENTS = 1;
-        Bundle automatchCriteria = RoomConfig.createAutoMatchCriteria(MIN_OPPONENTS, MAX_OPPONENTS, 0);
+    public void findPlayers() {
+        if (mGoogleApiClient.isConnected()) {
+            final int MIN_OPPONENTS = 1, MAX_OPPONENTS = 2;
+            Bundle automatchCriteria = RoomConfig.createAutoMatchCriteria(MIN_OPPONENTS, MAX_OPPONENTS, 0);
 
-        RoomConfig.Builder rtmConfigBuilder = RoomConfig.builder(this);
-        rtmConfigBuilder.setMessageReceivedListener(this);
-        rtmConfigBuilder.setRoomStatusUpdateListener(this);
-        rtmConfigBuilder.setAutoMatchCriteria(automatchCriteria);
-        Games.RealTimeMultiplayer.create(mGoogleApiClient, rtmConfigBuilder.build());
-        getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+            RoomConfig.Builder rtmConfigBuilder = RoomConfig.builder(this);
+            rtmConfigBuilder.setMessageReceivedListener(this);
+            rtmConfigBuilder.setRoomStatusUpdateListener(this);
+            rtmConfigBuilder.setAutoMatchCriteria(automatchCriteria);
+            Games.RealTimeMultiplayer.create(mGoogleApiClient, rtmConfigBuilder.build());
+            getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+        } else {
+            Toast.makeText(this, "Sign in to find players", Toast.LENGTH_LONG).show();
+        }
+    }
+
+    public void saveTeamToFirebase(List<String> teamMembers) {
+        Firebase createdTeam = new Firebase(Constants.FIREBASE_URL_TEAM);
+        createdTeam.setValue(teamMembers);
     }
 
     @Override
-    public void onInvitationReceived(Invitation invitation) {
-
-    }
+    public void onInvitationReceived(Invitation invitation) {}
 
     @Override
-    public void onInvitationRemoved(String s) {
-
-    }
+    public void onInvitationRemoved(String s) {}
 
     @Override
-    public void onRealTimeMessageReceived(RealTimeMessage realTimeMessage) {
-
-    }
+    public void onRealTimeMessageReceived(RealTimeMessage realTimeMessage) {}
 
     @Override
     public void onRoomCreated(int statusCode, Room room) {
-        Toast.makeText(this, "Room created", Toast.LENGTH_SHORT).show();
-
         Intent intent = Games.RealTimeMultiplayer.getWaitingRoomIntent(mGoogleApiClient, room, Integer.MAX_VALUE);
         startActivityForResult(intent, RC_WAITING_ROOM);
-
-
-//        Intent intent = Games.RealTimeMultiplayer.getSelectOpponentsIntent(mGoogleApiClient, 1, 3);
-//        startActivityForResult(intent, RC_SELECT_PLAYERS);
-
     }
 
     @Override
@@ -234,16 +226,10 @@ public class MainActivity extends AppCompatActivity
             Toast.makeText(this, "You broke it!", Toast.LENGTH_LONG).show();
             return;
         }
-
-        Intent intent = Games.RealTimeMultiplayer.getWaitingRoomIntent(mGoogleApiClient, room, Integer.MAX_VALUE);
-        startActivityForResult(intent, RC_WAITING_ROOM);
-
     }
 
     @Override
-    public void onLeftRoom(int i, String s) {
-
-    }
+    public void onLeftRoom(int i, String s) {}
 
     @Override
     public void onRoomConnected(int i, Room room) {
@@ -268,20 +254,15 @@ public class MainActivity extends AppCompatActivity
     }
 
     @Override
-    public void onPeerDeclined(Room room, List<String> list) {
-
-    }
+    public void onPeerDeclined(Room room, List<String> list) {}
 
     @Override
     public void onPeerJoined(Room room, List<String> list) {
         Toast.makeText(this, "Other player joined", Toast.LENGTH_SHORT).show();
-
     }
 
     @Override
-    public void onPeerLeft(Room room, List<String> list) {
-
-    }
+    public void onPeerLeft(Room room, List<String> list) {}
 
     @Override
     public void onConnectedToRoom(Room room) {
@@ -289,38 +270,25 @@ public class MainActivity extends AppCompatActivity
     }
 
     @Override
-    public void onDisconnectedFromRoom(Room room) {
-
-    }
+    public void onDisconnectedFromRoom(Room room) {}
 
     @Override
     public void onPeersConnected(Room room, List<String> list) {
-        Toast.makeText(this, "Other player connected", Toast.LENGTH_SHORT).show();
+        playersText.setText(room.getParticipantIds().toString());
+        roomText.setText(room.getRoomId());
     }
 
     @Override
-    public void onPeersDisconnected(Room room, List<String> list) {
-
-    }
+    public void onPeersDisconnected(Room room, List<String> list) {}
 
     @Override
-    public void onP2PConnected(String s) {
-
-    }
+    public void onP2PConnected(String s) {}
 
     @Override
-    public void onP2PDisconnected(String s) {
-
-    }
+    public void onP2PDisconnected(String s) {}
 
     @Override
     public void onActivityResult(int request, int response, Intent data) {
         super.onActivityResult(request, response, data);
-        if (data != null) {
-            String playerId = data.getStringArrayListExtra(Games.EXTRA_STATUS).toString();
-            if (playerId != null) {
-                Toast.makeText(this, "result called", Toast.LENGTH_LONG).show();
-            }
-        }
     }
 }
