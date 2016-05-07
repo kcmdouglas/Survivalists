@@ -1,5 +1,6 @@
 package com.eyecuelab.survivalists;
 
+import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.content.Intent;
@@ -8,6 +9,7 @@ import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
 import android.os.Bundle;
+import android.support.annotation.NonNull;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.View;
@@ -17,10 +19,16 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.fasterxml.jackson.databind.type.ArrayType;
+import com.firebase.client.ChildEventListener;
+import com.firebase.client.DataSnapshot;
 import com.firebase.client.Firebase;
+import com.firebase.client.FirebaseError;
+import com.firebase.client.Query;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.SignInButton;
 import com.google.android.gms.common.api.GoogleApiClient;
+import com.google.android.gms.common.api.Result;
+import com.google.android.gms.common.api.ResultCallback;
 import com.google.android.gms.games.Games;
 import com.google.android.gms.games.GamesStatusCodes;
 import com.google.android.gms.games.multiplayer.Invitation;
@@ -31,6 +39,7 @@ import com.google.android.gms.games.multiplayer.realtime.Room;
 import com.google.android.gms.games.multiplayer.realtime.RoomConfig;
 import com.google.android.gms.games.multiplayer.realtime.RoomStatusUpdateListener;
 import com.google.android.gms.games.multiplayer.realtime.RoomUpdateListener;
+import com.google.android.gms.games.multiplayer.turnbased.TurnBasedMatchConfig;
 import com.google.example.games.basegameutils.BaseGameUtils;
 
 import java.util.ArrayList;
@@ -42,7 +51,7 @@ import butterknife.ButterKnife;
 public class MainActivity extends AppCompatActivity
         implements View.OnClickListener, SensorEventListener, GoogleApiClient.ConnectionCallbacks,
                    GoogleApiClient.OnConnectionFailedListener, RealTimeMessageReceivedListener,
-                   RoomUpdateListener, OnInvitationReceivedListener, RoomStatusUpdateListener {
+                   RoomUpdateListener, OnInvitationReceivedListener, RoomStatusUpdateListener, ResultCallback {
 
     @Bind(R.id.stepTextView) TextView counter;
     @Bind(R.id.dailyStepsTextView) TextView dailyCounter;
@@ -104,6 +113,8 @@ public class MainActivity extends AppCompatActivity
         signInButton.setOnClickListener(this);
         signOutButton.setOnClickListener(this);
         findPlayersButton.setOnClickListener(this);
+
+        setupMatch();
     }
 
     @Override
@@ -203,13 +214,11 @@ public class MainActivity extends AppCompatActivity
         }
     }
 
-    public void saveTeamToFirebase(List<String> teamMembers) {
-        Firebase createdTeam = new Firebase(Constants.FIREBASE_URL_TEAM);
-        createdTeam.setValue(teamMembers);
-    }
-
     @Override
-    public void onInvitationReceived(Invitation invitation) {}
+    public void onInvitationReceived(Invitation invitation) {
+        Toast.makeText(this, "Invited to room", Toast.LENGTH_SHORT).show();
+
+    }
 
     @Override
     public void onInvitationRemoved(String s) {}
@@ -219,7 +228,8 @@ public class MainActivity extends AppCompatActivity
 
     @Override
     public void onRoomCreated(int statusCode, Room room) {
-        Intent intent = Games.RealTimeMultiplayer.getWaitingRoomIntent(mGoogleApiClient, room, Integer.MAX_VALUE);
+        final int MIN_OPPONENTS = 1, MAX_OPPONENTS = 2;
+        Intent intent = Games.TurnBasedMultiplayer.getSelectOpponentsIntent(mGoogleApiClient, MIN_OPPONENTS, MAX_OPPONENTS, true);
         startActivityForResult(intent, RC_WAITING_ROOM);
     }
 
@@ -277,20 +287,17 @@ public class MainActivity extends AppCompatActivity
 
     @Override
     public void onPeersConnected(Room room, List<String> list) {
-        ArrayList<String> playersIdList = room.getParticipantIds();
-        String roomId = room.getRoomId();
-        Firebase firebaseRef = new Firebase(Constants.FIREBASE_URL_TEAM);
-        firebaseRef.child(roomId).setValue(playersIdList);
         playersText.setText(room.getParticipantIds().toString());
         roomText.setText(room.getRoomId());
-
     }
 
     @Override
     public void onPeersDisconnected(Room room, List<String> list) {}
 
     @Override
-    public void onP2PConnected(String s) {}
+    public void onP2PConnected(String s) {
+        Toast.makeText(this, "P2P connected", Toast.LENGTH_SHORT).show();
+    }
 
     @Override
     public void onP2PDisconnected(String s) {}
@@ -298,5 +305,60 @@ public class MainActivity extends AppCompatActivity
     @Override
     public void onActivityResult(int request, int response, Intent data) {
         super.onActivityResult(request, response, data);
+        if (response == RC_SELECT_PLAYERS) {
+//            user canceled
+            return;
+        }
+        if (data != null) {
+            final ArrayList<String> invitees = data.getStringArrayListExtra(Games.EXTRA_PLAYER_IDS);
+
+            Firebase firebaseRef = new Firebase(Constants.FIREBASE_URL_TEAM);
+            firebaseRef.setValue(invitees);
+
+            TurnBasedMatchConfig turnBasedMatchConfig = TurnBasedMatchConfig.builder()
+                    .addInvitedPlayers(invitees)
+                    .build();
+
+            Games.TurnBasedMultiplayer
+                    .createMatch(mGoogleApiClient, turnBasedMatchConfig);
+        }
+    }
+
+    @Override
+    public void onResult(Result result) {
+        Log.d("TAG", "I GOT TO THE RESULT!");
+
+    }
+
+    public void setupMatch() {
+        Firebase firebaseRef = new Firebase(Constants.FIREBASE_URL_TEAM + "/" + "");
+        Query queryRef = firebaseRef.orderByValue();
+
+        queryRef.addChildEventListener(new ChildEventListener() {
+            @Override
+            public void onChildAdded(DataSnapshot dataSnapshot, String s) {
+                    Log.d("TAG", dataSnapshot.getValue().toString());
+            }
+
+            @Override
+            public void onChildChanged(DataSnapshot dataSnapshot, String s) {
+
+            }
+
+            @Override
+            public void onChildRemoved(DataSnapshot dataSnapshot) {
+
+            }
+
+            @Override
+            public void onChildMoved(DataSnapshot dataSnapshot, String s) {
+
+            }
+
+            @Override
+            public void onCancelled(FirebaseError firebaseError) {
+
+            }
+        });
     }
 }
