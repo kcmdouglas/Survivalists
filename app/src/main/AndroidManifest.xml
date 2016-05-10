@@ -3,8 +3,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     package="com.eyecuelab.survivalists">
 
-    <uses-sdk
-        tools:overrideLibrary="com.google.android.gms.all"/>
+    <uses-sdk tools:overrideLibrary="com.google.android.gms.all"/>
 
     <uses-permission android:name="android.permission.INTERNET" />
 
@@ -28,7 +27,6 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-
     </application>
 
 </manifest>
