@@ -21,17 +21,10 @@ public class StepResetAlarmReceiver extends BroadcastReceiver {
     public void onReceive(Context context, Intent intent) {
         Bundle bundle = intent.getExtras();
 
-        Log.v("Receiver", "Total steps: " + bundle.getInt("endOfDaySteps"));
-
         int totalSteps = bundle.getInt("endOfDaySteps");
-
-        Toast.makeText(context, "Made it to the broadcast receiver", Toast.LENGTH_LONG).show();
-        Log.v("Receiver", " Made it!!");
-
-
         Intent resetIntent = new Intent ("resetBroadcast");
         resetIntent.putExtra("resetDailySteps", 0);
-        resetIntent.putExtra("resetRecordedStepsCount", totalSteps);
+        resetIntent.putExtra("resetPreviousDaySteps", totalSteps);
         context.sendBroadcast(resetIntent);
     }
 }

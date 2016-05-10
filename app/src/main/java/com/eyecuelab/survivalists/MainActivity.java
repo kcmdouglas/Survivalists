@@ -84,7 +84,6 @@ public class MainActivity extends AppCompatActivity
         if (!mInSignInFlow && !mExplicitSignOut) {
             mGoogleApiClient.connect();
         }
-        //initiateDailyCountResetService();
     }
 
     @Override
@@ -111,32 +110,33 @@ public class MainActivity extends AppCompatActivity
         quickGameButton.setOnClickListener(this);
 
 
-
+        //This sets the BroadcastReceiver in this activity so the broadcast sent by StepResetAlarmReceiver BroadcastReceiver is handled properly
         BroadcastReceiver broadcastReceiver = new BroadcastReceiver() {
             @Override
             public void onReceive(Context context, Intent intent) {
                 Bundle receivedSteps = intent.getExtras();
-                previousDayStepCount = receivedSteps.getInt("resetRecordedStepsCount");
+                previousDayStepCount = receivedSteps.getInt("resetPreviousDayStep");
                 dailySteps = receivedSteps.getInt("resetDailySteps");
             }
         };
 
+        //This registers the receiver--the receiver is never unregistered, which ensures that this will happen daily
         registerReceiver(broadcastReceiver, new IntentFilter("resetBroadcast"));
         dailyCounter.setText(Integer.toString(dailySteps));
         counter.setText(Integer.toString(stepsInSensor));
     }
 
     public void initiateDailyCountResetService() {
+        //Bundles the number of steps in the sensor
         Intent intent = new Intent(getBaseContext(), StepResetAlarmReceiver.class);
         Bundle bundle = new Bundle();
-        Log.v("Main Activity", "Steps in Sensor: " + stepsInSensor);
         bundle.putInt("endOfDaySteps", stepsInSensor);
 
         intent.putExtras(bundle);
-
+        //Sets a recurring alarm just before midnight daily to trigger BroadcastReceiver
         Calendar calendar = Calendar.getInstance();
-        calendar.set(Calendar.HOUR_OF_DAY, 17);
-        calendar.set(Calendar.MINUTE, 07);
+        calendar.set(Calendar.HOUR_OF_DAY, 23);
+        calendar.set(Calendar.MINUTE, 59);
         calendar.set(Calendar.SECOND, 0);
         calendar.set(Calendar.MILLISECOND, 0);
         PendingIntent pi = PendingIntent.getBroadcast(getBaseContext(), 1, intent, PendingIntent.FLAG_UPDATE_CURRENT);
@@ -163,12 +163,10 @@ public class MainActivity extends AppCompatActivity
 
     @Override
     public void onSensorChanged(SensorEvent event) {
-        stepsInSensor = (int) Math.round(event.values[0] - 0.0);
+        stepsInSensor = (int) event.values[0];
         dailySteps = Math.round(event.values[0] - previousDayStepCount);
         dailyCounter.setText(Integer.toString(dailySteps));
         counter.setText(Integer.toString(stepsInSensor));
-
-        Log.d("Main Activity", "Steps:" + stepsInSensor);
 
         initiateDailyCountResetService();
     }
