@@ -1,7 +1,11 @@
 package com.eyecuelab.survivalists;
 
 import android.app.Activity;
+import android.app.AlarmManager;
+import android.app.PendingIntent;
+import android.content.BroadcastReceiver;
 import android.content.Context;
+import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.content.Intent;
 import android.hardware.Sensor;
@@ -39,6 +43,7 @@ import com.google.android.gms.games.multiplayer.turnbased.TurnBasedMultiplayer;
 import com.google.example.games.basegameutils.BaseGameUtils;
 
 import java.util.ArrayList;
+import java.util.Calendar;
 
 import butterknife.Bind;
 import butterknife.ButterKnife;
@@ -56,23 +61,27 @@ public class MainActivity extends AppCompatActivity
     @Bind(R.id.joinMatchButton) Button joinMatchButton;
     @Bind(R.id.playerTextView) TextView playersTextView;
 
-    private int stepsInSensor = 0;
+    private int stepsInSensor;
+    private int previousDayStepCount;
     private int dailySteps;
     private SharedPreferences mSharedPreferences;
     private SharedPreferences.Editor mEditor;
     private SensorManager mSensorManager;
     private GoogleApiClient mGoogleApiClient;
     private TurnBasedMatch mCurrentMatch;
+    private Sensor countSensor;
 
-    private static final int RC_SIGN_IN = 9001;
-    private static final int RC_SELECT_PLAYERS = 101;
-    private static final int RC_WAITING_ROOM = 10002;
+    private static final int RC_SIGN_IN =  (int) Math.round(Math.random() * 99999);
+    private static final int RC_SELECT_PLAYERS = (int) Math.round(Math.random() * 99999);
+    private static final int RC_WAITING_ROOM = (int) Math.round(Math.random() * 99999);
 
     private boolean mResolvingConnectionFailure = false;
     private boolean mAutoStartSignInFlow = true;
     private boolean mSignInCLicked = false;
     private boolean mExplicitSignOut = false;
     private boolean mInSignInFlow = false;
+
+    private Context mContext;
 
     @Override
     protected void onStart() {
@@ -92,6 +101,7 @@ public class MainActivity extends AppCompatActivity
 
         //set content view AFTER ABOVE sequence (to avoid crash)
         setContentView(R.layout.activity_main);
+        mContext = this;
 
         mSensorManager = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
 
@@ -110,6 +120,40 @@ public class MainActivity extends AppCompatActivity
         signOutButton.setOnClickListener(this);
         findPlayersButton.setOnClickListener(this);
         joinMatchButton.setOnClickListener(this);
+
+
+        //This sets the BroadcastReceiver in this activity so the broadcast sent by StepResetAlarmReceiver BroadcastReceiver is handled properly
+        BroadcastReceiver broadcastReceiver = new BroadcastReceiver() {
+            @Override
+            public void onReceive(Context context, Intent intent) {
+                Bundle receivedSteps = intent.getExtras();
+                previousDayStepCount = receivedSteps.getInt("resetPreviousDayStep");
+                dailySteps = receivedSteps.getInt("resetDailySteps");
+            }
+        };
+
+        //This registers the receiver--the receiver is never unregistered, which ensures that this will happen daily
+        registerReceiver(broadcastReceiver, new IntentFilter("resetBroadcast"));
+        dailyCounter.setText(Integer.toString(dailySteps));
+        counter.setText(Integer.toString(stepsInSensor));
+    }
+
+    public void initiateDailyCountResetService() {
+        //Bundles the number of steps in the sensor
+        Intent intent = new Intent(getBaseContext(), StepResetAlarmReceiver.class);
+        Bundle bundle = new Bundle();
+        bundle.putInt("endOfDaySteps", stepsInSensor);
+
+        intent.putExtras(bundle);
+        //Sets a recurring alarm just before midnight daily to trigger BroadcastReceiver
+        Calendar calendar = Calendar.getInstance();
+        calendar.set(Calendar.HOUR_OF_DAY, 23);
+        calendar.set(Calendar.MINUTE, 59);
+        calendar.set(Calendar.SECOND, 0);
+        calendar.set(Calendar.MILLISECOND, 0);
+        PendingIntent pi = PendingIntent.getBroadcast(getBaseContext(), 1, intent, PendingIntent.FLAG_UPDATE_CURRENT);
+        AlarmManager am = (AlarmManager) mContext.getSystemService(Context.ALARM_SERVICE);
+        am.setRepeating(AlarmManager.RTC_WAKEUP, calendar.getTimeInMillis(), AlarmManager.INTERVAL_DAY, pi);
     }
 
     @Override
@@ -133,10 +177,12 @@ public class MainActivity extends AppCompatActivity
 
     @Override
     public void onSensorChanged(SensorEvent event) {
-        dailySteps++;
+        stepsInSensor = (int) event.values[0];
+        dailySteps = Math.round(event.values[0] - previousDayStepCount);
         dailyCounter.setText(Integer.toString(dailySteps));
-        counter.setText(Integer.toString(Math.round(event.values[0])));
-        counter.setText(String.valueOf(event.values[0]));
+        counter.setText(Integer.toString(stepsInSensor));
+
+        initiateDailyCountResetService();
     }
 
     @Override

@@ -3,7 +3,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     package="com.eyecuelab.survivalists">
 
-    <uses-sdk tools:overrideLibrary="com.google.android.gms.all" />
+    <uses-sdk tools:overrideLibrary="com.google.android.gms.all"/>
 
     <uses-permission android:name="android.permission.INTERNET" />
 
@@ -13,9 +13,12 @@
         android:label="@string/app_name"
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
-        <meta-data
-            android:name="com.google.android.gms.games.APP_ID"
-            android:value="@string/app_id" />
+
+        <receiver
+            android:name=".StepResetAlarmReceiver" android:process=":remote" />
+
+        <meta-data android:name="com.google.android.gms.games.APP_ID"
+            android:value="@string/app_id"/>
 
         <activity android:name=".MainActivity">
             <intent-filter>
