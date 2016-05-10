@@ -194,7 +194,9 @@ public class MainActivity extends AppCompatActivity
         signOutButton.setVisibility(View.VISIBLE);
         Games.Invitations.registerInvitationListener(mGoogleApiClient, this);
         Games.TurnBasedMultiplayer.registerMatchUpdateListener(mGoogleApiClient, this);
-        Games.TurnBasedMultiplayer.loadMatch(mGoogleApiClient, mCurrentMatch.getMatchId()).setResultCallback(new LoadTurnBasedMatchCallback());
+        if (mCurrentMatch != null) {
+            Games.TurnBasedMultiplayer.loadMatch(mGoogleApiClient, mCurrentMatch.getMatchId()).setResultCallback(new LoadTurnBasedMatchCallback());
+        }
 
 //        load current match
         if (connectionHint != null) {
