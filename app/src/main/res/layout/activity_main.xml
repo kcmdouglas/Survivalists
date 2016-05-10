@@ -91,7 +91,6 @@
         android:text="Player Placeholder"
         android:id="@+id/playerTextView"
         android:layout_below="@+id/textView3"
-        android:layout_toLeftOf="@+id/findPlayersButton"
-        android:layout_toStartOf="@+id/findPlayersButton" />
+        android:layout_centerHorizontal="true" />
 
 </RelativeLayout>
