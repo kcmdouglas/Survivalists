@@ -3,7 +3,9 @@ package com.eyecuelab.survivalists;
 import android.app.Activity;
 import android.app.AlarmManager;
 import android.app.PendingIntent;
+import android.content.BroadcastReceiver;
 import android.content.Context;
+import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.content.Intent;
 import android.hardware.Sensor;
@@ -59,6 +61,7 @@ public class MainActivity extends AppCompatActivity
     @Bind(R.id.quickGameButton) Button quickGameButton;
 
     private SensorManager sensorManager;
+    private Sensor countSensor;
 
     private static final int RC_SIGN_IN =  (int) Math.round(Math.random() * 99999);
     private static final int RC_SELECT_PLAYERS = (int) Math.round(Math.random() * 99999);
@@ -81,6 +84,7 @@ public class MainActivity extends AppCompatActivity
         if (!mInSignInFlow && !mExplicitSignOut) {
             mGoogleApiClient.connect();
         }
+        //initiateDailyCountResetService();
     }
 
     @Override
@@ -105,33 +109,46 @@ public class MainActivity extends AppCompatActivity
         signInButton.setOnClickListener(this);
         signOutButton.setOnClickListener(this);
         quickGameButton.setOnClickListener(this);
-        initiateDailyCountResetService();
+
+
+
+        BroadcastReceiver broadcastReceiver = new BroadcastReceiver() {
+            @Override
+            public void onReceive(Context context, Intent intent) {
+                Bundle receivedSteps = intent.getExtras();
+                previousDayStepCount = receivedSteps.getInt("resetRecordedStepsCount");
+                dailySteps = receivedSteps.getInt("resetDailySteps");
+            }
+        };
+
+        registerReceiver(broadcastReceiver, new IntentFilter("resetBroadcast"));
+        dailyCounter.setText(Integer.toString(dailySteps));
+        counter.setText(Integer.toString(stepsInSensor));
     }
 
     public void initiateDailyCountResetService() {
-        Intent intent = new Intent(mContext, DailyCountResetService.class);
-        intent.putExtra("endOfDaySteps", stepsInSensor);
+        Intent intent = new Intent(getBaseContext(), StepResetAlarmReceiver.class);
+        Bundle bundle = new Bundle();
+        Log.v("Main Activity", "Steps in Sensor: " + stepsInSensor);
+        bundle.putInt("endOfDaySteps", stepsInSensor);
+
+        intent.putExtras(bundle);
 
         Calendar calendar = Calendar.getInstance();
-        calendar.set(Calendar.HOUR_OF_DAY, 14);
-        calendar.set(Calendar.MINUTE, 13);
+        calendar.set(Calendar.HOUR_OF_DAY, 17);
+        calendar.set(Calendar.MINUTE, 07);
         calendar.set(Calendar.SECOND, 0);
         calendar.set(Calendar.MILLISECOND, 0);
-        PendingIntent pi = PendingIntent.getService(mContext, 0,
-                intent, PendingIntent.FLAG_UPDATE_CURRENT);
+        PendingIntent pi = PendingIntent.getBroadcast(getBaseContext(), 1, intent, PendingIntent.FLAG_UPDATE_CURRENT);
         AlarmManager am = (AlarmManager) mContext.getSystemService(Context.ALARM_SERVICE);
         am.setRepeating(AlarmManager.RTC_WAKEUP, calendar.getTimeInMillis(), AlarmManager.INTERVAL_DAY, pi);
-
-        Intent receivedIntent = getIntent();
-        previousDayStepCount = receivedIntent.getIntExtra("resetRecordedStepsCount", 0);
-        dailySteps = receivedIntent.getIntExtra("resetDailySteps", 0);
 
     }
 
     @Override
     protected void onResume() {
         super.onResume();
-        Sensor countSensor = sensorManager.getDefaultSensor(Sensor.TYPE_STEP_COUNTER);
+       countSensor = sensorManager.getDefaultSensor(Sensor.TYPE_STEP_COUNTER);
         if (countSensor != null) {
             sensorManager.registerListener(this, countSensor, SensorManager.SENSOR_DELAY_UI);
         } else {
@@ -146,11 +163,14 @@ public class MainActivity extends AppCompatActivity
 
     @Override
     public void onSensorChanged(SensorEvent event) {
-        stepsInSensor = Math.round(event.values[0]);
+        stepsInSensor = (int) Math.round(event.values[0] - 0.0);
         dailySteps = Math.round(event.values[0] - previousDayStepCount);
         dailyCounter.setText(Integer.toString(dailySteps));
-        counter.setText(Integer.toString(Math.round(event.values[0])));
-        counter.setText(String.valueOf(event.values[0]));
+        counter.setText(Integer.toString(stepsInSensor));
+
+        Log.d("Main Activity", "Steps:" + stepsInSensor);
+
+        initiateDailyCountResetService();
     }
 
     @Override
