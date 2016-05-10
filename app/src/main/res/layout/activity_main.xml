@@ -15,9 +15,9 @@
         android:layout_height="wrap_content"
         android:text="System Steps:"
         android:id="@+id/textView2"
-        android:layout_alignParentTop="true"
+        android:layout_marginTop="107dp"
         android:layout_centerHorizontal="true"
-        android:layout_marginTop="123dp" />
+        android:layout_below="@+id/findPlayersButton" />
 
     <TextView
         android:layout_width="wrap_content"
@@ -33,8 +33,7 @@
         android:text="Daily Steps:"
         android:id="@+id/textView"
         android:layout_below="@+id/stepTextView"
-        android:layout_centerHorizontal="true"
-        android:layout_marginTop="33dp" />
+        android:layout_centerHorizontal="true" />
 
     <TextView
         android:layout_width="wrap_content"
@@ -66,43 +65,33 @@
         android:layout_alignParentRight="true"
         android:layout_alignParentEnd="true" />
 
+    <Button
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Join Match"
+        android:id="@+id/joinMatchButton"
+        android:layout_below="@+id/findPlayersButton"
+        android:layout_alignLeft="@+id/findPlayersButton"
+        android:layout_alignStart="@+id/findPlayersButton"
+        android:layout_marginTop="29dp" />
+
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Connected Players:"
+        android:text="Match Players:"
         android:id="@+id/textView3"
         android:layout_below="@+id/dailyStepsTextView"
-        android:layout_alignParentLeft="true"
-        android:layout_alignParentStart="true"
-        android:layout_marginTop="93dp" />
+        android:layout_alignLeft="@+id/textView2"
+        android:layout_alignStart="@+id/textView2"
+        android:layout_marginTop="111dp" />
 
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Room info:"
-        android:id="@+id/textView4"
-        android:layout_alignParentBottom="true"
-        android:layout_alignParentLeft="true"
-        android:layout_alignParentStart="true"
-        android:layout_marginBottom="92dp" />
-
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Blank!"
-        android:id="@+id/playersTextView"
+        android:text="Player Placeholder"
+        android:id="@+id/playerTextView"
         android:layout_below="@+id/textView3"
-        android:layout_alignParentLeft="true"
-        android:layout_alignParentStart="true" />
-
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Blank!"
-        android:id="@+id/roomTextView"
-        android:layout_marginTop="24dp"
-        android:layout_alignTop="@+id/textView4"
-        android:layout_alignParentLeft="true"
-        android:layout_alignParentStart="true" />
+        android:layout_toLeftOf="@+id/findPlayersButton"
+        android:layout_toStartOf="@+id/findPlayersButton" />
 
 </RelativeLayout>
