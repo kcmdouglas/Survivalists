@@ -22,6 +22,8 @@ import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.facebook.FacebookSdk;
+import com.facebook.appevents.AppEventsLogger;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.SignInButton;
 import com.google.android.gms.common.api.GoogleApiClient;
@@ -93,18 +95,27 @@ public class MainActivity extends AppCompatActivity
         //Remove notification bar
         this.getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN, WindowManager.LayoutParams.FLAG_FULLSCREEN);
 
+        //Initialize Facebook SDK
+        FacebookSdk.sdkInitialize(getApplicationContext());
+        AppEventsLogger.activateApp(this);
+
         //set content view AFTER ABOVE sequence (to avoid crash)
         setContentView(R.layout.activity_main);
         mContext = this;
+        ButterKnife.bind(this);
 
+        //Initialize SensorManager
         sensorManager = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
 
+        //Create Shared Preferences
+        mSharedPreferences = getSharedPreferences(getString(R.string.preference_file_key), Context.MODE_PRIVATE);
+        mEditor = mSharedPreferences.edit();
+
+
+        //Google Play Games client and correlating buttons
         mGoogleApiClient = new GoogleApiClient.Builder(this, this, this)
                 .addApi(Games.API)
                 .build();
-        mSharedPreferences = getSharedPreferences(getString(R.string.preference_file_key), Context.MODE_PRIVATE);
-        mEditor = mSharedPreferences.edit();
-        ButterKnife.bind(this);
         signInButton.setOnClickListener(this);
         signOutButton.setOnClickListener(this);
         quickGameButton.setOnClickListener(this);
@@ -358,14 +369,14 @@ public class MainActivity extends AppCompatActivity
 
     }
 
-    @Override
-    public void onActivityResult(int request, int response, Intent data) {
-        super.onActivityResult(request, response, data);
-        if (data != null) {
-            String playerId = data.getStringArrayListExtra(Games.EXTRA_STATUS).toString();
-            if (playerId != null) {
-                Toast.makeText(this, "result called", Toast.LENGTH_LONG).show();
-            }
-        }
-    }
+//    @Override
+//    public void onActivityResult(int request, int response, Intent data) {
+//        super.onActivityResult(request, response, data);
+//        if (data != null) {
+//            String playerId = data.getStringArrayListExtra(Games.EXTRA_STATUS).toString();
+//            if (playerId != null) {
+//                Toast.makeText(this, "result called", Toast.LENGTH_LONG).show();
+//            }
+//        }
+//    }
 }
