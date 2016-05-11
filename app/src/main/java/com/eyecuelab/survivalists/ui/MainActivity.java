@@ -46,6 +46,7 @@ import com.google.android.gms.games.multiplayer.Invitation;
 import com.google.android.gms.games.multiplayer.Multiplayer;
 import com.google.android.gms.games.multiplayer.OnInvitationReceivedListener;
 import com.google.android.gms.games.multiplayer.realtime.RoomConfig;
+import com.google.android.gms.games.multiplayer.realtime.RoomUpdateListener;
 import com.google.android.gms.games.multiplayer.turnbased.OnTurnBasedMatchUpdateReceivedListener;
 import com.google.android.gms.games.multiplayer.turnbased.TurnBasedMatch;
 import com.google.android.gms.games.multiplayer.turnbased.TurnBasedMatchConfig;
@@ -76,6 +77,7 @@ public class MainActivity extends AppCompatActivity
     private int stepsInSensor;
     private int previousDayStepCount;
     private int dailySteps;
+    private ArrayList<String> invitees;
     private SharedPreferences mSharedPreferences;
     private SharedPreferences.Editor mEditor;
     private SensorManager mSensorManager;
@@ -280,7 +282,7 @@ public class MainActivity extends AppCompatActivity
 
     public void findPlayers() {
         if (mGoogleApiClient.isConnected()) {
-            final int MIN_OPPONENTS = 1, MAX_OPPONENTS = 2;
+            final int MIN_OPPONENTS = 1, MAX_OPPONENTS = 4;
             Intent intent = Games.TurnBasedMultiplayer.getSelectOpponentsIntent(mGoogleApiClient, MIN_OPPONENTS, MAX_OPPONENTS, true);
             startActivityForResult(intent, RC_SELECT_PLAYERS);
         } else {
@@ -300,32 +302,6 @@ public class MainActivity extends AppCompatActivity
                 nextPlayer = "p_1";
             }
 
-//            OnInvitationReceivedListener onInvitationReceivedListener = new OnInvitationReceivedListener() {
-//                @Override
-//                public void onInvitationReceived(Invitation invitation) {
-//                    Toast.makeText(MainActivity.this, "Received " + invitation.getInviter().getDisplayName(), Toast.LENGTH_LONG).show();
-//                }
-//
-//                @Override
-//                public void onInvitationRemoved(String s) {
-//
-//                }
-//            };
-//
-//            OnTurnBasedMatchUpdateReceivedListener onTurnBasedMatchUpdateReceivedListener = new OnTurnBasedMatchUpdateReceivedListener() {
-//                @Override
-//                public void onTurnBasedMatchReceived(TurnBasedMatch turnBasedMatch) {
-//                    Toast.makeText(MainActivity.this, "Received " + turnBasedMatch.getLastUpdaterId(), Toast.LENGTH_LONG).show();
-//                }
-//
-//                @Override
-//                public void onTurnBasedMatchRemoved(String s) {
-//
-//                }
-//            };
-//            Games.Invitations.registerInvitationListener(mGoogleApiClient, onInvitationReceivedListener);
-//            Games.TurnBasedMultiplayer.registerMatchUpdateListener(mGoogleApiClient, onTurnBasedMatchUpdateReceivedListener);
-
             Games.TurnBasedMultiplayer.takeTurn(mGoogleApiClient, mCurrentMatch.getMatchId(), matchData, nextPlayer);
         } else {
             Toast.makeText(this, "mCurrent match is null", Toast.LENGTH_LONG).show();
@@ -333,15 +309,25 @@ public class MainActivity extends AppCompatActivity
     }
 
     public void takeFirstTurn() {
-        byte[] matchData = new byte[1234];
+        byte[] matchData = new byte[1];
         String nextPlayer;
+        String matchId = mCurrentMatch.getMatchId();
+        String creatorId = Games.Players.getCurrentPlayerId(mGoogleApiClient);
+        ArrayList<String> wholeParty = invitees;
+        wholeParty.add(creatorId);
 
         if (mCurrentMatch.getLastUpdaterId().equals("p_1")) {
             nextPlayer = "p_2";
         } else {
             nextPlayer = "p_1";
         }
-        Games.TurnBasedMultiplayer.takeTurn(mGoogleApiClient, mCurrentMatch.getMatchId(), matchData, nextPlayer);
+
+        Games.TurnBasedMultiplayer.takeTurn(mGoogleApiClient, matchId, matchData, nextPlayer);
+
+        Firebase firebaseRef = new Firebase(Constants.FIREBASE_URL_TEAM + "/" + "");
+        firebaseListening();
+        firebaseRef.child(matchId).setValue(wholeParty);
+        firebaseListening();
     }
 
     @Override
@@ -364,7 +350,7 @@ public class MainActivity extends AppCompatActivity
 
         if (request == RC_SELECT_PLAYERS) {
 //            user returning from select players
-            final ArrayList<String> invitees = data.getStringArrayListExtra(Games.EXTRA_PLAYER_IDS);
+            invitees = data.getStringArrayListExtra(Games.EXTRA_PLAYER_IDS);
             playersTextView.setText(invitees.toString());
 
             Bundle automatchCriteria = null;
@@ -392,16 +378,16 @@ public class MainActivity extends AppCompatActivity
                         }
                     });
 
+            int[] statusMyTurn = new int[1];
+            Games.TurnBasedMultiplayer.loadMatchesByStatus(mGoogleApiClient, statusMyTurn);
+            joinMatch();
+
         } else if (request == RC_WAITING_ROOM) {
 //            user returning from join match
             mCurrentMatch = data.getParcelableExtra(Multiplayer.EXTRA_TURN_BASED_MATCH);
-            String playersId = mCurrentMatch.getPendingParticipantId();
-
-            Log.d("Creator Id", mCurrentMatch.getCreatorId());
-            Log.d("Participant Ids", mCurrentMatch.getParticipantIds().toString());
-            Log.d("Pending participant Id", mCurrentMatch.getPendingParticipantId());
-
+            String playersId = mCurrentMatch.getParticipantIds().toString();
             playersTextView.setText(playersId);
+            takeFirstTurn();
         }
 
     }
@@ -437,7 +423,8 @@ public class MainActivity extends AppCompatActivity
         queryRef.addChildEventListener(new ChildEventListener() {
             @Override
             public void onChildAdded(DataSnapshot dataSnapshot, String s) {
-                    Log.d("Firebase Update", dataSnapshot.getValue().toString());
+                    Log.d("Firebase Update", "New Match: " + dataSnapshot.getKey());
+                    Log.d("Firebase Update", "Players: " + dataSnapshot.getValue());
             }
 
             @Override
