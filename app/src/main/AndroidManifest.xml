@@ -5,28 +5,40 @@
 
     <uses-sdk tools:overrideLibrary="com.google.android.gms.all"/>
 
+
     <uses-permission android:name="android.permission.INTERNET" />
 
     <application
+        android:name=".SurvivalistsApplication"
         android:allowBackup="true"
         android:icon="@mipmap/ic_launcher"
         android:label="@string/app_name"
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
-
         <receiver
-            android:name=".StepResetAlarmReceiver" android:process=":remote" />
+            android:name=".util.StepResetAlarmReceiver"
+            android:process=":remote" />
 
-        <meta-data android:name="com.google.android.gms.games.APP_ID"
-            android:value="@string/app_id"/>
+        <meta-data
+            android:name="com.google.android.gms.games.APP_ID"
+            android:value="@string/app_id" />
+        <meta-data
+            android:name="com.facebook.sdk.ApplicationId"
+            android:value="@string/facebook_app_id" />
 
-        <activity android:name=".MainActivity">
+        <activity android:name=".ui.MainActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+        <activity
+            android:name="com.facebook.FacebookActivity"
+            android:configChanges="keyboard|keyboardHidden|screenLayout|screenSize|orientation"
+            android:label="@string/app_name"
+            android:theme="@android:style/Theme.Translucent.NoTitleBar" />
+        <activity android:name=".ui.Login"></activity>
     </application>
 
 </manifest>
