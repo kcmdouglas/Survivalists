@@ -290,7 +290,7 @@ public class MainActivity extends AppCompatActivity
 
     public void testMethod() {
         if (mCurrentMatch != null) {
-            Toast.makeText(this, "You've submitted your turn", Toast.LENGTH_LONG).show();
+            Toast.makeText(this, "Testing...", Toast.LENGTH_LONG).show();
             byte[] matchData = new byte[1234];
             String nextPlayer;
 
@@ -300,35 +300,48 @@ public class MainActivity extends AppCompatActivity
                 nextPlayer = "p_1";
             }
 
-            OnInvitationReceivedListener onInvitationReceivedListener = new OnInvitationReceivedListener() {
-                @Override
-                public void onInvitationReceived(Invitation invitation) {
-                    Toast.makeText(MainActivity.this, "Received " + invitation.getInviter().getDisplayName(), Toast.LENGTH_LONG).show();
-                }
+//            OnInvitationReceivedListener onInvitationReceivedListener = new OnInvitationReceivedListener() {
+//                @Override
+//                public void onInvitationReceived(Invitation invitation) {
+//                    Toast.makeText(MainActivity.this, "Received " + invitation.getInviter().getDisplayName(), Toast.LENGTH_LONG).show();
+//                }
+//
+//                @Override
+//                public void onInvitationRemoved(String s) {
+//
+//                }
+//            };
+//
+//            OnTurnBasedMatchUpdateReceivedListener onTurnBasedMatchUpdateReceivedListener = new OnTurnBasedMatchUpdateReceivedListener() {
+//                @Override
+//                public void onTurnBasedMatchReceived(TurnBasedMatch turnBasedMatch) {
+//                    Toast.makeText(MainActivity.this, "Received " + turnBasedMatch.getLastUpdaterId(), Toast.LENGTH_LONG).show();
+//                }
+//
+//                @Override
+//                public void onTurnBasedMatchRemoved(String s) {
+//
+//                }
+//            };
+//            Games.Invitations.registerInvitationListener(mGoogleApiClient, onInvitationReceivedListener);
+//            Games.TurnBasedMultiplayer.registerMatchUpdateListener(mGoogleApiClient, onTurnBasedMatchUpdateReceivedListener);
 
-                @Override
-                public void onInvitationRemoved(String s) {
-
-                }
-            };
-
-            OnTurnBasedMatchUpdateReceivedListener onTurnBasedMatchUpdateReceivedListener = new OnTurnBasedMatchUpdateReceivedListener() {
-                @Override
-                public void onTurnBasedMatchReceived(TurnBasedMatch turnBasedMatch) {
-                    Toast.makeText(MainActivity.this, "Received " + turnBasedMatch.getLastUpdaterId(), Toast.LENGTH_LONG).show();
-                }
-
-                @Override
-                public void onTurnBasedMatchRemoved(String s) {
-
-                }
-            };
-            Games.Invitations.registerInvitationListener(mGoogleApiClient, onInvitationReceivedListener);
-            Games.TurnBasedMultiplayer.registerMatchUpdateListener(mGoogleApiClient, onTurnBasedMatchUpdateReceivedListener);
             Games.TurnBasedMultiplayer.takeTurn(mGoogleApiClient, mCurrentMatch.getMatchId(), matchData, nextPlayer);
         } else {
             Toast.makeText(this, "mCurrent match is null", Toast.LENGTH_LONG).show();
         }
+    }
+
+    public void takeFirstTurn() {
+        byte[] matchData = new byte[1234];
+        String nextPlayer;
+
+        if (mCurrentMatch.getLastUpdaterId().equals("p_1")) {
+            nextPlayer = "p_2";
+        } else {
+            nextPlayer = "p_1";
+        }
+        Games.TurnBasedMultiplayer.takeTurn(mGoogleApiClient, mCurrentMatch.getMatchId(), matchData, nextPlayer);
     }
 
     @Override
@@ -367,25 +380,17 @@ public class MainActivity extends AppCompatActivity
 
             TurnBasedMatchConfig turnBasedMatchConfig = TurnBasedMatchConfig.builder()
                     .addInvitedPlayers(invitees)
-                    .setAutoMatchCriteria(automatchCriteria)
                     .build();
 
             Games.TurnBasedMultiplayer
                     .createMatch(mGoogleApiClient, turnBasedMatchConfig)
-                    .setResultCallback(new ResultCallbacks<TurnBasedMultiplayer.InitiateMatchResult>() {
+                    .setResultCallback(new ResultCallback<TurnBasedMultiplayer.InitiateMatchResult>() {
                         @Override
-                        public void onSuccess(TurnBasedMultiplayer.InitiateMatchResult result) {
-                            Toast.makeText(MainActivity.this, "Success!!", Toast.LENGTH_SHORT).show();
-                            processResult(result);
-                        }
-
-                        @Override
-                        public void onFailure(Status status) {
-                            Toast.makeText(MainActivity.this, "Something went wrong while creating game.", Toast.LENGTH_SHORT).show();
+                        public void onResult(TurnBasedMultiplayer.InitiateMatchResult result) {
+                            Log.d("TAG", result.toString());
+                            takeFirstTurn();
                         }
                     });
-
-            mCurrentMatch = data.getParcelableExtra(Multiplayer.EXTRA_TURN_BASED_MATCH);
 
         } else if (request == RC_WAITING_ROOM) {
 //            user returning from join match
