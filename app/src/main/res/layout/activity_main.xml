@@ -59,7 +59,7 @@
     <Button
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Find Players"
+        android:text="New Match"
         android:id="@+id/findPlayersButton"
         android:layout_alignParentTop="true"
         android:layout_alignParentRight="true"
@@ -68,7 +68,7 @@
     <Button
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Join Match"
+        android:text="Current Matches"
         android:id="@+id/joinMatchButton"
         android:layout_below="@+id/findPlayersButton"
         android:layout_alignLeft="@+id/findPlayersButton"
@@ -80,17 +80,44 @@
         android:layout_height="wrap_content"
         android:text="Match Players:"
         android:id="@+id/textView3"
-        android:layout_below="@+id/dailyStepsTextView"
-        android:layout_alignLeft="@+id/textView2"
-        android:layout_alignStart="@+id/textView2"
-        android:layout_marginTop="111dp" />
+        android:layout_marginTop="29dp"
+        android:layout_below="@+id/textView4"
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentStart="true" />
 
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Player Placeholder"
+        android:text="none!"
         android:id="@+id/playerTextView"
-        android:layout_below="@+id/textView3"
+        android:layout_alignTop="@+id/textView3"
+        android:layout_toRightOf="@+id/textView3"
+        android:layout_toEndOf="@+id/textView3" />
+
+    <Button
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Test Button"
+        android:id="@+id/testButton"
+        android:layout_alignParentBottom="true"
         android:layout_centerHorizontal="true" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Match Id:"
+        android:id="@+id/textView4"
+        android:layout_centerVertical="true"
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentStart="true" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="0"
+        android:id="@+id/matchIdTextView"
+        android:layout_above="@+id/textView3"
+        android:layout_toRightOf="@+id/textView4"
+        android:layout_toEndOf="@+id/textView4" />
 
 </RelativeLayout>
