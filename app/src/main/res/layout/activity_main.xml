@@ -7,7 +7,7 @@
     android:paddingLeft="@dimen/activity_horizontal_margin"
     android:paddingRight="@dimen/activity_horizontal_margin"
     android:paddingTop="@dimen/activity_vertical_margin"
-    tools:context="com.eyecuelab.survivalists.MainActivity"
+    tools:context=".ui.MainActivity"
     android:background="@color/accent_material_dark">
 
     <TextView
@@ -42,19 +42,20 @@
         android:id="@+id/dailyStepsTextView"
         android:layout_below="@+id/textView"
         android:layout_centerHorizontal="true" />
-        <!-- sign-in button -->
-        <com.google.android.gms.common.SignInButton
-            android:id="@+id/sign_in_button"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content" />
 
-        <!-- sign-out button -->
-        <Button
-            android:id="@+id/sign_out_button"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Sign Out"
-            android:visibility="gone" />
+    <!-- sign-in button -->
+    <com.google.android.gms.common.SignInButton
+        android:id="@+id/sign_in_button"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content" />
+
+    <!-- sign-out button -->
+    <Button
+        android:id="@+id/sign_out_button"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Sign Out"
+        android:visibility="gone" />
 
     <Button
         android:layout_width="wrap_content"
@@ -119,5 +120,4 @@
         android:layout_above="@+id/textView3"
         android:layout_toRightOf="@+id/textView4"
         android:layout_toEndOf="@+id/textView4" />
-
 </RelativeLayout>

@@ -1,4 +1,4 @@
-package com.eyecuelab.survivalists;
+package com.eyecuelab.survivalists.ui;
 
 import android.app.Activity;
 import android.app.AlarmManager;
@@ -22,6 +22,11 @@ import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.eyecuelab.survivalists.Constants;
+import com.eyecuelab.survivalists.R;
+import com.eyecuelab.survivalists.util.StepResetAlarmReceiver;
+import com.facebook.FacebookSdk;
+import com.facebook.appevents.AppEventsLogger;
 import com.firebase.client.ChildEventListener;
 import com.firebase.client.DataSnapshot;
 import com.firebase.client.Firebase;
@@ -107,23 +112,27 @@ public class MainActivity extends AppCompatActivity
         //Remove notification bar
         this.getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN, WindowManager.LayoutParams.FLAG_FULLSCREEN);
 
+        //Initialize Facebook SDK
+        FacebookSdk.sdkInitialize(getApplicationContext());
+        AppEventsLogger.activateApp(this);
+
         //set content view AFTER ABOVE sequence (to avoid crash)
         setContentView(R.layout.activity_main);
         mContext = this;
+        ButterKnife.bind(this);
 
+        //Initialize SensorManager
         mSensorManager = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
 
-        mGoogleApiClient = new GoogleApiClient.Builder(this)
-                .addConnectionCallbacks(this)
-                .addOnConnectionFailedListener(this)
-                .addApi(Games.API)
-                .build();
-
+        //Create Shared Preferences
         mSharedPreferences = getSharedPreferences(getString(R.string.preference_file_key), Context.MODE_PRIVATE);
         mEditor = mSharedPreferences.edit();
 
-        ButterKnife.bind(this);
 
+        //Google Play Games client and correlating buttons
+        mGoogleApiClient = new GoogleApiClient.Builder(this, this, this)
+                .addApi(Games.API)
+                .build();
         signInButton.setOnClickListener(this);
         signOutButton.setOnClickListener(this);
         findPlayersButton.setOnClickListener(this);
