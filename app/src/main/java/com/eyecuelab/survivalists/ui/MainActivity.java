@@ -56,6 +56,8 @@ import com.google.example.games.basegameutils.BaseGameUtils;
 
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.HashMap;
+import java.util.Map;
 
 import butterknife.Bind;
 import butterknife.ButterKnife;
@@ -95,6 +97,7 @@ public class MainActivity extends AppCompatActivity
     private boolean mSignInCLicked = false;
     private boolean mExplicitSignOut = false;
     private boolean mInSignInFlow = false;
+    private Firebase mFirebaseRef;
 
     private Context mContext;
 
@@ -155,6 +158,9 @@ public class MainActivity extends AppCompatActivity
         registerReceiver(broadcastReceiver, new IntentFilter("resetBroadcast"));
         dailyCounter.setText(Integer.toString(dailySteps));
         counter.setText(Integer.toString(stepsInSensor));
+
+        //Set Firebase reference
+        mFirebaseRef = new Firebase(Constants.FIREBASE_URL);
     }
 
 
@@ -478,7 +484,27 @@ public class MainActivity extends AppCompatActivity
         }
 
         //TODO: Send team information to the database
+        //Saves team data to Firebase
+        Firebase firebaseTeamRef = new Firebase(Constants.FIREBASE_URL_TEAM);
+        firebaseTeamRef.setValue(mCurrentMatch.toString());
+
         //TODO: Send user information to the database
+//        //Nest user information within the Team child
+//        Map<String, Object> userID = new HashMap<String, Object>();
+//
+//        Map<String, Object> userIDs = new HashMap<String, Object>();
+//
+//
+//        userIDs.put("user/", mCurrentMatch.getCreatorId());
+//
+//        ArrayList<String> participants = mCurrentMatch.getParticipantIds();
+//
+//        for(int i = 0; i < participants.size(); i++) {
+//            String participant = participants.get(i);
+//            userIDs.put("user/", participant);
+//        }
+//
+//        firebaseTeamRef.child(mCurrentMatch.toString()).updateChildren(userIDs);
         //TODO: Create endCampaign method
 
     }
@@ -500,5 +526,6 @@ public class MainActivity extends AppCompatActivity
         PendingIntent pi = PendingIntent.getBroadcast(getBaseContext(), 1, intent, PendingIntent.FLAG_UPDATE_CURRENT);
         AlarmManager am = (AlarmManager) mContext.getSystemService(Context.ALARM_SERVICE);
         am.setRepeating(AlarmManager.RTC_WAKEUP, calendar.getTimeInMillis(), AlarmManager.INTERVAL_DAY, pi);
+
     }
 }
