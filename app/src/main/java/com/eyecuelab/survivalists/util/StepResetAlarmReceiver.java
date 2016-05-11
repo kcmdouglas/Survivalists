@@ -1,4 +1,4 @@
-package com.eyecuelab.survivalists;
+package com.eyecuelab.survivalists.util;
 
 import android.content.BroadcastReceiver;
 import android.content.Context;

@@ -1,4 +1,4 @@
-package com.eyecuelab.survivalists;
+package com.eyecuelab.survivalists.ui;
 
 import android.app.Activity;
 import android.app.AlarmManager;
@@ -21,6 +21,9 @@ import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.eyecuelab.survivalists.Constants;
+import com.eyecuelab.survivalists.R;
+import com.eyecuelab.survivalists.util.StepResetAlarmReceiver;
 import com.facebook.FacebookSdk;
 import com.facebook.appevents.AppEventsLogger;
 import com.firebase.client.ChildEventListener;
