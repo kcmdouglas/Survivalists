@@ -375,6 +375,7 @@ public class MainActivity extends AppCompatActivity
                     .setResultCallback(new ResultCallbacks<TurnBasedMultiplayer.InitiateMatchResult>() {
                         @Override
                         public void onSuccess(TurnBasedMultiplayer.InitiateMatchResult result) {
+                            Toast.makeText(MainActivity.this, "Success!!", Toast.LENGTH_SHORT).show();
                             processResult(result);
                         }
 
@@ -384,17 +385,8 @@ public class MainActivity extends AppCompatActivity
                         }
                     });
 
-            OnInvitationReceivedListener onInvitationReceivedListener = new OnInvitationReceivedListener() {
-                @Override
-                public void onInvitationReceived(Invitation invitation) {
-                    Toast.makeText(MainActivity.this, "Invitation received from " + invitation.getInviter().getDisplayName(), Toast.LENGTH_LONG).show();
-                }
-
-                @Override
-                public void onInvitationRemoved(String s) {}
-            };
             mCurrentMatch = data.getParcelableExtra(Multiplayer.EXTRA_TURN_BASED_MATCH);
-            Games.Invitations.registerInvitationListener(mGoogleApiClient, onInvitationReceivedListener);
+
         } else if (request == RC_WAITING_ROOM) {
 //            user returning from join match
             mCurrentMatch = data.getParcelableExtra(Multiplayer.EXTRA_TURN_BASED_MATCH);
@@ -419,22 +411,18 @@ public class MainActivity extends AppCompatActivity
 
 //        Verifying if new match:
         if (match.getData() == null) {
-            startMatch(match);
+            String matchId = match.getMatchId();
+            String googlePlayerId = Games.Players.getCurrentPlayerId(mGoogleApiClient);
+            String matchPlayerId = match.getParticipantId(googlePlayerId);
+            ArrayList<String> playerIds = match.getParticipantIds();
+
+            Firebase firebaseRef = new Firebase(Constants.FIREBASE_URL_TEAM + "/" + "");
+            firebaseListening();
+            firebaseRef.child(matchId).setValue(playerIds);
+
+            Log.d("Google Player Id", googlePlayerId);
+            Log.d("Match Player Id", matchPlayerId);
         }
-    }
-
-    private void startMatch(TurnBasedMatch match) {
-        String matchId = match.getMatchId();
-        String googlePlayerId = Games.Players.getCurrentPlayerId(mGoogleApiClient);
-        String matchPlayerId = match.getParticipantId(googlePlayerId);
-        ArrayList<String> playerIds = match.getParticipantIds();
-
-        Firebase firebaseRef = new Firebase(Constants.FIREBASE_URL_TEAM + "/" + "");
-        firebaseListening();
-        firebaseRef.child(matchId).setValue(playerIds);
-
-        Log.d("Google Player Id", googlePlayerId);
-        Log.d("Match Player Id", matchPlayerId);
     }
 
     private void firebaseListening() {
