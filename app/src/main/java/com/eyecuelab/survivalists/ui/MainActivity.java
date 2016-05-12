@@ -42,6 +42,7 @@ import com.google.android.gms.common.api.Status;
 import com.google.android.gms.games.Games;
 import com.google.android.gms.games.Player;
 import com.google.android.gms.games.Players;
+import com.google.android.gms.games.internal.game.Acls;
 import com.google.android.gms.games.multiplayer.Invitation;
 import com.google.android.gms.games.multiplayer.Multiplayer;
 import com.google.android.gms.games.multiplayer.OnInvitationReceivedListener;
@@ -61,8 +62,8 @@ import butterknife.ButterKnife;
 
 public class MainActivity extends AppCompatActivity
         implements View.OnClickListener, SensorEventListener, GoogleApiClient.ConnectionCallbacks,
-                   GoogleApiClient.OnConnectionFailedListener, OnInvitationReceivedListener,
-                   OnTurnBasedMatchUpdateReceivedListener {
+        GoogleApiClient.OnConnectionFailedListener, OnInvitationReceivedListener,
+        Acls.OnGameplayAclLoadedCallback {
 
     @Bind(R.id.stepTextView) TextView counter;
     @Bind(R.id.dailyStepsTextView) TextView dailyCounter;
@@ -210,15 +211,12 @@ public class MainActivity extends AppCompatActivity
     public void onConnected(Bundle connectionHint) {
         signInButton.setVisibility(View.GONE);
         signOutButton.setVisibility(View.VISIBLE);
-        Games.Invitations.registerInvitationListener(mGoogleApiClient, this);
-        Games.TurnBasedMultiplayer.registerMatchUpdateListener(mGoogleApiClient, this);
         if (mCurrentMatch != null) {
             Games.TurnBasedMultiplayer
                     .loadMatch(mGoogleApiClient, mCurrentMatch.getMatchId());
 
 
         }
-
 //        load current match
         if (connectionHint != null) {
             mCurrentMatch = connectionHint.getParcelable(Multiplayer.EXTRA_TURN_BASED_MATCH);
@@ -236,17 +234,14 @@ public class MainActivity extends AppCompatActivity
         if (mResolvingConnectionFailure) {
             return;
         }
-
         if (mSignInCLicked || mAutoStartSignInFlow) {
             mAutoStartSignInFlow = false;
             mSignInCLicked = false;
             mResolvingConnectionFailure = true;
         }
-
         if (!BaseGameUtils.resolveConnectionFailure(this,
                 mGoogleApiClient, connectionResult, RC_SIGN_IN, "Sign in error!")) {
             mResolvingConnectionFailure = false;
-
         }
     }
 
@@ -291,21 +286,7 @@ public class MainActivity extends AppCompatActivity
     }
 
     public void testMethod() {
-        if (mCurrentMatch != null) {
-            Toast.makeText(this, "Testing...", Toast.LENGTH_LONG).show();
-            byte[] matchData = new byte[1234];
-            String nextPlayer;
-
-            if (mCurrentMatch.getLastUpdaterId().equals("p_1")) {
-                nextPlayer = "p_2";
-            } else {
-                nextPlayer = "p_1";
-            }
-
-            Games.TurnBasedMultiplayer.takeTurn(mGoogleApiClient, mCurrentMatch.getMatchId(), matchData, nextPlayer);
-        } else {
-            Toast.makeText(this, "mCurrent match is null", Toast.LENGTH_LONG).show();
-        }
+        Toast.makeText(this, "Testing...", Toast.LENGTH_LONG).show();
     }
 
     public void takeFirstTurn() {
@@ -314,7 +295,9 @@ public class MainActivity extends AppCompatActivity
         String matchId = mCurrentMatch.getMatchId();
         String creatorId = Games.Players.getCurrentPlayerId(mGoogleApiClient);
         ArrayList<String> wholeParty = invitees;
-        wholeParty.add(creatorId);
+        if (wholeParty != null) {
+            wholeParty.add(creatorId);
+        }
 
         if (mCurrentMatch.getLastUpdaterId().equals("p_1")) {
             nextPlayer = "p_2";
@@ -328,16 +311,8 @@ public class MainActivity extends AppCompatActivity
         firebaseListening();
         firebaseRef.child(matchId).setValue(wholeParty);
         firebaseListening();
+        invitationListening();
     }
-
-    @Override
-    public void onInvitationReceived(Invitation invitation) {
-        Toast.makeText(this, "You have been invited to join " + invitation.getInviter().getDisplayName(), Toast.LENGTH_SHORT).show();
-
-    }
-
-    @Override
-    public void onInvitationRemoved(String s) {}
 
     @Override
     public void onActivityResult(int request, int response, Intent data) {
@@ -350,11 +325,13 @@ public class MainActivity extends AppCompatActivity
 
         if (request == RC_SELECT_PLAYERS) {
 //            user returning from select players
+            joinMatch();
+//            TODO: implement automatically selecting the match which was just created.
             invitees = data.getStringArrayListExtra(Games.EXTRA_PLAYER_IDS);
             playersTextView.setText(invitees.toString());
 
             Bundle automatchCriteria = null;
-
+//            checking if user chose auto match opponents
             int minAutoMatchPlayers = data.getIntExtra(Multiplayer.EXTRA_MIN_AUTOMATCH_PLAYERS, 0);
             int maxAutoMatchPlayers = data.getIntExtra(Multiplayer.EXTRA_MAX_AUTOMATCH_PLAYERS, 0);
 
@@ -363,11 +340,12 @@ public class MainActivity extends AppCompatActivity
             } else {
                 automatchCriteria = null;
             }
-
+//            Match configuration
             TurnBasedMatchConfig turnBasedMatchConfig = TurnBasedMatchConfig.builder()
+                    .setAutoMatchCriteria(automatchCriteria)
                     .addInvitedPlayers(invitees)
                     .build();
-
+//            Build match
             Games.TurnBasedMultiplayer
                     .createMatch(mGoogleApiClient, turnBasedMatchConfig)
                     .setResultCallback(new ResultCallback<TurnBasedMultiplayer.InitiateMatchResult>() {
@@ -378,9 +356,7 @@ public class MainActivity extends AppCompatActivity
                         }
                     });
 
-            int[] statusMyTurn = new int[1];
-            Games.TurnBasedMultiplayer.loadMatchesByStatus(mGoogleApiClient, statusMyTurn);
-            joinMatch();
+            Games.Invitations.registerInvitationListener(mGoogleApiClient, this);
 
         } else if (request == RC_WAITING_ROOM) {
 //            user returning from join match
@@ -449,11 +425,15 @@ public class MainActivity extends AppCompatActivity
         });
     }
 
-    @Override
-    public void onTurnBasedMatchReceived(TurnBasedMatch turnBasedMatch) {
-        Toast.makeText(this, "Match received: " + turnBasedMatch.getMatchId(), Toast.LENGTH_LONG).show();
+    private void invitationListening() {
+        Toast.makeText(MainActivity.this, "Listening...", Toast.LENGTH_SHORT).show();
     }
 
     @Override
-    public void onTurnBasedMatchRemoved(String s) {}
+    public void onInvitationReceived(Invitation invitation) {
+        Toast.makeText(this, "You have been invited to join " + invitation.getInviter().getDisplayName(), Toast.LENGTH_SHORT).show();
+    }
+
+    @Override
+    public void onInvitationRemoved(String s) {}
 }
