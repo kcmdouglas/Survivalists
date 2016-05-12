@@ -62,19 +62,18 @@
         android:layout_height="wrap_content"
         android:text="New Match"
         android:id="@+id/findPlayersButton"
-        android:layout_alignParentTop="true"
-        android:layout_alignParentRight="true"
-        android:layout_alignParentEnd="true" />
+        android:layout_alignTop="@+id/sign_in_button"
+        android:layout_centerHorizontal="true" />
 
     <Button
         android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Current Matches"
-        android:id="@+id/joinMatchButton"
-        android:layout_below="@+id/findPlayersButton"
-        android:layout_alignLeft="@+id/findPlayersButton"
-        android:layout_alignStart="@+id/findPlayersButton"
-        android:layout_marginTop="29dp" />
+        android:layout_height="90dp"
+        android:text="End Current Match"
+        android:id="@+id/endMatchButton"
+        android:layout_alignParentRight="true"
+        android:layout_alignParentEnd="true"
+        android:layout_toRightOf="@+id/testButton"
+        android:layout_toEndOf="@+id/testButton" />
 
     <TextView
         android:layout_width="wrap_content"
@@ -89,11 +88,11 @@
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="none!"
+        android:text="None yet, please wait for google!"
         android:id="@+id/playerTextView"
-        android:layout_alignTop="@+id/textView3"
-        android:layout_toRightOf="@+id/textView3"
-        android:layout_toEndOf="@+id/textView3" />
+        android:layout_below="@+id/textView3"
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentStart="true" />
 
     <Button
         android:layout_width="wrap_content"
@@ -117,7 +116,36 @@
         android:layout_height="wrap_content"
         android:text="0"
         android:id="@+id/matchIdTextView"
-        android:layout_above="@+id/textView3"
-        android:layout_toRightOf="@+id/textView4"
-        android:layout_toEndOf="@+id/textView4" />
+        android:layout_below="@+id/textView4"
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentStart="true" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Your User Id"
+        android:id="@+id/textView5"
+        android:layout_below="@+id/textView3"
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentStart="true"
+        android:layout_marginTop="38dp" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="0"
+        android:id="@+id/userIdTextView"
+        android:layout_below="@+id/textView5"
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentStart="true" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="User Name Goes HERE!"
+        android:id="@+id/userNameTextView"
+        android:layout_marginTop="24dp"
+        android:layout_below="@+id/userIdTextView"
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentStart="true" />
 </RelativeLayout>
