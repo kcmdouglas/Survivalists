@@ -12,6 +12,7 @@ import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
+import android.os.Build;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.v7.app.AppCompatActivity;
@@ -24,6 +25,7 @@ import android.widget.Toast;
 
 import com.eyecuelab.survivalists.Constants;
 import com.eyecuelab.survivalists.R;
+import com.eyecuelab.survivalists.util.CampaignEndAlarmReceiver;
 import com.eyecuelab.survivalists.util.StepResetAlarmReceiver;
 import com.facebook.FacebookSdk;
 import com.facebook.appevents.AppEventsLogger;
@@ -56,6 +58,8 @@ import com.google.example.games.basegameutils.BaseGameUtils;
 
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.HashMap;
+import java.util.Map;
 
 import butterknife.Bind;
 import butterknife.ButterKnife;
@@ -96,6 +100,7 @@ public class MainActivity extends AppCompatActivity
     private boolean mSignInCLicked = false;
     private boolean mExplicitSignOut = false;
     private boolean mInSignInFlow = false;
+    private Firebase mFirebaseRef;
 
     private Context mContext;
 
@@ -156,25 +161,9 @@ public class MainActivity extends AppCompatActivity
         registerReceiver(broadcastReceiver, new IntentFilter("resetBroadcast"));
         dailyCounter.setText(Integer.toString(dailySteps));
         counter.setText(Integer.toString(stepsInSensor));
+
     }
 
-    public void initiateDailyCountResetService() {
-        //Bundles the number of steps in the sensor
-        Intent intent = new Intent(getBaseContext(), StepResetAlarmReceiver.class);
-        Bundle bundle = new Bundle();
-        bundle.putInt("endOfDaySteps", stepsInSensor);
-
-        intent.putExtras(bundle);
-        //Sets a recurring alarm just before midnight daily to trigger BroadcastReceiver
-        Calendar calendar = Calendar.getInstance();
-        calendar.set(Calendar.HOUR_OF_DAY, 23);
-        calendar.set(Calendar.MINUTE, 59);
-        calendar.set(Calendar.SECOND, 0);
-        calendar.set(Calendar.MILLISECOND, 0);
-        PendingIntent pi = PendingIntent.getBroadcast(getBaseContext(), 1, intent, PendingIntent.FLAG_UPDATE_CURRENT);
-        AlarmManager am = (AlarmManager) mContext.getSystemService(Context.ALARM_SERVICE);
-        am.setRepeating(AlarmManager.RTC_WAKEUP, calendar.getTimeInMillis(), AlarmManager.INTERVAL_DAY, pi);
-    }
 
     @Override
     protected void onResume() {
@@ -194,19 +183,66 @@ public class MainActivity extends AppCompatActivity
         super.onPause();
     }
 
+    //STEP SENSOR LOGIC AND FIREBASE CALLS
     @Override
     public void onSensorChanged(SensorEvent event) {
         stepsInSensor = (int) event.values[0];
         dailySteps = Math.round(event.values[0] - previousDayStepCount);
         dailyCounter.setText(Integer.toString(dailySteps));
         counter.setText(Integer.toString(stepsInSensor));
-
+        String dailyStepsString = Integer.toString(dailySteps);
+        if((mCurrentMatch != null) && (Games.Players.getCurrentPlayerId(mGoogleApiClient) != null) && (dailySteps % 100 == 0)) {
+            Firebase firebaseStepsRef = new Firebase(Constants.FIREBASE_URL_STEPS + "/" + Games.Players.getCurrentPlayerId(mGoogleApiClient) + "/");
+            Map<String, Object> dailySteps = new HashMap<>();
+            dailySteps.put("daily_steps", dailyStepsString);
+            firebaseStepsRef.updateChildren(dailySteps);
+            firebaseStepListener();
+        }
         initiateDailyCountResetService();
+
     }
 
     @Override
     public void onAccuracyChanged(Sensor sensor, int accuracy) {}
 
+    private void firebaseStepListener() {
+        Firebase firebaseStepsRef = new Firebase(Constants.FIREBASE_URL_STEPS + "/" + Games.Players.getCurrentPlayerId(mGoogleApiClient));
+        Query queryRef = firebaseStepsRef.orderByValue();
+
+        queryRef.addChildEventListener(new ChildEventListener() {
+            @Override
+            public void onChildAdded(DataSnapshot dataSnapshot, String s) {
+                Log.d("Firebase Update", "New Match: " + dataSnapshot.getKey());
+                Log.d("Firebase Update", "Players: " + dataSnapshot.getValue());
+            }
+
+            @Override
+            public void onChildChanged(DataSnapshot dataSnapshot, String s) {}
+
+            @Override
+            public void onChildRemoved(DataSnapshot dataSnapshot) {}
+
+            @Override
+            public void onChildMoved(DataSnapshot dataSnapshot, String s) {}
+
+            @Override
+            public void onCancelled(FirebaseError firebaseError) {}
+        });
+
+        queryRef.addValueEventListener(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {}
+
+            @Override
+            public void onCancelled(FirebaseError firebaseError) {}
+        });
+    }
+
+
+
+
+
+    //GOOGLE GAMES API LOGIC BEGINS HERE
     @Override
     public void onConnected(Bundle connectionHint) {
         signInButton.setVisibility(View.GONE);
@@ -344,14 +380,15 @@ public class MainActivity extends AppCompatActivity
             TurnBasedMatchConfig turnBasedMatchConfig = TurnBasedMatchConfig.builder()
                     .setAutoMatchCriteria(automatchCriteria)
                     .addInvitedPlayers(invitees)
+                    .setAutoMatchCriteria(automatchCriteria)
                     .build();
 //            Build match
             Games.TurnBasedMultiplayer
                     .createMatch(mGoogleApiClient, turnBasedMatchConfig)
                     .setResultCallback(new ResultCallback<TurnBasedMultiplayer.InitiateMatchResult>() {
                         @Override
-                        public void onResult(TurnBasedMultiplayer.InitiateMatchResult result) {
-                            Log.d("TAG", result.toString());
+                        public void onResult(@NonNull TurnBasedMultiplayer.InitiateMatchResult initiateMatchResult) {
+                            processResult(initiateMatchResult);
                             takeFirstTurn();
                         }
                     });
@@ -367,6 +404,7 @@ public class MainActivity extends AppCompatActivity
         }
 
     }
+
 
     private void processResult(TurnBasedMultiplayer.CancelMatchResult result) {
         String matchId = result.getMatchId();
@@ -435,5 +473,48 @@ public class MainActivity extends AppCompatActivity
     }
 
     @Override
+    public void onTurnBasedMatchRemoved(String s) {}
+
+    //CAMPAIGN LOGIC BEGINS HERE
+
+    public void createCampaign() {
+        //TODO: Set alarm for x Days
+        //Set the Campaign Length here: (Default is 6pm on the 15th day after campaign begins)
+        Calendar campaignCalendar = Calendar.getInstance();
+        campaignCalendar.set(Calendar.DATE, 15);
+        campaignCalendar.set(Calendar.HOUR_OF_DAY, 18);
+
+        Intent intent = new Intent(this, CampaignEndAlarmReceiver.class);
+        PendingIntent pendingIntent = PendingIntent.getBroadcast(getBaseContext(), 1, intent, PendingIntent.FLAG_ONE_SHOT);
+        AlarmManager alarmManager = (AlarmManager) mContext.getSystemService(Context.ALARM_SERVICE);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
+            alarmManager.setExact(AlarmManager.RTC_WAKEUP, campaignCalendar.getTimeInMillis(), pendingIntent);
+        } else {
+            alarmManager.set(AlarmManager.RTC_WAKEUP, campaignCalendar.getTimeInMillis(), pendingIntent);
+        }
+        //TODO: Create endCampaign method
+
+    }
+
+    //Sets alarm for daily step count
+    public void initiateDailyCountResetService() {
+        //Bundles the number of steps in the sensor
+        Intent intent = new Intent(getBaseContext(), StepResetAlarmReceiver.class);
+        Bundle bundle = new Bundle();
+        bundle.putInt("endOfDaySteps", stepsInSensor);
+
+        intent.putExtras(bundle);
+        //Sets a recurring alarm just before midnight daily to trigger BroadcastReceiver
+        Calendar calendar = Calendar.getInstance();
+        calendar.set(Calendar.HOUR_OF_DAY, 23);
+        calendar.set(Calendar.MINUTE, 59);
+        calendar.set(Calendar.SECOND, 0);
+        calendar.set(Calendar.MILLISECOND, 0);
+        PendingIntent pi = PendingIntent.getBroadcast(getBaseContext(), 1, intent, PendingIntent.FLAG_UPDATE_CURRENT);
+        AlarmManager am = (AlarmManager) mContext.getSystemService(Context.ALARM_SERVICE);
+        am.setRepeating(AlarmManager.RTC_WAKEUP, calendar.getTimeInMillis(), AlarmManager.INTERVAL_DAY, pi);
+
+    }
     public void onInvitationRemoved(String s) {}
+
 }
