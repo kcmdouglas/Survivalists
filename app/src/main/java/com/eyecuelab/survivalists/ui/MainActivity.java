@@ -172,9 +172,6 @@ public class MainActivity extends AppCompatActivity
         registerReceiver(broadcastReceiver, new IntentFilter("resetBroadcast"));
         dailyCounter.setText(Integer.toString(dailySteps));
         counter.setText(Integer.toString(stepsInSensor));
-
-        //Load current match
-        loadMatch();
     }
 
 
@@ -263,7 +260,12 @@ public class MainActivity extends AppCompatActivity
         if (connectionHint != null) {
             mCurrentMatch = connectionHint.getParcelable(Multiplayer.EXTRA_TURN_BASED_MATCH);
         }
-        loadMatch();
+
+        //Load current match
+        if (mCurrentMatch != null) {
+            loadMatch();
+        }
+
         Games.Invitations.registerInvitationListener(mGoogleApiClient, this);
         Games.TurnBasedMultiplayer.registerMatchUpdateListener(mGoogleApiClient, this);
 

@@ -62,19 +62,18 @@
         android:layout_height="wrap_content"
         android:text="New Match"
         android:id="@+id/findPlayersButton"
-        android:layout_alignParentTop="true"
-        android:layout_alignParentRight="true"
-        android:layout_alignParentEnd="true" />
+        android:layout_alignTop="@+id/sign_in_button"
+        android:layout_centerHorizontal="true" />
 
     <Button
         android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
+        android:layout_height="90dp"
         android:text="End Current Match"
         android:id="@+id/endMatchButton"
-        android:layout_below="@+id/findPlayersButton"
-        android:layout_alignLeft="@+id/findPlayersButton"
-        android:layout_alignStart="@+id/findPlayersButton"
-        android:layout_marginTop="29dp" />
+        android:layout_alignParentRight="true"
+        android:layout_alignParentEnd="true"
+        android:layout_toRightOf="@+id/testButton"
+        android:layout_toEndOf="@+id/testButton" />
 
     <TextView
         android:layout_width="wrap_content"
