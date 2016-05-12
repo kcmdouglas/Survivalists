@@ -14,6 +14,8 @@ import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Handler;
+import android.preference.PreferenceManager;
 import android.support.annotation.NonNull;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
@@ -25,8 +27,10 @@ import android.widget.Toast;
 
 import com.eyecuelab.survivalists.Constants;
 import com.eyecuelab.survivalists.R;
+import com.eyecuelab.survivalists.services.StepResetIntentService;
 import com.eyecuelab.survivalists.util.CampaignEndAlarmReceiver;
 import com.eyecuelab.survivalists.util.StepResetAlarmReceiver;
+import com.eyecuelab.survivalists.util.StepResetResultReceiver;
 import com.facebook.FacebookSdk;
 import com.facebook.appevents.AppEventsLogger;
 import com.firebase.client.ChildEventListener;
@@ -56,6 +60,8 @@ import com.google.android.gms.games.multiplayer.turnbased.TurnBasedMatchConfig;
 import com.google.android.gms.games.multiplayer.turnbased.TurnBasedMultiplayer;
 import com.google.example.games.basegameutils.BaseGameUtils;
 
+import java.io.IOException;
+import java.net.DatagramSocket;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.HashMap;
@@ -78,6 +84,7 @@ public class MainActivity extends AppCompatActivity
     @Bind(R.id.playerTextView) TextView playersTextView;
     @Bind(R.id.testButton) Button testButton;
     @Bind(R.id.matchIdTextView) TextView matchIdTextView;
+    @Bind(R.id.currentPlayerIdTextView) TextView currentPlayerIdTextView;
 
     private int stepsInSensor;
     private int previousDayStepCount;
@@ -102,8 +109,12 @@ public class MainActivity extends AppCompatActivity
     private boolean mExplicitSignOut = false;
     private boolean mInSignInFlow = false;
     private Firebase mFirebaseRef;
+    private int mockCounter;
+    private String mockCounterString;
+    DatagramSocket socket;
 
     private Context mContext;
+    private StepResetResultReceiver mReceiver;
 
     @Override
     protected void onStart() {
@@ -111,6 +122,7 @@ public class MainActivity extends AppCompatActivity
         if (!mInSignInFlow && !mExplicitSignOut) {
             mGoogleApiClient.connect();
         }
+        mockCounter = stepsInSensor;
     }
 
     @Override
@@ -134,7 +146,7 @@ public class MainActivity extends AppCompatActivity
         mSensorManager = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
 
         //Create Shared Preferences
-        mSharedPreferences = getSharedPreferences(getString(R.string.preference_file_key), Context.MODE_PRIVATE);
+        mSharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
         mEditor = mSharedPreferences.edit();
 
 
@@ -148,21 +160,16 @@ public class MainActivity extends AppCompatActivity
         joinMatchButton.setOnClickListener(this);
         testButton.setOnClickListener(this);
 
-        //This sets the BroadcastReceiver in this activity so the broadcast sent by StepResetAlarmReceiver BroadcastReceiver is handled properly
-        BroadcastReceiver broadcastReceiver = new BroadcastReceiver() {
-            @Override
-            public void onReceive(Context context, Intent intent) {
-                Bundle receivedSteps = intent.getExtras();
-                previousDayStepCount = receivedSteps.getInt("resetPreviousDayStep");
-                dailySteps = receivedSteps.getInt("resetDailySteps");
-            }
-        };
+        //
+//        mReceiver= new StepResetResultReceiver(new Handler());
+//
+//        mReceiver.setReceiver(this);
 
-        //This registers the receiver--the receiver is never unregistered, which ensures that this will happen daily
-        registerReceiver(broadcastReceiver, new IntentFilter("resetBroadcast"));
         dailyCounter.setText(Integer.toString(dailySteps));
         counter.setText(Integer.toString(stepsInSensor));
+        previousDayStepCount = mSharedPreferences.getInt(Constants.PREFERENCES_PREVIOUS_STEPS_KEY, 0);
 
+        mockCounter = stepsInSensor;
     }
 
 
@@ -172,11 +179,14 @@ public class MainActivity extends AppCompatActivity
         mGoogleApiClient.reconnect();
         Sensor countSensor = mSensorManager.getDefaultSensor(Sensor.TYPE_STEP_COUNTER);
         if (countSensor != null) {
-            mSensorManager.registerListener(this, countSensor, SensorManager.SENSOR_DELAY_UI);
+            mSensorManager.registerListener(this, countSensor, SensorManager.SENSOR_DELAY_GAME);
         }
         if (mCurrentMatch != null) {
             matchIdTextView.setText(mCurrentMatch.getMatchId());
         }
+//        if(mockCounter != 0) {
+//            currentPlayerIdTextView.setText(mockCounter);
+//        }
     }
 
     @Override
@@ -184,9 +194,16 @@ public class MainActivity extends AppCompatActivity
         super.onPause();
     }
 
+//    @Override
+//    protected void onDestroy() {
+//        super.onDestroy();
+//        mSensorManager.unregisterListener(this);
+//    }
+
     //STEP SENSOR LOGIC AND FIREBASE CALLS
     @Override
     public void onSensorChanged(SensorEvent event) {
+        previousDayStepCount = mSharedPreferences.getInt(Constants.PREFERENCES_PREVIOUS_STEPS_KEY, 0);
         stepsInSensor = (int) event.values[0];
         if(stepsInSensor < previousDayStepCount) {
             dailySteps =+ stepsInSensor;
@@ -196,14 +213,22 @@ public class MainActivity extends AppCompatActivity
         dailyCounter.setText(Integer.toString(dailySteps));
         counter.setText(Integer.toString(stepsInSensor));
         String dailyStepsString = Integer.toString(dailySteps);
-        if((mCurrentMatch != null) && (Games.Players.getCurrentPlayerId(mGoogleApiClient) != null) && (dailySteps % 100 == 0)) {
-            Firebase firebaseStepsRef = new Firebase(Constants.FIREBASE_URL_STEPS + "/" + Games.Players.getCurrentPlayerId(mGoogleApiClient) + "/");
+
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                initiateDailyCountResetService(stepsInSensor);
+            }
+        });
+
+
+        if((mCurrentPlayerId != null) && (dailySteps % 10 < 1)) {
+            Firebase firebaseStepsRef = new Firebase(Constants.FIREBASE_URL_STEPS + "/" + mCurrentPlayerId + "/");
             Map<String, Object> dailySteps = new HashMap<>();
             dailySteps.put("daily_steps", dailyStepsString);
             firebaseStepsRef.updateChildren(dailySteps);
             firebaseStepListener();
         }
-        initiateDailyCountResetService();
 
     }
 
@@ -505,26 +530,33 @@ public class MainActivity extends AppCompatActivity
     }
 
     //Sets alarm for daily step count
-    public void initiateDailyCountResetService() {
+    public void initiateDailyCountResetService(int steps) {
         //Bundles the number of steps in the sensor
         Intent intent = new Intent(getBaseContext(), StepResetAlarmReceiver.class);
         Bundle bundle = new Bundle();
-        bundle.putInt("endOfDaySteps", stepsInSensor);
+        intent.putExtra("receiver", mReceiver);
+        bundle.putInt("endOfDaySteps", 4000);
         bundle.putInt("dailySteps", dailySteps);
         bundle.putString("currentPlayerID", mCurrentPlayerId);
 
         intent.putExtras(bundle);
         //Sets a recurring alarm just before midnight daily to trigger BroadcastReceiver
         Calendar calendar = Calendar.getInstance();
-        calendar.set(Calendar.HOUR_OF_DAY, 23);
-        calendar.set(Calendar.MINUTE, 59);
+        calendar.set(Calendar.HOUR_OF_DAY, 16);
+        calendar.set(Calendar.MINUTE, 38);
         calendar.set(Calendar.SECOND, 0);
         calendar.set(Calendar.MILLISECOND, 0);
-        PendingIntent pi = PendingIntent.getBroadcast(getBaseContext(), 1, intent, PendingIntent.FLAG_UPDATE_CURRENT);
+        PendingIntent pi = PendingIntent.getBroadcast(this, StepResetAlarmReceiver.REQUEST_CODE, intent, PendingIntent.FLAG_UPDATE_CURRENT);
         AlarmManager am = (AlarmManager) mContext.getSystemService(Context.ALARM_SERVICE);
         am.setRepeating(AlarmManager.RTC_WAKEUP, calendar.getTimeInMillis(), AlarmManager.INTERVAL_DAY, pi);
 
     }
+
     public void onInvitationRemoved(String s) {}
 
+//    @Override
+//    public void onReceiveResult(int resultCode, Bundle resultData) {
+//        int totalSteps = resultData.getInt("endOfDaySteps");
+//        previousDayStepCount = totalSteps;
+//    }
 }

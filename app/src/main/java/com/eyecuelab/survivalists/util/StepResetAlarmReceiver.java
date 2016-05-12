@@ -6,10 +6,12 @@ import android.content.Intent;
 import android.hardware.Sensor;
 import android.hardware.SensorManager;
 import android.os.Bundle;
+import android.os.ResultReceiver;
 import android.util.Log;
 import android.widget.Toast;
 
 import com.eyecuelab.survivalists.Constants;
+import com.eyecuelab.survivalists.services.StepResetIntentService;
 import com.firebase.client.Firebase;
 import com.google.android.gms.games.Games;
 
@@ -18,6 +20,8 @@ import com.google.android.gms.games.Games;
  */
 public class StepResetAlarmReceiver extends BroadcastReceiver {
 
+    public static final int REQUEST_CODE = 1234;
+    public static final String ACTION = "com.eyecuelab.survivalists.services.alarm";
     int stepsInCounter;
     int flag=0;
 
@@ -29,17 +33,13 @@ public class StepResetAlarmReceiver extends BroadcastReceiver {
 
         int totalSteps = bundle.getInt("endOfDaySteps");
         int dailySteps = bundle.getInt("dailySteps");
+        ResultReceiver receiver = intent.getParcelableExtra("receiver");
         String currentPlayerId = bundle.getString("currentPlayerId");
 
-
-        Firebase firebaseStepsRef = new Firebase(Constants.FIREBASE_URL_STEPS + "/" + currentPlayerId + "/");
-
-
-
-
-        Intent resetIntent = new Intent ("resetBroadcast");
+        Intent resetIntent = new Intent (context, StepResetIntentService.class);
         resetIntent.putExtra("resetDailySteps", 0);
         resetIntent.putExtra("resetPreviousDaySteps", totalSteps);
-        context.sendBroadcast(resetIntent);
+        resetIntent.putExtra("receiver", receiver);
+        context.startService(resetIntent);
     }
 }

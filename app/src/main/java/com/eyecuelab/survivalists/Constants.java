@@ -12,4 +12,5 @@ public class Constants {
     public static final String FIREBASE_PROPERTY_EMAIL = "email";
     public static final String FIREBASE_URL_TEAM = FIREBASE_URL + "/" + FIREBASE_TEAM;
     public static final String FIREBASE_URL_STEPS = FIREBASE_URL + "/" + FIREBASE_STEPS;
+    public static final String PREFERENCES_PREVIOUS_STEPS_KEY = "previousSteps";
 }
