@@ -83,6 +83,7 @@ public class MainActivity extends AppCompatActivity
     private int stepsInSensor;
     private int previousDayStepCount;
     private int dailySteps;
+    private String mCurrentMatchId;
     private ArrayList<String> invitees;
     private SharedPreferences mSharedPreferences;
     private SharedPreferences.Editor mEditor;
@@ -137,7 +138,6 @@ public class MainActivity extends AppCompatActivity
         mSharedPreferences = getSharedPreferences(getString(R.string.preference_file_key), Context.MODE_PRIVATE);
         mEditor = mSharedPreferences.edit();
 
-
         //Google Play Games client and correlating buttons
         mGoogleApiClient = new GoogleApiClient.Builder(this)
                 .addConnectionCallbacks(this)
@@ -167,6 +167,8 @@ public class MainActivity extends AppCompatActivity
         dailyCounter.setText(Integer.toString(dailySteps));
         counter.setText(Integer.toString(stepsInSensor));
 
+        //Load current match
+        loadMatch();
     }
 
 
@@ -252,15 +254,10 @@ public class MainActivity extends AppCompatActivity
     public void onConnected(Bundle connectionHint) {
         signInButton.setVisibility(View.GONE);
         signOutButton.setVisibility(View.VISIBLE);
-        if (mCurrentMatch != null) {
-            Games.TurnBasedMultiplayer
-                    .loadMatch(mGoogleApiClient, mCurrentMatch.getMatchId());
-        }
-        //load current match
         if (connectionHint != null) {
             mCurrentMatch = connectionHint.getParcelable(Multiplayer.EXTRA_TURN_BASED_MATCH);
         }
-
+        loadMatch();
         Games.Invitations.registerInvitationListener(mGoogleApiClient, this);
         Games.TurnBasedMultiplayer.registerMatchUpdateListener(mGoogleApiClient, this);
     }
@@ -312,9 +309,35 @@ public class MainActivity extends AppCompatActivity
         }
     }
 
+    public void loadMatch() {
+        mCurrentMatchId = mSharedPreferences.getString(getString(R.string.preference_file_key), null);
+
+        ResultCallback<TurnBasedMultiplayer.LoadMatchResult> loadMatchResultResultCallback = new ResultCallback<TurnBasedMultiplayer.LoadMatchResult>() {
+            @Override
+            public void onResult(TurnBasedMultiplayer.LoadMatchResult result) {
+                mCurrentMatch = result.getMatch();
+                if (mCurrentMatch != null) {
+                    playersTextView.setText(mCurrentMatch.getParticipantIds().toString());
+                }
+            }
+        };
+
+        if (mCurrentMatchId != null) {
+            Games.TurnBasedMultiplayer
+                    .loadMatch(mGoogleApiClient, mCurrentMatchId)
+                    .setResultCallback(loadMatchResultResultCallback);
+
+            matchIdTextView.setText(mCurrentMatchId);
+        }
+    }
+
     public void joinMatch() {
-        Intent invitationIntent = Games.TurnBasedMultiplayer.getInboxIntent(mGoogleApiClient);
-        startActivityForResult(invitationIntent, RC_WAITING_ROOM);
+        if (mCurrentMatch == null) {
+            Intent invitationIntent = Games.TurnBasedMultiplayer.getInboxIntent(mGoogleApiClient);
+            startActivityForResult(invitationIntent, RC_WAITING_ROOM);
+        } else {
+            Toast.makeText(this, "You are already connected to match " + mCurrentMatch, Toast.LENGTH_LONG).show();
+        }
     }
 
     public void findPlayers() {
@@ -328,12 +351,15 @@ public class MainActivity extends AppCompatActivity
     }
 
     public void testMethod() {
-        Toast.makeText(this, "Testing...", Toast.LENGTH_LONG).show();
+        matchIdTextView.setText("");
+        playersTextView.setText("");
+        Toast.makeText(this, "Clear...", Toast.LENGTH_LONG).show();
     }
 
     public void takeFirstTurn() {
         byte[] matchData = new byte[1];
         String nextPlayer;
+
         String matchId = mCurrentMatch.getMatchId();
         String creatorId = Games.Players.getCurrentPlayerId(mGoogleApiClient);
         ArrayList<String> wholeParty = invitees;
@@ -349,6 +375,9 @@ public class MainActivity extends AppCompatActivity
 
         Games.TurnBasedMultiplayer.takeTurn(mGoogleApiClient, matchId, matchData, nextPlayer);
 
+        mEditor.putString(getString(R.string.preference_file_key), matchId);
+        mEditor.commit();
+
         Firebase firebaseRef = new Firebase(Constants.FIREBASE_URL_TEAM + "/" + "");
         firebaseListening();
         firebaseRef.child(matchId).setValue(wholeParty);
@@ -356,7 +385,7 @@ public class MainActivity extends AppCompatActivity
     }
 
     @Override
-    public void onActivityResult(int request, int response, Intent data) {
+    public void onActivityResult(final int request, int response, Intent data) {
         super.onActivityResult(request, response, data);
 
         if (response != Activity.RESULT_OK) {
@@ -391,6 +420,7 @@ public class MainActivity extends AppCompatActivity
             ResultCallback<TurnBasedMultiplayer.InitiateMatchResult> initiateMatchResultResultCallback = new ResultCallback<TurnBasedMultiplayer.InitiateMatchResult>() {
                 @Override
                 public void onResult(TurnBasedMultiplayer.InitiateMatchResult result) {
+                    Toast.makeText(MainActivity.this, "YAY!", Toast.LENGTH_LONG).show();
                     processResult(result);
                 }
             };
@@ -398,6 +428,8 @@ public class MainActivity extends AppCompatActivity
             Games.TurnBasedMultiplayer
                     .createMatch(mGoogleApiClient, turnBasedMatchConfig)
                     .setResultCallback(initiateMatchResultResultCallback);
+
+            Games.TurnBasedMultiplayer.registerMatchUpdateListener(mGoogleApiClient, this);
 
         } else if (request == RC_WAITING_ROOM) {
             //user returning from join match
@@ -409,28 +441,26 @@ public class MainActivity extends AppCompatActivity
 
     }
 
-    private void processResult(TurnBasedMultiplayer.CancelMatchResult result) {
-        String matchId = result.getMatchId();
-        Toast.makeText(this, "This match is canceled: " + matchId, Toast.LENGTH_LONG).show();
-    }
-
     private void processResult(TurnBasedMultiplayer.InitiateMatchResult result) {
-        TurnBasedMatch match = result.getMatch();
+        mCurrentMatch = result.getMatch();
+        mCurrentMatchId = mCurrentMatch.getMatchId();
+        takeFirstTurn();
 
-//        Verifying if new match:
-        if (match.getData() == null) {
-            String matchId = match.getMatchId();
-            String googlePlayerId = Games.Players.getCurrentPlayerId(mGoogleApiClient);
-            String matchPlayerId = match.getParticipantId(googlePlayerId);
-            ArrayList<String> playerIds = match.getParticipantIds();
 
-            Firebase firebaseRef = new Firebase(Constants.FIREBASE_URL_TEAM + "/" + "");
-            firebaseListening();
-            firebaseRef.child(matchId).setValue(playerIds);
 
-            Log.d("Google Player Id", googlePlayerId);
-            Log.d("Match Player Id", matchPlayerId);
-        }
+////        Verifying if new match:
+//        if (mCurrentMatch.getData() == null) {
+//            String googlePlayerId = Games.Players.getCurrentPlayerId(mGoogleApiClient);
+//            String matchPlayerId = mCurrentMatch.getParticipantId(googlePlayerId);
+//            ArrayList<String> playerIds = mCurrentMatch.getParticipantIds();
+//
+//            Firebase firebaseRef = new Firebase(Constants.FIREBASE_URL_TEAM + "/" + "");
+//            firebaseListening();
+//            firebaseRef.child(mCurrentMatchId).setValue(playerIds);
+//
+//            Log.d("Google Player Id", googlePlayerId);
+//            Log.d("Match Player Id", matchPlayerId);
+//        }
     }
 
     @Override
