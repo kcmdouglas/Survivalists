@@ -88,6 +88,7 @@ public class MainActivity extends AppCompatActivity
     private SensorManager mSensorManager;
     private GoogleApiClient mGoogleApiClient;
     private TurnBasedMatch mCurrentMatch;
+    private String mCurrentPlayerId;
     private Sensor countSensor;
 
 //    Flags to indicate return activity
@@ -187,7 +188,11 @@ public class MainActivity extends AppCompatActivity
     @Override
     public void onSensorChanged(SensorEvent event) {
         stepsInSensor = (int) event.values[0];
-        dailySteps = Math.round(event.values[0] - previousDayStepCount);
+        if(stepsInSensor < previousDayStepCount) {
+            dailySteps =+ stepsInSensor;
+        } else {
+            dailySteps = Math.round(event.values[0] - previousDayStepCount);
+        }
         dailyCounter.setText(Integer.toString(dailySteps));
         counter.setText(Integer.toString(stepsInSensor));
         String dailyStepsString = Integer.toString(dailySteps);
@@ -247,6 +252,7 @@ public class MainActivity extends AppCompatActivity
     public void onConnected(Bundle connectionHint) {
         signInButton.setVisibility(View.GONE);
         signOutButton.setVisibility(View.VISIBLE);
+        mCurrentPlayerId = Games.Players.getCurrentPlayerId(mGoogleApiClient);
         if (mCurrentMatch != null) {
             Games.TurnBasedMultiplayer
                     .loadMatch(mGoogleApiClient, mCurrentMatch.getMatchId());
@@ -472,7 +478,6 @@ public class MainActivity extends AppCompatActivity
         Toast.makeText(this, "You have been invited to join " + invitation.getInviter().getDisplayName(), Toast.LENGTH_SHORT).show();
     }
 
-    @Override
     public void onTurnBasedMatchRemoved(String s) {}
 
     //CAMPAIGN LOGIC BEGINS HERE
@@ -494,6 +499,9 @@ public class MainActivity extends AppCompatActivity
         }
         //TODO: Create endCampaign method
 
+
+        dailySteps = 0;
+
     }
 
     //Sets alarm for daily step count
@@ -502,6 +510,8 @@ public class MainActivity extends AppCompatActivity
         Intent intent = new Intent(getBaseContext(), StepResetAlarmReceiver.class);
         Bundle bundle = new Bundle();
         bundle.putInt("endOfDaySteps", stepsInSensor);
+        bundle.putInt("dailySteps", dailySteps);
+        bundle.putString("currentPlayerID", mCurrentPlayerId);
 
         intent.putExtras(bundle);
         //Sets a recurring alarm just before midnight daily to trigger BroadcastReceiver
