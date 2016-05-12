@@ -161,8 +161,6 @@ public class MainActivity extends AppCompatActivity
         dailyCounter.setText(Integer.toString(dailySteps));
         counter.setText(Integer.toString(stepsInSensor));
 
-        //Set Firebase reference
-        mFirebaseRef = new Firebase(Constants.FIREBASE_URL);
     }
 
 
@@ -184,18 +182,63 @@ public class MainActivity extends AppCompatActivity
         super.onPause();
     }
 
+    //STEP SENSOR LOGIC AND FIREBASE CALLS
     @Override
     public void onSensorChanged(SensorEvent event) {
         stepsInSensor = (int) event.values[0];
         dailySteps = Math.round(event.values[0] - previousDayStepCount);
         dailyCounter.setText(Integer.toString(dailySteps));
         counter.setText(Integer.toString(stepsInSensor));
-
+        String dailyStepsString = Integer.toString(dailySteps);
+        if((mCurrentMatch != null) && (Games.Players.getCurrentPlayerId(mGoogleApiClient) != null) && (dailySteps % 100 == 0)) {
+            Firebase firebaseStepsRef = new Firebase(Constants.FIREBASE_URL_STEPS + "/" + Games.Players.getCurrentPlayerId(mGoogleApiClient) + "/");
+            Map<String, Object> dailySteps = new HashMap<>();
+            dailySteps.put("daily_steps", dailyStepsString);
+            firebaseStepsRef.updateChildren(dailySteps);
+            firebaseStepListener();
+        }
         initiateDailyCountResetService();
+
     }
 
     @Override
     public void onAccuracyChanged(Sensor sensor, int accuracy) {}
+
+    private void firebaseStepListener() {
+        Firebase firebaseStepsRef = new Firebase(Constants.FIREBASE_URL_STEPS + "/" + Games.Players.getCurrentPlayerId(mGoogleApiClient));
+        Query queryRef = firebaseStepsRef.orderByValue();
+
+        queryRef.addChildEventListener(new ChildEventListener() {
+            @Override
+            public void onChildAdded(DataSnapshot dataSnapshot, String s) {
+                Log.d("Firebase Update", "New Match: " + dataSnapshot.getKey());
+                Log.d("Firebase Update", "Players: " + dataSnapshot.getValue());
+            }
+
+            @Override
+            public void onChildChanged(DataSnapshot dataSnapshot, String s) {}
+
+            @Override
+            public void onChildRemoved(DataSnapshot dataSnapshot) {}
+
+            @Override
+            public void onChildMoved(DataSnapshot dataSnapshot, String s) {}
+
+            @Override
+            public void onCancelled(FirebaseError firebaseError) {}
+        });
+
+        queryRef.addValueEventListener(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {}
+
+            @Override
+            public void onCancelled(FirebaseError firebaseError) {}
+        });
+    }
+
+
+
 
 
     //GOOGLE GAMES API LOGIC BEGINS HERE
@@ -469,29 +512,6 @@ public class MainActivity extends AppCompatActivity
         } else {
             alarmManager.set(AlarmManager.RTC_WAKEUP, campaignCalendar.getTimeInMillis(), pendingIntent);
         }
-
-        //TODO: Send team information to the database
-        //Saves team data to Firebase
-        Firebase firebaseTeamRef = new Firebase(Constants.FIREBASE_URL_TEAM);
-        firebaseTeamRef.setValue(mCurrentMatch.toString());
-
-        //TODO: Send user information to the database
-//        //Nest user information within the Team child
-//        Map<String, Object> userID = new HashMap<String, Object>();
-//
-//        Map<String, Object> userIDs = new HashMap<String, Object>();
-//
-//
-//        userIDs.put("user/", mCurrentMatch.getCreatorId());
-//
-//        ArrayList<String> participants = mCurrentMatch.getParticipantIds();
-//
-//        for(int i = 0; i < participants.size(); i++) {
-//            String participant = participants.get(i);
-//            userIDs.put("user/", participant);
-//        }
-//
-//        firebaseTeamRef.child(mCurrentMatch.toString()).updateChildren(userIDs);
         //TODO: Create endCampaign method
 
     }
