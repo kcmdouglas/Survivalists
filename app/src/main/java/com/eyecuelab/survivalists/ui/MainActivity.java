@@ -217,10 +217,10 @@ public class MainActivity extends AppCompatActivity
         new Thread(new Runnable() {
             @Override
             public void run() {
-                initiateDailyCountResetService(stepsInSensor);
             }
         });
 
+        initiateDailyCountResetService();
 
         if((mCurrentPlayerId != null) && (dailySteps % 10 < 1)) {
             Firebase firebaseStepsRef = new Firebase(Constants.FIREBASE_URL_STEPS + "/" + mCurrentPlayerId + "/");
@@ -530,20 +530,20 @@ public class MainActivity extends AppCompatActivity
     }
 
     //Sets alarm for daily step count
-    public void initiateDailyCountResetService(int steps) {
+    public void initiateDailyCountResetService() {
         //Bundles the number of steps in the sensor
-        Intent intent = new Intent(getBaseContext(), StepResetAlarmReceiver.class);
+        Intent intent = new Intent(this, StepResetAlarmReceiver.class);
         Bundle bundle = new Bundle();
         intent.putExtra("receiver", mReceiver);
-        bundle.putInt("endOfDaySteps", 4000);
+        bundle.putInt("endOfDaySteps", stepsInSensor);
         bundle.putInt("dailySteps", dailySteps);
         bundle.putString("currentPlayerID", mCurrentPlayerId);
 
         intent.putExtras(bundle);
         //Sets a recurring alarm just before midnight daily to trigger BroadcastReceiver
         Calendar calendar = Calendar.getInstance();
-        calendar.set(Calendar.HOUR_OF_DAY, 16);
-        calendar.set(Calendar.MINUTE, 38);
+        calendar.set(Calendar.HOUR_OF_DAY, 23);
+        calendar.set(Calendar.MINUTE, 59);
         calendar.set(Calendar.SECOND, 0);
         calendar.set(Calendar.MILLISECOND, 0);
         PendingIntent pi = PendingIntent.getBroadcast(this, StepResetAlarmReceiver.REQUEST_CODE, intent, PendingIntent.FLAG_UPDATE_CURRENT);

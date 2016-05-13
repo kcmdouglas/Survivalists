@@ -37,9 +37,7 @@ public class StepResetAlarmReceiver extends BroadcastReceiver {
         String currentPlayerId = bundle.getString("currentPlayerId");
 
         Intent resetIntent = new Intent (context, StepResetIntentService.class);
-        resetIntent.putExtra("resetDailySteps", 0);
-        resetIntent.putExtra("resetPreviousDaySteps", totalSteps);
-        resetIntent.putExtra("receiver", receiver);
+        resetIntent.putExtras(bundle);
         context.startService(resetIntent);
     }
 }
