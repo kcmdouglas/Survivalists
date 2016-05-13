@@ -92,6 +92,8 @@ public class MainActivity extends AppCompatActivity
     private String mCurrentPlayerId;
     private Sensor countSensor;
 
+    private User mCurrentUser;
+
 //    Flags to indicate return activity
     private static final int RC_SIGN_IN =  100;
     private static final int RC_SELECT_PLAYERS = 200;
@@ -289,35 +291,32 @@ public class MainActivity extends AppCompatActivity
 
         Games.TurnBasedMultiplayer.registerMatchUpdateListener(mGoogleApiClient, this);
 
-        String userId = Games.Players.getCurrentPlayerId(mGoogleApiClient);
         String userName = Games.Players.getCurrentPlayer(mGoogleApiClient).getDisplayName();
 
         //Save to shared preferences
-        mEditor.putString("userId", userId);
+        mEditor.putString("userId", mCurrentPlayerId);
         mEditor.putString("userName", userName);
         mEditor.commit();
 
-        userIdTextView.setText(userId);
+        userIdTextView.setText(mCurrentPlayerId);
         String greeting = "Hello " + userName;
         userNameTextView.setText(greeting);
 
         //Save user info to firebase
-        mUserFirebaseRef = new Firebase(Constants.FIREBASE_URL_USERS + "/" + "");
-        firebaseListening();
-        mUserFirebaseRef.child(userId)
-                .child("displayName")
+        mUserFirebaseRef = new Firebase(Constants.FIREBASE_URL_USERS + "/" + "").child(mCurrentPlayerId);
+        mUserFirebaseRef.child("displayName")
                 .setValue(userName);
-
-        mUserFirebaseRef.child(mCurrentPlayerId)
-                .child("atSafeHouse")
+        mUserFirebaseRef.child("atSafeHouse")
                 .setValue(false);
 
-        if (mCurrentMatchId == null) {
-            //Parameters: full user Id, display name, match id, is at safehouse, is in match
-            User currentUser = new User(userId, userName, "0", false, false);
+        if (mCurrentMatch == null) {
+            mUserFirebaseRef.child("joinedMatch")
+                    .setValue(false);
         } else {
-            User currentUser = new User(userId, userName, mCurrentMatchId, false, true);
+            mUserFirebaseRef.child("joinedMatch")
+                    .setValue(true);
         }
+        firebaseListening();
     }
 
     @Override
@@ -401,18 +400,6 @@ public class MainActivity extends AppCompatActivity
 
             matchIdTextView.setText(mCurrentMatchId);
         }
-//        else if (mCurrentMatch != null) {
-//            ResultCallback<TurnBasedMultiplayer.LoadMatchesResult> loadMatchesResultResultCallback = new ResultCallback<TurnBasedMultiplayer.LoadMatchesResult>() {
-//
-//                @Override
-//                public void onResult(TurnBasedMultiplayer.LoadMatchesResult loadMatchesResult) {
-//                    mCurrentMatch = loadMatchesResult.getMatches().getMyTurnMatches().get(0);
-//                    takeFirstTurn();
-//                }
-//            };
-//            Games.TurnBasedMultiplayer.loadMatchesByStatus(mGoogleApiClient, TurnBasedMatch.MATCH_TURN_STATUS_ALL).setResultCallback(loadMatchesResultResultCallback);
-//            takeFirstTurn();
-//        }
     }
 
     public void joinMatch() {
@@ -490,9 +477,9 @@ public class MainActivity extends AppCompatActivity
                 .setValue(mCurrentMatch.getCreationTimestamp());
         teamFirebaseRef.child("matchDuration")
                 .setValue(mMatchDuraution);
-        teamFirebaseRef.child("lastSafehouse")
+        teamFirebaseRef.child("lastSafehouseId")
                 .setValue(mLastSafeHouseId);
-        teamFirebaseRef.child("nextSafehouse")
+        teamFirebaseRef.child("nextSafehouseId")
                 .setValue(mNextSafeHouseId);
         Firebase playerFirebase = teamFirebaseRef
                 .child("players");
@@ -503,7 +490,7 @@ public class MainActivity extends AppCompatActivity
         }
         firebaseListening();
 
-        mUserFirebaseRef.child(mCurrentPlayerId).child("teamId").setValue(mCurrentMatchId);
+        mUserFirebaseRef.child("teamId").setValue(mCurrentMatchId);
         matchIdTextView.setText(mCurrentMatchId);
     }
 
