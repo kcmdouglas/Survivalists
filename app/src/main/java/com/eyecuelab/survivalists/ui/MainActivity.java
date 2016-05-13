@@ -3,10 +3,7 @@ package com.eyecuelab.survivalists.ui;
 import android.app.Activity;
 import android.app.AlarmManager;
 import android.app.PendingIntent;
-import android.content.BroadcastReceiver;
-import android.content.ComponentCallbacks;
 import android.content.Context;
-import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.content.Intent;
 import android.hardware.Sensor;
@@ -15,9 +12,7 @@ import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
 import android.os.Build;
 import android.os.Bundle;
-import android.os.Handler;
 import android.preference.PreferenceManager;
-import android.support.annotation.NonNull;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.View;
@@ -29,7 +24,7 @@ import android.widget.Toast;
 
 import com.eyecuelab.survivalists.Constants;
 import com.eyecuelab.survivalists.R;
-import com.eyecuelab.survivalists.services.StepResetIntentService;
+import com.eyecuelab.survivalists.models.User;
 import com.eyecuelab.survivalists.models.SafeHouse;
 import com.eyecuelab.survivalists.util.CampaignEndAlarmReceiver;
 import com.eyecuelab.survivalists.util.StepResetAlarmReceiver;
@@ -46,28 +41,15 @@ import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.SignInButton;
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.common.api.ResultCallback;
-import com.google.android.gms.common.api.ResultCallbacks;
-import com.google.android.gms.common.api.Status;
-import com.google.android.gms.games.Game;
 import com.google.android.gms.games.Games;
-import com.google.android.gms.games.Player;
-import com.google.android.gms.games.Players;
-import com.google.android.gms.games.internal.game.Acls;
-import com.google.android.gms.games.internal.game.GameInstance;
-import com.google.android.gms.games.multiplayer.Invitation;
 import com.google.android.gms.games.multiplayer.Multiplayer;
-import com.google.android.gms.games.multiplayer.OnInvitationReceivedListener;
 import com.google.android.gms.games.multiplayer.realtime.RoomConfig;
-import com.google.android.gms.games.multiplayer.realtime.RoomUpdateListener;
 import com.google.android.gms.games.multiplayer.turnbased.OnTurnBasedMatchUpdateReceivedListener;
 import com.google.android.gms.games.multiplayer.turnbased.TurnBasedMatch;
 import com.google.android.gms.games.multiplayer.turnbased.TurnBasedMatchConfig;
 import com.google.android.gms.games.multiplayer.turnbased.TurnBasedMultiplayer;
-import com.google.android.gms.games.request.GameRequest;
 import com.google.example.games.basegameutils.BaseGameUtils;
-import com.google.example.games.basegameutils.GameHelper;
 
-import java.io.IOException;
 import java.net.DatagramSocket;
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -98,6 +80,9 @@ public class MainActivity extends AppCompatActivity
     private int previousDayStepCount;
     private int dailySteps;
     private String mCurrentMatchId;
+    private String mMatchDuraution;
+    private String mLastSafeHouseId;
+    private String mNextSafeHouseId;
     private ArrayList<String> invitees;
     private SharedPreferences mSharedPreferences;
     private SharedPreferences.Editor mEditor;
@@ -118,6 +103,7 @@ public class MainActivity extends AppCompatActivity
     private boolean mExplicitSignOut = false;
     private boolean mInSignInFlow = false;
     private Firebase mFirebaseRef;
+    private Firebase mUserFirebaseRef;
     private int mockCounter;
     private String mockCounterString;
     DatagramSocket socket;
@@ -176,6 +162,10 @@ public class MainActivity extends AppCompatActivity
         counter.setText(Integer.toString(stepsInSensor));
         previousDayStepCount = mSharedPreferences.getInt(Constants.PREFERENCES_PREVIOUS_STEPS_KEY, 0);
         mCurrentMatchId = mSharedPreferences.getString("matchId", null);
+
+        mMatchDuraution = "30";
+        mLastSafeHouseId = "0";
+        mNextSafeHouseId = "1";
     }
 
 
@@ -302,6 +292,7 @@ public class MainActivity extends AppCompatActivity
         String userId = Games.Players.getCurrentPlayerId(mGoogleApiClient);
         String userName = Games.Players.getCurrentPlayer(mGoogleApiClient).getDisplayName();
 
+        //Save to shared preferences
         mEditor.putString("userId", userId);
         mEditor.putString("userName", userName);
         mEditor.commit();
@@ -309,6 +300,24 @@ public class MainActivity extends AppCompatActivity
         userIdTextView.setText(userId);
         String greeting = "Hello " + userName;
         userNameTextView.setText(greeting);
+
+        //Save user info to firebase
+        mUserFirebaseRef = new Firebase(Constants.FIREBASE_URL_USERS + "/" + "");
+        firebaseListening();
+        mUserFirebaseRef.child(userId)
+                .child("displayName")
+                .setValue(userName);
+
+        mUserFirebaseRef.child(mCurrentPlayerId)
+                .child("atSafeHouse")
+                .setValue(false);
+
+        if (mCurrentMatchId == null) {
+            //Parameters: full user Id, display name, match id, is at safehouse, is in match
+            User currentUser = new User(userId, userName, "0", false, false);
+        } else {
+            User currentUser = new User(userId, userName, mCurrentMatchId, false, true);
+        }
     }
 
     @Override
@@ -475,11 +484,26 @@ public class MainActivity extends AppCompatActivity
         mEditor.putString("matchId", mCurrentMatchId);
         mEditor.commit();
 
-        Firebase firebaseRef = new Firebase(Constants.FIREBASE_URL_TEAM + "/" + "");
-        firebaseListening();
-        firebaseRef.child(mCurrentMatchId).setValue(wholeParty);
+        Firebase teamFirebaseRef = new Firebase(Constants.FIREBASE_URL_TEAM + "/" + "")
+                .child(mCurrentMatchId);
+        teamFirebaseRef.child("matchStart")
+                .setValue(mCurrentMatch.getCreationTimestamp());
+        teamFirebaseRef.child("matchDuration")
+                .setValue(mMatchDuraution);
+        teamFirebaseRef.child("lastSafehouse")
+                .setValue(mLastSafeHouseId);
+        teamFirebaseRef.child("nextSafehouse")
+                .setValue(mNextSafeHouseId);
+        Firebase playerFirebase = teamFirebaseRef
+                .child("players");
+        for (int i = 0; i < wholeParty.size(); i++) {
+            playerFirebase
+                    .child("p_" + (i + 1))
+                    .setValue(wholeParty.get(i));
+        }
         firebaseListening();
 
+        mUserFirebaseRef.child(mCurrentPlayerId).child("teamId").setValue(mCurrentMatchId);
         matchIdTextView.setText(mCurrentMatchId);
     }
 
