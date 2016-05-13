@@ -116,6 +116,9 @@
         android:layout_height="wrap_content"
         android:text="0"
         android:id="@+id/matchIdTextView"
+        android:layout_above="@+id/textView3"
+        android:layout_toRightOf="@+id/textView4"
+        android:layout_toEndOf="@+id/textView4"
         android:layout_below="@+id/textView4"
         android:layout_alignParentLeft="true"
         android:layout_alignParentStart="true" />
@@ -123,7 +126,8 @@
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Your User Id"
+        android:textAppearance="?android:attr/textAppearanceSmall"
+        android:text="Current Player ID: "
         android:id="@+id/textView5"
         android:layout_below="@+id/textView3"
         android:layout_alignParentLeft="true"
@@ -142,6 +146,10 @@
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:textAppearance="?android:attr/textAppearanceSmall"
+        android:layout_alignBottom="@+id/textView5"
+        android:layout_toRightOf="@+id/textView5"
+        android:layout_toEndOf="@+id/textView5"
         android:text="User Name Goes HERE!"
         android:id="@+id/userNameTextView"
         android:layout_marginTop="24dp"
@@ -161,4 +169,5 @@
         android:layout_alignEnd="@+id/textView"
         android:singleLine="true"
         android:inputType="number" />
+>>>>>>> 28df5c5c697b15f172c35a8f19fe6e0e86785fe4
 </RelativeLayout>

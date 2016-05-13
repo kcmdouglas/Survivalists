@@ -15,6 +15,8 @@ import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Handler;
+import android.preference.PreferenceManager;
 import android.support.annotation.NonNull;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
@@ -27,9 +29,11 @@ import android.widget.Toast;
 
 import com.eyecuelab.survivalists.Constants;
 import com.eyecuelab.survivalists.R;
+import com.eyecuelab.survivalists.services.StepResetIntentService;
 import com.eyecuelab.survivalists.models.SafeHouse;
 import com.eyecuelab.survivalists.util.CampaignEndAlarmReceiver;
 import com.eyecuelab.survivalists.util.StepResetAlarmReceiver;
+import com.eyecuelab.survivalists.util.StepResetResultReceiver;
 import com.facebook.FacebookSdk;
 import com.facebook.appevents.AppEventsLogger;
 import com.firebase.client.ChildEventListener;
@@ -63,6 +67,8 @@ import com.google.android.gms.games.request.GameRequest;
 import com.google.example.games.basegameutils.BaseGameUtils;
 import com.google.example.games.basegameutils.GameHelper;
 
+import java.io.IOException;
+import java.net.DatagramSocket;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.HashMap;
@@ -99,6 +105,7 @@ public class MainActivity extends AppCompatActivity
     private SensorManager mSensorManager;
     private GoogleApiClient mGoogleApiClient;
     private TurnBasedMatch mCurrentMatch;
+    private String mCurrentPlayerId;
     private Sensor countSensor;
 
 //    Flags to indicate return activity
@@ -112,8 +119,12 @@ public class MainActivity extends AppCompatActivity
     private boolean mExplicitSignOut = false;
     private boolean mInSignInFlow = false;
     private Firebase mFirebaseRef;
+    private int mockCounter;
+    private String mockCounterString;
+    DatagramSocket socket;
 
     private Context mContext;
+    private StepResetResultReceiver mReceiver;
 
     @Override
     protected void onStart() {
@@ -121,6 +132,7 @@ public class MainActivity extends AppCompatActivity
         if (!mInSignInFlow && !mExplicitSignOut) {
             mGoogleApiClient.connect();
         }
+        mockCounter = stepsInSensor;
     }
 
     @Override
@@ -144,7 +156,7 @@ public class MainActivity extends AppCompatActivity
         mSensorManager = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
 
         //Create Shared Preferences
-        mSharedPreferences = getSharedPreferences(getString(R.string.preference_file_key), Context.MODE_PRIVATE);
+        mSharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
         mEditor = mSharedPreferences.edit();
 
         //Google Play Games client and correlating buttons
@@ -161,20 +173,9 @@ public class MainActivity extends AppCompatActivity
         endMatchButton.setOnClickListener(this);
         testButton.setOnClickListener(this);
 
-        //This sets the BroadcastReceiver in this activity so the broadcast sent by StepResetAlarmReceiver BroadcastReceiver is handled properly
-        BroadcastReceiver broadcastReceiver = new BroadcastReceiver() {
-            @Override
-            public void onReceive(Context context, Intent intent) {
-                Bundle receivedSteps = intent.getExtras();
-                previousDayStepCount = receivedSteps.getInt("resetPreviousDayStep");
-                dailySteps = receivedSteps.getInt("resetDailySteps");
-            }
-        };
-
-        //This registers the receiver--the receiver is never unregistered, which ensures that this will happen daily
-        registerReceiver(broadcastReceiver, new IntentFilter("resetBroadcast"));
         dailyCounter.setText(Integer.toString(dailySteps));
         counter.setText(Integer.toString(stepsInSensor));
+        previousDayStepCount = mSharedPreferences.getInt(Constants.PREFERENCES_PREVIOUS_STEPS_KEY, 0);
     }
 
 
@@ -184,10 +185,12 @@ public class MainActivity extends AppCompatActivity
         mGoogleApiClient.reconnect();
         Sensor countSensor = mSensorManager.getDefaultSensor(Sensor.TYPE_STEP_COUNTER);
         if (countSensor != null) {
-            mSensorManager.registerListener(this, countSensor, SensorManager.SENSOR_DELAY_UI);
+            mSensorManager.registerListener(this, countSensor, SensorManager.SENSOR_DELAY_GAME);
         }
         if (mCurrentMatch != null) {
             matchIdTextView.setText(mCurrentMatch.getMatchId());
+        }
+        if(mCurrentPlayerId != null) {
         }
     }
 
@@ -196,22 +199,41 @@ public class MainActivity extends AppCompatActivity
         super.onPause();
     }
 
+//    @Override
+//    protected void onDestroy() {
+//        super.onDestroy();
+//        mSensorManager.unregisterListener(this);
+//    }
+
     //STEP SENSOR LOGIC AND FIREBASE CALLS
     @Override
     public void onSensorChanged(SensorEvent event) {
+        previousDayStepCount = mSharedPreferences.getInt(Constants.PREFERENCES_PREVIOUS_STEPS_KEY, 0);
         stepsInSensor = (int) event.values[0];
-        dailySteps = Math.round(event.values[0] - previousDayStepCount);
+        if(stepsInSensor < previousDayStepCount) {
+            dailySteps =+ stepsInSensor;
+        } else {
+            dailySteps = Math.round(event.values[0] - previousDayStepCount);
+        }
         dailyCounter.setText(Integer.toString(dailySteps));
         counter.setText(Integer.toString(stepsInSensor));
         String dailyStepsString = Integer.toString(dailySteps);
-        if((mCurrentMatch != null) && (Games.Players.getCurrentPlayerId(mGoogleApiClient) != null) && (dailySteps % 100 == 0)) {
-            Firebase firebaseStepsRef = new Firebase(Constants.FIREBASE_URL_STEPS + "/" + Games.Players.getCurrentPlayerId(mGoogleApiClient) + "/");
+
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+            }
+        });
+
+        initiateDailyCountResetService();
+
+        if((mCurrentPlayerId != null) && (dailySteps % 10 < 1)) {
+            Firebase firebaseStepsRef = new Firebase(Constants.FIREBASE_URL_STEPS + "/" + mCurrentPlayerId + "/");
             Map<String, Object> dailySteps = new HashMap<>();
             dailySteps.put("daily_steps", dailyStepsString);
             firebaseStepsRef.updateChildren(dailySteps);
             firebaseStepListener();
         }
-        initiateDailyCountResetService();
 
     }
 
@@ -260,6 +282,14 @@ public class MainActivity extends AppCompatActivity
     public void onConnected(Bundle connectionHint) {
         signInButton.setVisibility(View.GONE);
         signOutButton.setVisibility(View.VISIBLE);
+        mCurrentPlayerId = Games.Players.getCurrentPlayerId(mGoogleApiClient);
+        if (mCurrentMatch != null) {
+            Games.TurnBasedMultiplayer
+                    .loadMatch(mGoogleApiClient, mCurrentMatch.getMatchId());
+
+
+        }
+//        load current match
         if (connectionHint != null) {
             mCurrentMatch = connectionHint.getParcelable(Multiplayer.EXTRA_TURN_BASED_MATCH);
         }
@@ -519,10 +549,7 @@ public class MainActivity extends AppCompatActivity
         takeFirstTurn();
     }
 
-    @Override
-    public void onInvitationReceived(Invitation invitation) {
-        Toast.makeText(this, "You have been invited to join " + invitation.getInviter().getDisplayName(), Toast.LENGTH_SHORT).show();
-    }
+
 
     public void onInvitationRemoved(String s) {}
 
@@ -531,8 +558,6 @@ public class MainActivity extends AppCompatActivity
         Toast.makeText(this, "Match Received!", Toast.LENGTH_SHORT).show();
     }
 
-    @Override
-    public void onTurnBasedMatchRemoved(String s) {}
 
     private void firebaseListening() {
         Firebase firebaseRef = new Firebase(Constants.FIREBASE_URL_TEAM + "/" + "");
@@ -567,6 +592,18 @@ public class MainActivity extends AppCompatActivity
         });
     }
 
+    private void invitationListening() {
+        Toast.makeText(MainActivity.this, "Listening...", Toast.LENGTH_SHORT).show();
+    }
+
+    @Override
+    public void onInvitationReceived(Invitation invitation) {
+        Toast.makeText(this, "You have been invited to join " + invitation.getInviter().getDisplayName(), Toast.LENGTH_SHORT).show();
+    }
+
+    public void onTurnBasedMatchRemoved(String s) {}
+
+
     //CAMPAIGN LOGIC BEGINS HERE
 
     public void createCampaign() {
@@ -586,14 +623,20 @@ public class MainActivity extends AppCompatActivity
         }
         //TODO: Create endCampaign method
 
+
+        previousDayStepCount = 0;
+
     }
 
     //Sets alarm for daily step count
     public void initiateDailyCountResetService() {
         //Bundles the number of steps in the sensor
-        Intent intent = new Intent(getBaseContext(), StepResetAlarmReceiver.class);
+        Intent intent = new Intent(this, StepResetAlarmReceiver.class);
         Bundle bundle = new Bundle();
+        intent.putExtra("receiver", mReceiver);
         bundle.putInt("endOfDaySteps", stepsInSensor);
+        bundle.putInt("dailySteps", dailySteps);
+        bundle.putString("currentPlayerID", mCurrentPlayerId);
 
         intent.putExtras(bundle);
         //Sets a recurring alarm just before midnight daily to trigger BroadcastReceiver
@@ -602,9 +645,10 @@ public class MainActivity extends AppCompatActivity
         calendar.set(Calendar.MINUTE, 59);
         calendar.set(Calendar.SECOND, 0);
         calendar.set(Calendar.MILLISECOND, 0);
-        PendingIntent pi = PendingIntent.getBroadcast(getBaseContext(), 1, intent, PendingIntent.FLAG_UPDATE_CURRENT);
+        PendingIntent pi = PendingIntent.getBroadcast(this, StepResetAlarmReceiver.REQUEST_CODE, intent, PendingIntent.FLAG_UPDATE_CURRENT);
         AlarmManager am = (AlarmManager) mContext.getSystemService(Context.ALARM_SERVICE);
         am.setRepeating(AlarmManager.RTC_WAKEUP, calendar.getTimeInMillis(), AlarmManager.INTERVAL_DAY, pi);
 
     }
+
 }
