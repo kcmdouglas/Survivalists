@@ -62,19 +62,17 @@
         android:layout_height="wrap_content"
         android:text="New Match"
         android:id="@+id/findPlayersButton"
-        android:layout_alignParentTop="true"
-        android:layout_alignParentRight="true"
-        android:layout_alignParentEnd="true" />
+        android:layout_alignTop="@+id/sign_in_button"
+        android:layout_centerHorizontal="true" />
 
     <Button
         android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Current Matches"
-        android:id="@+id/joinMatchButton"
-        android:layout_below="@+id/findPlayersButton"
-        android:layout_alignLeft="@+id/findPlayersButton"
-        android:layout_alignStart="@+id/findPlayersButton"
-        android:layout_marginTop="29dp" />
+        android:layout_height="90dp"
+        android:text="End Current Match"
+        android:id="@+id/endMatchButton"
+        android:layout_alignParentTop="true"
+        android:layout_toRightOf="@+id/findPlayersButton"
+        android:layout_toEndOf="@+id/findPlayersButton" />
 
     <TextView
         android:layout_width="wrap_content"
@@ -89,11 +87,11 @@
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="none!"
+        android:text="None yet, please wait for google!"
         android:id="@+id/playerTextView"
-        android:layout_alignTop="@+id/textView3"
-        android:layout_toRightOf="@+id/textView3"
-        android:layout_toEndOf="@+id/textView3" />
+        android:layout_below="@+id/textView3"
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentStart="true" />
 
     <Button
         android:layout_width="wrap_content"
@@ -101,7 +99,8 @@
         android:text="Test Button"
         android:id="@+id/testButton"
         android:layout_alignParentBottom="true"
-        android:layout_centerHorizontal="true" />
+        android:layout_alignParentRight="true"
+        android:layout_alignParentEnd="true" />
 
     <TextView
         android:layout_width="wrap_content"
@@ -119,7 +118,10 @@
         android:id="@+id/matchIdTextView"
         android:layout_above="@+id/textView3"
         android:layout_toRightOf="@+id/textView4"
-        android:layout_toEndOf="@+id/textView4" />
+        android:layout_toEndOf="@+id/textView4"
+        android:layout_below="@+id/textView4"
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentStart="true" />
 
     <TextView
         android:layout_width="wrap_content"
@@ -130,14 +132,42 @@
         android:layout_below="@+id/textView3"
         android:layout_alignParentLeft="true"
         android:layout_alignParentStart="true"
-        android:layout_marginTop="33dp" />
+        android:layout_marginTop="38dp" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="0"
+        android:id="@+id/userIdTextView"
+        android:layout_below="@+id/textView5"
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentStart="true" />
 
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:textAppearance="?android:attr/textAppearanceSmall"
-        android:id="@+id/currentPlayerIdTextView"
         android:layout_alignBottom="@+id/textView5"
         android:layout_toRightOf="@+id/textView5"
-        android:layout_toEndOf="@+id/textView5" />
+        android:layout_toEndOf="@+id/textView5"
+        android:text="User Name Goes HERE!"
+        android:id="@+id/userNameTextView"
+        android:layout_marginTop="24dp"
+        android:layout_below="@+id/userIdTextView"
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentStart="true" />
+
+    <EditText
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/stepEditText"
+        android:layout_alignTop="@+id/testButton"
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentStart="true"
+        android:hint="Manual Steps"
+        android:layout_alignRight="@+id/textView"
+        android:layout_alignEnd="@+id/textView"
+        android:singleLine="true"
+        android:inputType="number" />
+>>>>>>> 28df5c5c697b15f172c35a8f19fe6e0e86785fe4
 </RelativeLayout>
