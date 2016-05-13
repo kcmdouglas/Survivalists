@@ -86,8 +86,7 @@ import butterknife.ButterKnife;
 
 public class MainActivity extends FragmentActivity
         implements View.OnClickListener, SensorEventListener, GoogleApiClient.ConnectionCallbacks,
-        GoogleApiClient.OnConnectionFailedListener, OnInvitationReceivedListener, OnTurnBasedMatchUpdateReceivedListener,
-        Acls.OnGameplayAclLoadedCallback {
+        GoogleApiClient.OnConnectionFailedListener, OnTurnBasedMatchUpdateReceivedListener {
 
     @Bind(R.id.stepTextView) TextView counter;
     @Bind(R.id.dailyStepsTextView) TextView dailyCounter;
@@ -183,6 +182,7 @@ public class MainActivity extends FragmentActivity
         previousDayStepCount = mSharedPreferences.getInt(Constants.PREFERENCES_PREVIOUS_STEPS_KEY, 0);
 
         showEventDialog();
+        mCurrentMatchId = mSharedPreferences.getString("matchId", null);
     }
 
 
@@ -205,12 +205,6 @@ public class MainActivity extends FragmentActivity
     protected void onPause() {
         super.onPause();
     }
-
-//    @Override
-//    protected void onDestroy() {
-//        super.onDestroy();
-//        mSensorManager.unregisterListener(this);
-//    }
 
     //STEP SENSOR LOGIC AND FIREBASE CALLS
     @Override
@@ -294,7 +288,7 @@ public class MainActivity extends FragmentActivity
             Games.TurnBasedMultiplayer
                     .loadMatch(mGoogleApiClient, mCurrentMatch.getMatchId());
 
-
+            matchIdTextView.setText(mCurrentMatchId);
         }
 //        load current match
         if (connectionHint != null) {
@@ -304,7 +298,6 @@ public class MainActivity extends FragmentActivity
         //Load current match
         loadMatch();
 
-        Games.Invitations.registerInvitationListener(mGoogleApiClient, this);
         Games.TurnBasedMultiplayer.registerMatchUpdateListener(mGoogleApiClient, this);
 
         String userId = Games.Players.getCurrentPlayerId(mGoogleApiClient);
@@ -399,18 +392,19 @@ public class MainActivity extends FragmentActivity
                     .setResultCallback(loadMatchResultResultCallback);
 
             matchIdTextView.setText(mCurrentMatchId);
-        } else {
-            ResultCallback<TurnBasedMultiplayer.LoadMatchesResult> loadMatchesResultResultCallback = new ResultCallback<TurnBasedMultiplayer.LoadMatchesResult>() {
-
-                @Override
-                public void onResult(TurnBasedMultiplayer.LoadMatchesResult loadMatchesResult) {
-                    mCurrentMatch = loadMatchesResult.getMatches().getMyTurnMatches().get(0);
-                    takeFirstTurn();
-                }
-            };
-            Games.TurnBasedMultiplayer.loadMatchesByStatus(mGoogleApiClient, TurnBasedMatch.MATCH_TURN_STATUS_ALL).setResultCallback(loadMatchesResultResultCallback);
-            takeFirstTurn();
         }
+//        else if (mCurrentMatch != null) {
+//            ResultCallback<TurnBasedMultiplayer.LoadMatchesResult> loadMatchesResultResultCallback = new ResultCallback<TurnBasedMultiplayer.LoadMatchesResult>() {
+//
+//                @Override
+//                public void onResult(TurnBasedMultiplayer.LoadMatchesResult loadMatchesResult) {
+//                    mCurrentMatch = loadMatchesResult.getMatches().getMyTurnMatches().get(0);
+//                    takeFirstTurn();
+//                }
+//            };
+//            Games.TurnBasedMultiplayer.loadMatchesByStatus(mGoogleApiClient, TurnBasedMatch.MATCH_TURN_STATUS_ALL).setResultCallback(loadMatchesResultResultCallback);
+//            takeFirstTurn();
+//        }
     }
 
     public void joinMatch() {
@@ -464,7 +458,7 @@ public class MainActivity extends FragmentActivity
         byte[] matchData = new byte[1];
         String nextPlayer;
 
-        String matchId = mCurrentMatch.getMatchId();
+        mCurrentMatchId = mCurrentMatch.getMatchId();
         String creatorId = Games.Players.getCurrentPlayerId(mGoogleApiClient);
         ArrayList<String> wholeParty = invitees;
         if (wholeParty != null) {
@@ -477,15 +471,17 @@ public class MainActivity extends FragmentActivity
             nextPlayer = "p_1";
         }
 
-        Games.TurnBasedMultiplayer.takeTurn(mGoogleApiClient, matchId, matchData, nextPlayer);
+        Games.TurnBasedMultiplayer.takeTurn(mGoogleApiClient, mCurrentMatchId, matchData, nextPlayer);
 
-        mEditor.putString("matchId", matchId);
+        mEditor.putString("matchId", mCurrentMatchId);
         mEditor.commit();
 
         Firebase firebaseRef = new Firebase(Constants.FIREBASE_URL_TEAM + "/" + "");
         firebaseListening();
-        firebaseRef.child(matchId).setValue(wholeParty);
+        firebaseRef.child(mCurrentMatchId).setValue(wholeParty);
         firebaseListening();
+
+        matchIdTextView.setText(mCurrentMatchId);
     }
 
     @Override
@@ -534,7 +530,7 @@ public class MainActivity extends FragmentActivity
                     .createMatch(mGoogleApiClient, turnBasedMatchConfig)
                     .setResultCallback(initiateMatchResultResultCallback);
 
-            Games.TurnBasedMultiplayer.registerMatchUpdateListener(mGoogleApiClient, this);
+            Games.TurnBasedMultiplayer.registerMatchUpdateListener(mGoogleApiClient, MainActivity.this);
 
         } else if (request == RC_WAITING_ROOM) {
             //user returning from join match
@@ -555,16 +551,6 @@ public class MainActivity extends FragmentActivity
         mCurrentMatchId = mCurrentMatch.getMatchId();
         takeFirstTurn();
     }
-
-
-
-    public void onInvitationRemoved(String s) {}
-
-    @Override
-    public void onTurnBasedMatchReceived(TurnBasedMatch turnBasedMatch) {
-        Toast.makeText(this, "Match Received!", Toast.LENGTH_SHORT).show();
-    }
-
 
     private void firebaseListening() {
         Firebase firebaseRef = new Firebase(Constants.FIREBASE_URL_TEAM + "/" + "");
@@ -599,15 +585,10 @@ public class MainActivity extends FragmentActivity
         });
     }
 
-    private void invitationListening() {
-        Toast.makeText(MainActivity.this, "Listening...", Toast.LENGTH_SHORT).show();
-    }
+    @Override
+    public void onTurnBasedMatchReceived(TurnBasedMatch turnBasedMatch) {}
 
     @Override
-    public void onInvitationReceived(Invitation invitation) {
-        Toast.makeText(this, "You have been invited to join " + invitation.getInviter().getDisplayName(), Toast.LENGTH_SHORT).show();
-    }
-
     public void onTurnBasedMatchRemoved(String s) {}
 
 
@@ -672,5 +653,4 @@ public class MainActivity extends FragmentActivity
         DialogFragment frag = EventDialogFragment.newInstance(mStackLevel);
         frag.show(ft, "fragment_event_dialog");
     }
-
 }
