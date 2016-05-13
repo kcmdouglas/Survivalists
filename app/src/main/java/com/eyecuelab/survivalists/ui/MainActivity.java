@@ -160,16 +160,9 @@ public class MainActivity extends AppCompatActivity
         joinMatchButton.setOnClickListener(this);
         testButton.setOnClickListener(this);
 
-        //
-//        mReceiver= new StepResetResultReceiver(new Handler());
-//
-//        mReceiver.setReceiver(this);
-
         dailyCounter.setText(Integer.toString(dailySteps));
         counter.setText(Integer.toString(stepsInSensor));
         previousDayStepCount = mSharedPreferences.getInt(Constants.PREFERENCES_PREVIOUS_STEPS_KEY, 0);
-
-        mockCounter = stepsInSensor;
     }
 
 
@@ -184,9 +177,9 @@ public class MainActivity extends AppCompatActivity
         if (mCurrentMatch != null) {
             matchIdTextView.setText(mCurrentMatch.getMatchId());
         }
-//        if(mockCounter != 0) {
-//            currentPlayerIdTextView.setText(mockCounter);
-//        }
+        if(mCurrentPlayerId != null) {
+            currentPlayerIdTextView.setText(mCurrentPlayerId);
+        }
     }
 
     @Override
@@ -525,7 +518,7 @@ public class MainActivity extends AppCompatActivity
         //TODO: Create endCampaign method
 
 
-        dailySteps = 0;
+        previousDayStepCount = 0;
 
     }
 
@@ -554,9 +547,4 @@ public class MainActivity extends AppCompatActivity
 
     public void onInvitationRemoved(String s) {}
 
-//    @Override
-//    public void onReceiveResult(int resultCode, Bundle resultData) {
-//        int totalSteps = resultData.getInt("endOfDaySteps");
-//        previousDayStepCount = totalSteps;
-//    }
 }
