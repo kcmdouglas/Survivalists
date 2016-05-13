@@ -75,6 +75,7 @@ public class MainActivity extends AppCompatActivity
     @Bind(R.id.userIdTextView) TextView userIdTextView;
     @Bind(R.id.userNameTextView) TextView userNameTextView;
     @Bind(R.id.stepEditText) EditText manualStepSetter;
+    @Bind(R.id.safehouseTextView) TextView safehouseTextView;
 
     private int stepsInSensor;
     private int previousDayStepCount;
@@ -233,14 +234,14 @@ public class MainActivity extends AppCompatActivity
     public void onAccuracyChanged(Sensor sensor, int accuracy) {}
 
     private void firebaseStepListener() {
-        Firebase firebaseStepsRef = new Firebase(Constants.FIREBASE_URL_STEPS + "/" + Games.Players.getCurrentPlayerId(mGoogleApiClient));
+        Firebase firebaseStepsRef = new Firebase(Constants.FIREBASE_URL_STEPS + "/" + mCurrentPlayerId);
         Query queryRef = firebaseStepsRef.orderByValue();
 
         queryRef.addChildEventListener(new ChildEventListener() {
             @Override
             public void onChildAdded(DataSnapshot dataSnapshot, String s) {
-                Log.d("Firebase Update", "New Match: " + dataSnapshot.getKey());
-                Log.d("Firebase Update", "Players: " + dataSnapshot.getValue());
+                Log.d("Firebase Update", dataSnapshot.getKey());
+                Log.d("Firebase Update", dataSnapshot.getValue().toString());
             }
 
             @Override
@@ -303,7 +304,7 @@ public class MainActivity extends AppCompatActivity
         userNameTextView.setText(greeting);
 
         //Save user info to firebase
-        mUserFirebaseRef = new Firebase(Constants.FIREBASE_URL_USERS + "/" + "").child(mCurrentPlayerId);
+        mUserFirebaseRef = new Firebase(Constants.FIREBASE_URL_USERS + "/" + mCurrentPlayerId);
         mUserFirebaseRef.child("displayName")
                 .setValue(userName);
         mUserFirebaseRef.child("atSafeHouse")
@@ -315,8 +316,24 @@ public class MainActivity extends AppCompatActivity
         } else {
             mUserFirebaseRef.child("joinedMatch")
                     .setValue(true);
+            Firebase teamFirebaseRef = new Firebase(Constants.FIREBASE_URL_TEAM + "/" + mCurrentMatchId);
+            teamFirebaseRef.addListenerForSingleValueEvent(new ValueEventListener() {
+                @Override
+                public void onDataChange(DataSnapshot dataSnapshot) {
+                    mLastSafeHouseId = dataSnapshot.child("lastSafehouseId").getValue().toString();
+                    mNextSafeHouseId = dataSnapshot.child("nextSafehouseId").getValue().toString();
+                    safehouseTextView.setText(mNextSafeHouseId);
+                }
+
+                @Override
+                public void onCancelled(FirebaseError firebaseError) {
+
+                }
+            });
         }
         firebaseListening();
+
+
     }
 
     @Override
@@ -367,14 +384,29 @@ public class MainActivity extends AppCompatActivity
     }
 
     public void testMethod() {
-        SafeHouse nextSafeHouse = new SafeHouse("1", "the first safehouse", "You find a hole in the ground. This is where your party will sleep tonight.", 35);
-        dailySteps = Integer.parseInt(manualStepSetter.getText().toString());
-        if (nextSafeHouse.reachedSafeHouse(dailySteps)) {
-            Toast.makeText(MainActivity.this, "You've reached " + nextSafeHouse.getHouseName(), Toast.LENGTH_SHORT).show();
-            Toast.makeText(MainActivity.this, nextSafeHouse.getDescription(), Toast.LENGTH_LONG).show();
-        } else {
-            Toast.makeText(MainActivity.this, "You have " + nextSafeHouse.stepsLeftToHouse(dailySteps) + " steps to reach the safehouse!", Toast.LENGTH_SHORT).show();
-        }
+        Firebase safehouseFirebaseRef = new Firebase(Constants.FIREBASE_URL_SAFEHOUSES + "/" + mNextSafeHouseId);
+        safehouseFirebaseRef.addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                String houseName = dataSnapshot.child("houseName").getValue().toString();
+                String description = dataSnapshot.child("description").getValue().toString();
+                int stepsRequired = Integer.parseInt(dataSnapshot.child("stepsRequired").getValue().toString());
+                // Build the next safehouse object and save it to shared preferences
+                SafeHouse nextSafeHouse = new SafeHouse(mNextSafeHouseId, houseName, description, stepsRequired);
+                dailySteps = Integer.parseInt(manualStepSetter.getText().toString());
+                if (nextSafeHouse.reachedSafeHouse(dailySteps)) {
+                    Toast.makeText(MainActivity.this, "You've reached " + nextSafeHouse.getHouseName(), Toast.LENGTH_SHORT).show();
+                    Toast.makeText(MainActivity.this, nextSafeHouse.getDescription(), Toast.LENGTH_LONG).show();
+                } else {
+                    Toast.makeText(MainActivity.this, "You have " + nextSafeHouse.stepsLeftToHouse(dailySteps) + " steps to reach the safehouse!", Toast.LENGTH_SHORT).show();
+                }
+            }
+
+            @Override
+            public void onCancelled(FirebaseError firebaseError) {
+
+            }
+        });
     }
 
     public void loadMatch() {

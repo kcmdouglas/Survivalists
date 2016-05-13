@@ -146,8 +146,7 @@
         android:layout_height="wrap_content"
         android:text="User Name Goes HERE!"
         android:id="@+id/userNameTextView"
-        android:layout_marginTop="24dp"
-        android:layout_below="@+id/userIdTextView"
+        android:layout_above="@+id/stepEditText"
         android:layout_alignParentLeft="true"
         android:layout_alignParentStart="true" />
 
@@ -163,4 +162,23 @@
         android:layout_alignEnd="@+id/textView"
         android:singleLine="true"
         android:inputType="number" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Next Safehouse:"
+        android:id="@+id/textView6"
+        android:layout_marginTop="19dp"
+        android:layout_below="@+id/userIdTextView"
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentStart="true" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="0"
+        android:id="@+id/safehouseTextView"
+        android:layout_alignParentStart="true"
+        android:layout_below="@+id/textView6"
+        android:layout_alignParentLeft="true" />
 </RelativeLayout>
