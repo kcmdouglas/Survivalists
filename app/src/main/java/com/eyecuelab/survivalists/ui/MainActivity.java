@@ -2,6 +2,8 @@ package com.eyecuelab.survivalists.ui;
 
 import android.app.Activity;
 import android.app.AlarmManager;
+import android.app.Dialog;
+import android.support.v4.app.DialogFragment;
 import android.app.PendingIntent;
 import android.content.BroadcastReceiver;
 import android.content.ComponentCallbacks;
@@ -18,6 +20,10 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.preference.PreferenceManager;
 import android.support.annotation.NonNull;
+import android.support.v4.app.Fragment;
+import android.support.v4.app.FragmentActivity;
+import android.support.v4.app.FragmentManager;
+import android.support.v4.app.FragmentTransaction;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.View;
@@ -52,6 +58,7 @@ import com.google.android.gms.games.Game;
 import com.google.android.gms.games.Games;
 import com.google.android.gms.games.Player;
 import com.google.android.gms.games.Players;
+import com.google.android.gms.games.internal.GamesContract;
 import com.google.android.gms.games.internal.game.Acls;
 import com.google.android.gms.games.internal.game.GameInstance;
 import com.google.android.gms.games.multiplayer.Invitation;
@@ -77,7 +84,7 @@ import java.util.Map;
 import butterknife.Bind;
 import butterknife.ButterKnife;
 
-public class MainActivity extends AppCompatActivity
+public class MainActivity extends FragmentActivity
         implements View.OnClickListener, SensorEventListener, GoogleApiClient.ConnectionCallbacks,
         GoogleApiClient.OnConnectionFailedListener, OnInvitationReceivedListener, OnTurnBasedMatchUpdateReceivedListener,
         Acls.OnGameplayAclLoadedCallback {
@@ -119,12 +126,11 @@ public class MainActivity extends AppCompatActivity
     private boolean mExplicitSignOut = false;
     private boolean mInSignInFlow = false;
     private Firebase mFirebaseRef;
-    private int mockCounter;
-    private String mockCounterString;
     DatagramSocket socket;
 
     private Context mContext;
     private StepResetResultReceiver mReceiver;
+    private int mStackLevel;
 
     @Override
     protected void onStart() {
@@ -132,7 +138,6 @@ public class MainActivity extends AppCompatActivity
         if (!mInSignInFlow && !mExplicitSignOut) {
             mGoogleApiClient.connect();
         }
-        mockCounter = stepsInSensor;
     }
 
     @Override
@@ -176,6 +181,8 @@ public class MainActivity extends AppCompatActivity
         dailyCounter.setText(Integer.toString(dailySteps));
         counter.setText(Integer.toString(stepsInSensor));
         previousDayStepCount = mSharedPreferences.getInt(Constants.PREFERENCES_PREVIOUS_STEPS_KEY, 0);
+
+        showEventDialog();
     }
 
 
@@ -649,6 +656,21 @@ public class MainActivity extends AppCompatActivity
         AlarmManager am = (AlarmManager) mContext.getSystemService(Context.ALARM_SERVICE);
         am.setRepeating(AlarmManager.RTC_WAKEUP, calendar.getTimeInMillis(), AlarmManager.INTERVAL_DAY, pi);
 
+    }
+
+    public void showEventDialog() {
+        mStackLevel++;
+
+        FragmentTransaction ft = getSupportFragmentManager().beginTransaction();
+        Fragment prev = getSupportFragmentManager().findFragmentByTag("event");
+        if(prev != null) {
+            ft.remove(prev);
+        }
+
+        ft.addToBackStack(null);
+
+        DialogFragment frag = EventDialogFragment.newInstance(mStackLevel);
+        frag.show(ft, "fragment_event_dialog");
     }
 
 }
