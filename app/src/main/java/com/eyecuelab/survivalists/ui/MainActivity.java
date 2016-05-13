@@ -21,11 +21,13 @@ import android.util.Log;
 import android.view.View;
 import android.view.WindowManager;
 import android.widget.Button;
+import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import com.eyecuelab.survivalists.Constants;
 import com.eyecuelab.survivalists.R;
+import com.eyecuelab.survivalists.models.SafeHouse;
 import com.eyecuelab.survivalists.util.CampaignEndAlarmReceiver;
 import com.eyecuelab.survivalists.util.StepResetAlarmReceiver;
 import com.facebook.FacebookSdk;
@@ -85,6 +87,7 @@ public class MainActivity extends AppCompatActivity
     @Bind(R.id.matchIdTextView) TextView matchIdTextView;
     @Bind(R.id.userIdTextView) TextView userIdTextView;
     @Bind(R.id.userNameTextView) TextView userNameTextView;
+    @Bind(R.id.stepEditText) EditText manualStepSetter;
 
     private int stepsInSensor;
     private int previousDayStepCount;
@@ -262,9 +265,7 @@ public class MainActivity extends AppCompatActivity
         }
 
         //Load current match
-        if (mCurrentMatch != null) {
-            loadMatch();
-        }
+        loadMatch();
 
         Games.Invitations.registerInvitationListener(mGoogleApiClient, this);
         Games.TurnBasedMultiplayer.registerMatchUpdateListener(mGoogleApiClient, this);
@@ -325,6 +326,17 @@ public class MainActivity extends AppCompatActivity
             endMatch();
         } else if (view == testButton) {
             testMethod();
+        }
+    }
+
+    public void testMethod() {
+        SafeHouse nextSafeHouse = new SafeHouse("1", "the first safehouse", "You find a hole in the ground. This is where your party will sleep tonight.", 35);
+        dailySteps = Integer.parseInt(manualStepSetter.getText().toString());
+        if (nextSafeHouse.reachedSafeHouse(dailySteps)) {
+            Toast.makeText(MainActivity.this, "You've reached " + nextSafeHouse.getHouseName(), Toast.LENGTH_SHORT).show();
+            Toast.makeText(MainActivity.this, nextSafeHouse.getDescription(), Toast.LENGTH_LONG).show();
+        } else {
+            Toast.makeText(MainActivity.this, "You have " + nextSafeHouse.stepsLeftToHouse(dailySteps) + " steps to reach the safehouse!", Toast.LENGTH_SHORT).show();
         }
     }
 
@@ -395,7 +407,8 @@ public class MainActivity extends AppCompatActivity
                 mEditor.putString("matchId", "Please create match");
                 mEditor.commit();
                 mCurrentMatch = null;
-                testMethod();
+                matchIdTextView.setText("");
+                playersTextView.setText("");
             }
         };
 
@@ -408,12 +421,6 @@ public class MainActivity extends AppCompatActivity
         } else {
             Toast.makeText(this, "Not connected to match", Toast.LENGTH_SHORT).show();
         }
-    }
-
-    public void testMethod() {
-        matchIdTextView.setText("");
-        playersTextView.setText("");
-        Toast.makeText(this, "Clear...", Toast.LENGTH_SHORT).show();
     }
 
     public void takeFirstTurn() {
