@@ -36,7 +36,7 @@ public class SafeHouse {
         return stepsRequired;
     }
 
-    public boolean reachedSafeHouse(int dailySteps) {
+    public boolean reachedSafehouse(int dailySteps) {
         if (dailySteps >= stepsRequired) {
             arrivedAtSafeHouse = true;
         }

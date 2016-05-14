@@ -49,6 +49,7 @@ import com.google.android.gms.games.multiplayer.turnbased.TurnBasedMatch;
 import com.google.android.gms.games.multiplayer.turnbased.TurnBasedMatchConfig;
 import com.google.android.gms.games.multiplayer.turnbased.TurnBasedMultiplayer;
 import com.google.example.games.basegameutils.BaseGameUtils;
+import com.google.gson.Gson;
 
 import java.net.DatagramSocket;
 import java.util.ArrayList;
@@ -79,7 +80,7 @@ public class MainActivity extends AppCompatActivity
 
     private int stepsInSensor;
     private int previousDayStepCount;
-    private int dailySteps;
+    private int dailySteps = 10;
     private String mCurrentMatchId;
     private String mMatchDuraution;
     private String mLastSafeHouseId;
@@ -92,6 +93,7 @@ public class MainActivity extends AppCompatActivity
     private TurnBasedMatch mCurrentMatch;
     private String mCurrentPlayerId;
     private Sensor countSensor;
+    private SafeHouse mNextSafehouse;
 
     private User mCurrentUser;
 
@@ -166,6 +168,15 @@ public class MainActivity extends AppCompatActivity
         previousDayStepCount = mSharedPreferences.getInt(Constants.PREFERENCES_PREVIOUS_STEPS_KEY, 0);
         mCurrentMatchId = mSharedPreferences.getString("matchId", null);
 
+        //pull next safehouse object from shared preferences
+        String safehouseJson = mSharedPreferences.getString("nextSafehouse", null);
+        Gson gson = new Gson();
+        mNextSafehouse = gson.fromJson(safehouseJson, SafeHouse.class);
+
+        if (mNextSafehouse != null) {
+            Toast.makeText(MainActivity.this, "YAYA! " + mNextSafehouse.getHouseName(), Toast.LENGTH_SHORT).show();
+        }
+
         mMatchDuraution = "30";
         mLastSafeHouseId = "0";
         mNextSafeHouseId = "1";
@@ -228,6 +239,11 @@ public class MainActivity extends AppCompatActivity
             firebaseStepListener();
         }
 
+        if ((mCurrentMatchId != null) && (mNextSafehouse.reachedSafehouse(dailySteps))) {
+            Toast.makeText(MainActivity.this, "You've reached " + mNextSafehouse.getHouseName(), Toast.LENGTH_SHORT).show();
+            Toast.makeText(MainActivity.this, mNextSafehouse.getDescription(), Toast.LENGTH_LONG).show();
+        }
+
     }
 
     @Override
@@ -271,6 +287,7 @@ public class MainActivity extends AppCompatActivity
 
 
     //GOOGLE GAMES API LOGIC BEGINS HERE
+    //TODO: Move this logic to a separate service class
     @Override
     public void onConnected(Bundle connectionHint) {
         signInButton.setVisibility(View.GONE);
@@ -281,10 +298,6 @@ public class MainActivity extends AppCompatActivity
                     .loadMatch(mGoogleApiClient, mCurrentMatch.getMatchId());
 
             matchIdTextView.setText(mCurrentMatchId);
-        }
-//        load current match
-        if (connectionHint != null) {
-            mCurrentMatch = connectionHint.getParcelable(Multiplayer.EXTRA_TURN_BASED_MATCH);
         }
 
         //Load current match
@@ -326,9 +339,7 @@ public class MainActivity extends AppCompatActivity
                 }
 
                 @Override
-                public void onCancelled(FirebaseError firebaseError) {
-
-                }
+                public void onCancelled(FirebaseError firebaseError) {}
             });
         }
         firebaseListening();
@@ -383,7 +394,7 @@ public class MainActivity extends AppCompatActivity
         }
     }
 
-    public void testMethod() {
+    public void saveSafehouse() {
         Firebase safehouseFirebaseRef = new Firebase(Constants.FIREBASE_URL_SAFEHOUSES + "/" + mNextSafeHouseId);
         safehouseFirebaseRef.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
@@ -391,15 +402,13 @@ public class MainActivity extends AppCompatActivity
                 String houseName = dataSnapshot.child("houseName").getValue().toString();
                 String description = dataSnapshot.child("description").getValue().toString();
                 int stepsRequired = Integer.parseInt(dataSnapshot.child("stepsRequired").getValue().toString());
+
                 // Build the next safehouse object and save it to shared preferences
                 SafeHouse nextSafeHouse = new SafeHouse(mNextSafeHouseId, houseName, description, stepsRequired);
-                dailySteps = Integer.parseInt(manualStepSetter.getText().toString());
-                if (nextSafeHouse.reachedSafeHouse(dailySteps)) {
-                    Toast.makeText(MainActivity.this, "You've reached " + nextSafeHouse.getHouseName(), Toast.LENGTH_SHORT).show();
-                    Toast.makeText(MainActivity.this, nextSafeHouse.getDescription(), Toast.LENGTH_LONG).show();
-                } else {
-                    Toast.makeText(MainActivity.this, "You have " + nextSafeHouse.stepsLeftToHouse(dailySteps) + " steps to reach the safehouse!", Toast.LENGTH_SHORT).show();
-                }
+                Gson gson = new Gson();
+                String nextSafehouseJson = gson.toJson(nextSafeHouse);
+                mEditor.putString("nextSafehouse", nextSafehouseJson);
+                mEditor.commit();
             }
 
             @Override
@@ -407,6 +416,13 @@ public class MainActivity extends AppCompatActivity
 
             }
         });
+    }
+
+    public void testMethod() {
+//        String stepsInThings = manualStepSetter.getText().toString();
+//        if (stepsInThings != "") {
+//            dailySteps = Integer.parseInt(stepsInThings);
+//        }
     }
 
     public void loadMatch() {
@@ -436,6 +452,7 @@ public class MainActivity extends AppCompatActivity
 
     public void joinMatch() {
         if (mCurrentMatch == null) {
+            // TODO: Get rid of this select current match intent!
             Intent joinMatchIntent = Games.TurnBasedMultiplayer.getInboxIntent(mGoogleApiClient);
             startActivityForResult(joinMatchIntent, RC_WAITING_ROOM);
             Games.TurnBasedMultiplayer
@@ -524,6 +541,7 @@ public class MainActivity extends AppCompatActivity
 
         mUserFirebaseRef.child("teamId").setValue(mCurrentMatchId);
         matchIdTextView.setText(mCurrentMatchId);
+        saveSafehouse();
     }
 
     @Override
