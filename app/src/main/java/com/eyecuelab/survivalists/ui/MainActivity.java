@@ -129,7 +129,11 @@ public class MainActivity extends FragmentActivity
 
     private Context mContext;
     private StepResetResultReceiver mReceiver;
+
+    //Event Variables
     private int mStackLevel;
+
+
 
     @Override
     protected void onStart() {
@@ -181,7 +185,6 @@ public class MainActivity extends FragmentActivity
         counter.setText(Integer.toString(stepsInSensor));
         previousDayStepCount = mSharedPreferences.getInt(Constants.PREFERENCES_PREVIOUS_STEPS_KEY, 0);
 
-        showEventDialog();
         mCurrentMatchId = mSharedPreferences.getString("matchId", null);
     }
 

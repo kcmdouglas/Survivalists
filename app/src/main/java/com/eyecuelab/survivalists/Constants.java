@@ -13,4 +13,9 @@ public class Constants {
     public static final String FIREBASE_URL_TEAM = FIREBASE_URL + "/" + FIREBASE_TEAM;
     public static final String FIREBASE_URL_STEPS = FIREBASE_URL + "/" + FIREBASE_STEPS;
     public static final String PREFERENCES_PREVIOUS_STEPS_KEY = "previousSteps";
+    public static final String PREFERENCES_EVENT_1_STEPS = "eventOneSteps";
+    public static final String PREFERENCES_EVENT_2_STEPS = "eventTwoSteps";
+    public static final String PREFERENCES_EVENT_3_STEPS = "eventThreeSteps";
+    public static final String PREFERENCES_EVENT_4_STEPS = "eventFourSteps";
+    public static final String PREFERENCES_EVENT_5_STEPS = "eventFiveSteps";
 }
