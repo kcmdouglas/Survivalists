@@ -27,6 +27,19 @@
             android:name=".services.StepResetIntentService"
             android:exported="false"/>
 
+        <service android:name=".services.BackgroundStepService"
+            android:enabled="true" >
+        </service>
+
+        <receiver android:name=".util.BackgroundStepReceiver"
+            android:enabled="true"
+            android:exported="true"
+            android:label="BackgroundStepService">
+            <intent-filter>
+                <action android:name="com.eyecuelab.survivalists.util.BackgroundStepReceiver"/>
+            </intent-filter>
+        </receiver>
+
         <meta-data
             android:name="com.google.android.gms.games.APP_ID"
             android:value="@string/app_id" />
