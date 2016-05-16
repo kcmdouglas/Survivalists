@@ -6,15 +6,19 @@ package com.eyecuelab.survivalists.models;
 public class User {
     public String UID;
     public String displayName;
-    public String teamID;
+    public String teamId;
+    public boolean atSafeHouse;
+    public boolean joinedMatch;
 
     public User() {
     }
 
-    public User (String UID, String  displayName, String teamID) {
+    public User (String UID, String  displayName, String teamId, boolean atSafeHouse, boolean joinedMatch) {
         this.UID = UID;
         this.displayName = displayName;
-        this.teamID = teamID;
+        this.teamId = teamId;
+        this.atSafeHouse = atSafeHouse;
+        this.joinedMatch = joinedMatch;
     }
 
     public String getUID() {
@@ -33,11 +37,27 @@ public class User {
         this.displayName = displayName;
     }
 
-    public String getTeamID() {
-        return teamID;
+    public String getTeamId() {
+        return teamId;
     }
 
-    public void setTeamID(String teamID) {
-        this.teamID = teamID;
+    public void setTeamId(String teamID) {
+        this.teamId = teamId;
+    }
+
+    public boolean isAtSafeHouse() {
+        return atSafeHouse;
+    }
+
+    public void setAtSafeHouse(boolean atSafeHouse) {
+        this.atSafeHouse = atSafeHouse;
+    }
+
+    public boolean isJoinedMatch() {
+        return joinedMatch;
+    }
+
+    public void setJoinedMatch(boolean joinedMatch) {
+        this.joinedMatch = joinedMatch;
     }
 }
