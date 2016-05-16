@@ -3,26 +3,21 @@ package com.eyecuelab.survivalists.ui;
 import android.app.Activity;
 import android.app.ActivityManager;
 import android.app.AlarmManager;
-import android.app.Dialog;
+import android.preference.PreferenceActivity;
 import android.support.v4.app.DialogFragment;
 import android.app.PendingIntent;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.content.Intent;
 import android.hardware.Sensor;
-import android.hardware.SensorEvent;
-import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
 import android.os.Build;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
-import android.support.annotation.NonNull;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentActivity;
-import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentTransaction;
 
-import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.View;
 import android.view.WindowManager;
@@ -37,7 +32,6 @@ import com.eyecuelab.survivalists.models.User;
 import com.eyecuelab.survivalists.models.SafeHouse;
 import com.eyecuelab.survivalists.services.BackgroundStepService;
 import com.eyecuelab.survivalists.util.CampaignEndAlarmReceiver;
-import com.eyecuelab.survivalists.util.StepResetAlarmReceiver;
 import com.eyecuelab.survivalists.util.StepResetResultReceiver;
 import com.facebook.FacebookSdk;
 import com.facebook.appevents.AppEventsLogger;
@@ -53,13 +47,6 @@ import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.common.api.ResultCallback;
 import com.google.android.gms.games.Games;
 
-import com.google.android.gms.games.Player;
-import com.google.android.gms.games.Players;
-import com.google.android.gms.games.internal.GamesContract;
-import com.google.android.gms.games.internal.game.Acls;
-import com.google.android.gms.games.internal.game.GameInstance;
-import com.google.android.gms.games.multiplayer.Invitation;
-
 import com.google.android.gms.games.multiplayer.Multiplayer;
 import com.google.android.gms.games.multiplayer.realtime.RoomConfig;
 import com.google.android.gms.games.multiplayer.turnbased.OnTurnBasedMatchUpdateReceivedListener;
@@ -69,18 +56,15 @@ import com.google.android.gms.games.multiplayer.turnbased.TurnBasedMultiplayer;
 import com.google.example.games.basegameutils.BaseGameUtils;
 import com.google.gson.Gson;
 
-import java.net.DatagramSocket;
 import java.util.ArrayList;
 import java.util.Calendar;
-import java.util.HashMap;
-import java.util.Map;
 
 import butterknife.Bind;
 import butterknife.ButterKnife;
 
 public class MainActivity extends FragmentActivity
-        implements View.OnClickListener, SensorEventListener, GoogleApiClient.ConnectionCallbacks,
-        GoogleApiClient.OnConnectionFailedListener, OnTurnBasedMatchUpdateReceivedListener {
+        implements View.OnClickListener, GoogleApiClient.ConnectionCallbacks,
+        GoogleApiClient.OnConnectionFailedListener, OnTurnBasedMatchUpdateReceivedListener, SharedPreferences.OnSharedPreferenceChangeListener {
 
     @Bind(R.id.stepTextView) TextView counter;
     @Bind(R.id.dailyStepsTextView) TextView dailyCounter;
@@ -127,6 +111,7 @@ public class MainActivity extends FragmentActivity
     private boolean mInSignInFlow = false;
     private Firebase mFirebaseRef;
     private Firebase mUserFirebaseRef;
+    private PreferenceActivity mPreferenceActivity;
 
 
     private Context mContext;
@@ -172,6 +157,7 @@ public class MainActivity extends FragmentActivity
         mSharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
         mEditor = mSharedPreferences.edit();
 
+
         //Google Play Games client and correlating buttons
         mGoogleApiClient = new GoogleApiClient.Builder(this)
                 .addConnectionCallbacks(this)
@@ -186,9 +172,16 @@ public class MainActivity extends FragmentActivity
         endMatchButton.setOnClickListener(this);
         testButton.setOnClickListener(this);
 
-        dailyCounter.setText(Integer.toString(dailySteps));
-        counter.setText(Integer.toString(stepsInSensor));
-        previousDayStepCount = mSharedPreferences.getInt(Constants.PREFERENCES_PREVIOUS_STEPS_KEY, 0);
+
+        //Initialize BackgroundStepService to run database injections and constant step updates
+        mBackgroundStepService = new BackgroundStepService(mContext);
+        mBackgroundStepServiceIntent = new Intent(mContext, mBackgroundStepService.getClass());
+        if(!isBackgroundStepServiceRunning(mBackgroundStepService.getClass()))
+        {
+            startService(mBackgroundStepServiceIntent);
+        }
+
+
 
         mCurrentMatchId = mSharedPreferences.getString("matchId", null);
 
@@ -205,13 +198,12 @@ public class MainActivity extends FragmentActivity
         mLastSafeHouseId = "0";
         mNextSafeHouseId = "1";
 
-        //initialize background step service to keep persistent pedometer
-        mBackgroundStepService = new BackgroundStepService(mContext);
-        mBackgroundStepServiceIntent = new Intent(mContext, mBackgroundStepService.getClass());
-        if(!isBackgroundStepServiceRunning(mBackgroundStepService.getClass()))
-        {
-            startService(mBackgroundStepServiceIntent);
-        }
+        //Set counter text based on current shared preferences--these are updated in the shared preferences onChange listener
+        dailySteps = mSharedPreferences.getInt(Constants.PREFERENCES_DAILY_STEPS, 0);
+        dailyCounter.setText(Integer.toString(dailySteps));
+        stepsInSensor = mSharedPreferences.getInt(Constants.PREFERENCES_STEPS_IN_SENSOR_KEY, 0);
+        counter.setText(Integer.toString(stepsInSensor));
+
     }
 
 
@@ -219,20 +211,22 @@ public class MainActivity extends FragmentActivity
     protected void onResume() {
         super.onResume();
         mGoogleApiClient.reconnect();
-        Sensor countSensor = mSensorManager.getDefaultSensor(Sensor.TYPE_STEP_COUNTER);
-        if (countSensor != null) {
-            mSensorManager.registerListener(this, countSensor, SensorManager.SENSOR_DELAY_GAME);
-        }
         if (mCurrentMatch != null) {
             matchIdTextView.setText(mCurrentMatch.getMatchId());
         }
         if(mCurrentPlayerId != null) {
         }
+
+
+        mSharedPreferences.registerOnSharedPreferenceChangeListener(this);
+
     }
 
     @Override
     protected void onPause() {
         super.onPause();
+        SharedPreferences pref = PreferenceManager.getDefaultSharedPreferences(this);
+        pref.unregisterOnSharedPreferenceChangeListener(this);
     }
 
     @Override
@@ -252,83 +246,6 @@ public class MainActivity extends FragmentActivity
         return false;
     }
 
-    //STEP SENSOR LOGIC AND FIREBASE CALLS
-    @Override
-    public void onSensorChanged(SensorEvent event) {
-        previousDayStepCount = mSharedPreferences.getInt(Constants.PREFERENCES_PREVIOUS_STEPS_KEY, 0);
-        stepsInSensor = (int) event.values[0];
-        if(stepsInSensor < previousDayStepCount) {
-            dailySteps =+ stepsInSensor;
-        } else {
-            dailySteps = Math.round(event.values[0] - previousDayStepCount);
-        }
-        dailyCounter.setText(Integer.toString(dailySteps));
-        counter.setText(Integer.toString(stepsInSensor));
-        String dailyStepsString = Integer.toString(dailySteps);
-
-        new Thread(new Runnable() {
-            @Override
-            public void run() {
-            }
-        });
-
-        initiateDailyCountResetService();
-
-        if((mCurrentPlayerId != null) && (dailySteps % 10 < 1)) {
-            Firebase firebaseStepsRef = new Firebase(Constants.FIREBASE_URL_STEPS + "/" + mCurrentPlayerId + "/");
-            Map<String, Object> dailySteps = new HashMap<>();
-            dailySteps.put("daily_steps", dailyStepsString);
-            firebaseStepsRef.updateChildren(dailySteps);
-            firebaseStepListener();
-        }
-
-        if ((mCurrentMatchId != null) && (mNextSafehouse.reachedSafehouse(dailySteps))) {
-            Toast.makeText(MainActivity.this, "You've reached " + mNextSafehouse.getHouseName(), Toast.LENGTH_SHORT).show();
-            Toast.makeText(MainActivity.this, mNextSafehouse.getDescription(), Toast.LENGTH_LONG).show();
-        }
-
-    }
-
-    @Override
-    public void onAccuracyChanged(Sensor sensor, int accuracy) {}
-
-    private void firebaseStepListener() {
-        Firebase firebaseStepsRef = new Firebase(Constants.FIREBASE_URL_STEPS + "/" + mCurrentPlayerId);
-        Query queryRef = firebaseStepsRef.orderByValue();
-
-        queryRef.addChildEventListener(new ChildEventListener() {
-            @Override
-            public void onChildAdded(DataSnapshot dataSnapshot, String s) {
-                Log.d("Firebase Update", dataSnapshot.getKey());
-                Log.d("Firebase Update", dataSnapshot.getValue().toString());
-            }
-
-            @Override
-            public void onChildChanged(DataSnapshot dataSnapshot, String s) {}
-
-            @Override
-            public void onChildRemoved(DataSnapshot dataSnapshot) {}
-
-            @Override
-            public void onChildMoved(DataSnapshot dataSnapshot, String s) {}
-
-            @Override
-            public void onCancelled(FirebaseError firebaseError) {}
-        });
-
-        queryRef.addValueEventListener(new ValueEventListener() {
-            @Override
-            public void onDataChange(DataSnapshot dataSnapshot) {}
-
-            @Override
-            public void onCancelled(FirebaseError firebaseError) {}
-        });
-    }
-
-
-
-
-
     //GOOGLE GAMES API LOGIC BEGINS HERE
     //TODO: Move this logic to a separate service class
     @Override
@@ -336,6 +253,7 @@ public class MainActivity extends FragmentActivity
         signInButton.setVisibility(View.GONE);
         signOutButton.setVisibility(View.VISIBLE);
         mCurrentPlayerId = Games.Players.getCurrentPlayerId(mGoogleApiClient);
+        mEditor.putString(Constants.PREFERENCES_GOOGLE_PLAYER_ID, mCurrentPlayerId);
         if (mCurrentMatch != null) {
             Games.TurnBasedMultiplayer
                     .loadMatch(mGoogleApiClient, mCurrentMatch.getMatchId());
@@ -715,30 +633,7 @@ public class MainActivity extends FragmentActivity
         //TODO: Create endCampaign method
 
 
-        previousDayStepCount = 0;
-
-    }
-
-    //Sets alarm for daily step count
-    public void initiateDailyCountResetService() {
-        //Bundles the number of steps in the sensor
-        Intent intent = new Intent(this, StepResetAlarmReceiver.class);
-        Bundle bundle = new Bundle();
-        intent.putExtra("receiver", mReceiver);
-        bundle.putInt("endOfDaySteps", stepsInSensor);
-        bundle.putInt("dailySteps", dailySteps);
-        bundle.putString("currentPlayerID", mCurrentPlayerId);
-
-        intent.putExtras(bundle);
-        //Sets a recurring alarm just before midnight daily to trigger BroadcastReceiver
-        Calendar calendar = Calendar.getInstance();
-        calendar.set(Calendar.HOUR_OF_DAY, 23);
-        calendar.set(Calendar.MINUTE, 59);
-        calendar.set(Calendar.SECOND, 0);
-        calendar.set(Calendar.MILLISECOND, 0);
-        PendingIntent pi = PendingIntent.getBroadcast(this, StepResetAlarmReceiver.REQUEST_CODE, intent, PendingIntent.FLAG_UPDATE_CURRENT);
-        AlarmManager am = (AlarmManager) mContext.getSystemService(Context.ALARM_SERVICE);
-        am.setRepeating(AlarmManager.RTC_WAKEUP, calendar.getTimeInMillis(), AlarmManager.INTERVAL_DAY, pi);
+        mEditor.putInt(Constants.PREFERENCES_PREVIOUS_STEPS_KEY, 0).commit();
 
     }
 
@@ -755,5 +650,20 @@ public class MainActivity extends FragmentActivity
 
         DialogFragment frag = EventDialogFragment.newInstance(mStackLevel);
         frag.show(ft, "fragment_event_dialog");
+    }
+
+    @Override
+    public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String key) {
+        if(key.equals(Constants.PREFERENCES_DAILY_STEPS)) {
+            dailySteps = mSharedPreferences.getInt(Constants.PREFERENCES_DAILY_STEPS, 0);
+
+            dailyCounter.setText(Integer.toString(dailySteps));
+        }
+
+        if(key.equals(Constants.PREFERENCES_STEPS_IN_SENSOR_KEY)) {
+            stepsInSensor = mSharedPreferences.getInt(Constants.PREFERENCES_STEPS_IN_SENSOR_KEY, 0);
+            counter.setText(Integer.toString(stepsInSensor));
+        }
+
     }
 }
