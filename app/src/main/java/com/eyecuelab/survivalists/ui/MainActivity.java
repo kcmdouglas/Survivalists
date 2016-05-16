@@ -3,10 +3,7 @@ package com.eyecuelab.survivalists.ui;
 import android.app.Activity;
 import android.app.AlarmManager;
 import android.app.PendingIntent;
-import android.content.BroadcastReceiver;
-import android.content.ComponentCallbacks;
 import android.content.Context;
-import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.content.Intent;
 import android.hardware.Sensor;
@@ -15,9 +12,7 @@ import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
 import android.os.Build;
 import android.os.Bundle;
-import android.os.Handler;
 import android.preference.PreferenceManager;
-import android.support.annotation.NonNull;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.View;
@@ -29,7 +24,7 @@ import android.widget.Toast;
 
 import com.eyecuelab.survivalists.Constants;
 import com.eyecuelab.survivalists.R;
-import com.eyecuelab.survivalists.services.StepResetIntentService;
+import com.eyecuelab.survivalists.models.User;
 import com.eyecuelab.survivalists.models.SafeHouse;
 import com.eyecuelab.survivalists.util.CampaignEndAlarmReceiver;
 import com.eyecuelab.survivalists.util.StepResetAlarmReceiver;
@@ -46,28 +41,16 @@ import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.SignInButton;
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.common.api.ResultCallback;
-import com.google.android.gms.common.api.ResultCallbacks;
-import com.google.android.gms.common.api.Status;
-import com.google.android.gms.games.Game;
 import com.google.android.gms.games.Games;
-import com.google.android.gms.games.Player;
-import com.google.android.gms.games.Players;
-import com.google.android.gms.games.internal.game.Acls;
-import com.google.android.gms.games.internal.game.GameInstance;
-import com.google.android.gms.games.multiplayer.Invitation;
 import com.google.android.gms.games.multiplayer.Multiplayer;
-import com.google.android.gms.games.multiplayer.OnInvitationReceivedListener;
 import com.google.android.gms.games.multiplayer.realtime.RoomConfig;
-import com.google.android.gms.games.multiplayer.realtime.RoomUpdateListener;
 import com.google.android.gms.games.multiplayer.turnbased.OnTurnBasedMatchUpdateReceivedListener;
 import com.google.android.gms.games.multiplayer.turnbased.TurnBasedMatch;
 import com.google.android.gms.games.multiplayer.turnbased.TurnBasedMatchConfig;
 import com.google.android.gms.games.multiplayer.turnbased.TurnBasedMultiplayer;
-import com.google.android.gms.games.request.GameRequest;
 import com.google.example.games.basegameutils.BaseGameUtils;
-import com.google.example.games.basegameutils.GameHelper;
+import com.google.gson.Gson;
 
-import java.io.IOException;
 import java.net.DatagramSocket;
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -93,11 +76,15 @@ public class MainActivity extends AppCompatActivity
     @Bind(R.id.userIdTextView) TextView userIdTextView;
     @Bind(R.id.userNameTextView) TextView userNameTextView;
     @Bind(R.id.stepEditText) EditText manualStepSetter;
+    @Bind(R.id.safehouseTextView) TextView safehouseTextView;
 
     private int stepsInSensor;
     private int previousDayStepCount;
-    private int dailySteps;
+    private int dailySteps = 10;
     private String mCurrentMatchId;
+    private String mMatchDuraution;
+    private String mLastSafeHouseId;
+    private String mNextSafeHouseId;
     private ArrayList<String> invitees;
     private SharedPreferences mSharedPreferences;
     private SharedPreferences.Editor mEditor;
@@ -106,6 +93,9 @@ public class MainActivity extends AppCompatActivity
     private TurnBasedMatch mCurrentMatch;
     private String mCurrentPlayerId;
     private Sensor countSensor;
+    private SafeHouse mNextSafehouse;
+
+    private User mCurrentUser;
 
 //    Flags to indicate return activity
     private static final int RC_SIGN_IN =  100;
@@ -118,6 +108,7 @@ public class MainActivity extends AppCompatActivity
     private boolean mExplicitSignOut = false;
     private boolean mInSignInFlow = false;
     private Firebase mFirebaseRef;
+    private Firebase mUserFirebaseRef;
     private int mockCounter;
     private String mockCounterString;
     DatagramSocket socket;
@@ -176,6 +167,19 @@ public class MainActivity extends AppCompatActivity
         counter.setText(Integer.toString(stepsInSensor));
         previousDayStepCount = mSharedPreferences.getInt(Constants.PREFERENCES_PREVIOUS_STEPS_KEY, 0);
         mCurrentMatchId = mSharedPreferences.getString("matchId", null);
+
+        //pull next safehouse object from shared preferences
+        String safehouseJson = mSharedPreferences.getString("nextSafehouse", null);
+        Gson gson = new Gson();
+        mNextSafehouse = gson.fromJson(safehouseJson, SafeHouse.class);
+
+        if (mNextSafehouse != null) {
+            Toast.makeText(MainActivity.this, "YAYA! " + mNextSafehouse.getHouseName(), Toast.LENGTH_SHORT).show();
+        }
+
+        mMatchDuraution = "30";
+        mLastSafeHouseId = "0";
+        mNextSafeHouseId = "1";
     }
 
 
@@ -235,20 +239,25 @@ public class MainActivity extends AppCompatActivity
             firebaseStepListener();
         }
 
+        if ((mCurrentMatchId != null) && (mNextSafehouse.reachedSafehouse(dailySteps))) {
+            Toast.makeText(MainActivity.this, "You've reached " + mNextSafehouse.getHouseName(), Toast.LENGTH_SHORT).show();
+            Toast.makeText(MainActivity.this, mNextSafehouse.getDescription(), Toast.LENGTH_LONG).show();
+        }
+
     }
 
     @Override
     public void onAccuracyChanged(Sensor sensor, int accuracy) {}
 
     private void firebaseStepListener() {
-        Firebase firebaseStepsRef = new Firebase(Constants.FIREBASE_URL_STEPS + "/" + Games.Players.getCurrentPlayerId(mGoogleApiClient));
+        Firebase firebaseStepsRef = new Firebase(Constants.FIREBASE_URL_STEPS + "/" + mCurrentPlayerId);
         Query queryRef = firebaseStepsRef.orderByValue();
 
         queryRef.addChildEventListener(new ChildEventListener() {
             @Override
             public void onChildAdded(DataSnapshot dataSnapshot, String s) {
-                Log.d("Firebase Update", "New Match: " + dataSnapshot.getKey());
-                Log.d("Firebase Update", "Players: " + dataSnapshot.getValue());
+                Log.d("Firebase Update", dataSnapshot.getKey());
+                Log.d("Firebase Update", dataSnapshot.getValue().toString());
             }
 
             @Override
@@ -278,6 +287,7 @@ public class MainActivity extends AppCompatActivity
 
 
     //GOOGLE GAMES API LOGIC BEGINS HERE
+    //TODO: Move this logic to a separate service class
     @Override
     public void onConnected(Bundle connectionHint) {
         signInButton.setVisibility(View.GONE);
@@ -289,26 +299,52 @@ public class MainActivity extends AppCompatActivity
 
             matchIdTextView.setText(mCurrentMatchId);
         }
-//        load current match
-        if (connectionHint != null) {
-            mCurrentMatch = connectionHint.getParcelable(Multiplayer.EXTRA_TURN_BASED_MATCH);
-        }
 
         //Load current match
         loadMatch();
 
         Games.TurnBasedMultiplayer.registerMatchUpdateListener(mGoogleApiClient, this);
 
-        String userId = Games.Players.getCurrentPlayerId(mGoogleApiClient);
         String userName = Games.Players.getCurrentPlayer(mGoogleApiClient).getDisplayName();
 
-        mEditor.putString("userId", userId);
+        //Save to shared preferences
+        mEditor.putString("userId", mCurrentPlayerId);
         mEditor.putString("userName", userName);
         mEditor.commit();
 
-        userIdTextView.setText(userId);
+        userIdTextView.setText(mCurrentPlayerId);
         String greeting = "Hello " + userName;
         userNameTextView.setText(greeting);
+
+        //Save user info to firebase
+        mUserFirebaseRef = new Firebase(Constants.FIREBASE_URL_USERS + "/" + mCurrentPlayerId);
+        mUserFirebaseRef.child("displayName")
+                .setValue(userName);
+        mUserFirebaseRef.child("atSafeHouse")
+                .setValue(false);
+
+        if (mCurrentMatch == null) {
+            mUserFirebaseRef.child("joinedMatch")
+                    .setValue(false);
+        } else {
+            mUserFirebaseRef.child("joinedMatch")
+                    .setValue(true);
+            Firebase teamFirebaseRef = new Firebase(Constants.FIREBASE_URL_TEAM + "/" + mCurrentMatchId);
+            teamFirebaseRef.addListenerForSingleValueEvent(new ValueEventListener() {
+                @Override
+                public void onDataChange(DataSnapshot dataSnapshot) {
+                    mLastSafeHouseId = dataSnapshot.child("lastSafehouseId").getValue().toString();
+                    mNextSafeHouseId = dataSnapshot.child("nextSafehouseId").getValue().toString();
+                    safehouseTextView.setText(mNextSafeHouseId);
+                }
+
+                @Override
+                public void onCancelled(FirebaseError firebaseError) {}
+            });
+        }
+        firebaseListening();
+
+
     }
 
     @Override
@@ -358,15 +394,35 @@ public class MainActivity extends AppCompatActivity
         }
     }
 
+    public void saveSafehouse() {
+        Firebase safehouseFirebaseRef = new Firebase(Constants.FIREBASE_URL_SAFEHOUSES + "/" + mNextSafeHouseId);
+        safehouseFirebaseRef.addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                String houseName = dataSnapshot.child("houseName").getValue().toString();
+                String description = dataSnapshot.child("description").getValue().toString();
+                int stepsRequired = Integer.parseInt(dataSnapshot.child("stepsRequired").getValue().toString());
+
+                // Build the next safehouse object and save it to shared preferences
+                SafeHouse nextSafeHouse = new SafeHouse(mNextSafeHouseId, houseName, description, stepsRequired);
+                Gson gson = new Gson();
+                String nextSafehouseJson = gson.toJson(nextSafeHouse);
+                mEditor.putString("nextSafehouse", nextSafehouseJson);
+                mEditor.commit();
+            }
+
+            @Override
+            public void onCancelled(FirebaseError firebaseError) {
+
+            }
+        });
+    }
+
     public void testMethod() {
-        SafeHouse nextSafeHouse = new SafeHouse("1", "the first safehouse", "You find a hole in the ground. This is where your party will sleep tonight.", 35);
-        dailySteps = Integer.parseInt(manualStepSetter.getText().toString());
-        if (nextSafeHouse.reachedSafeHouse(dailySteps)) {
-            Toast.makeText(MainActivity.this, "You've reached " + nextSafeHouse.getHouseName(), Toast.LENGTH_SHORT).show();
-            Toast.makeText(MainActivity.this, nextSafeHouse.getDescription(), Toast.LENGTH_LONG).show();
-        } else {
-            Toast.makeText(MainActivity.this, "You have " + nextSafeHouse.stepsLeftToHouse(dailySteps) + " steps to reach the safehouse!", Toast.LENGTH_SHORT).show();
-        }
+//        String stepsInThings = manualStepSetter.getText().toString();
+//        if (stepsInThings != "") {
+//            dailySteps = Integer.parseInt(stepsInThings);
+//        }
     }
 
     public void loadMatch() {
@@ -392,22 +448,11 @@ public class MainActivity extends AppCompatActivity
 
             matchIdTextView.setText(mCurrentMatchId);
         }
-//        else if (mCurrentMatch != null) {
-//            ResultCallback<TurnBasedMultiplayer.LoadMatchesResult> loadMatchesResultResultCallback = new ResultCallback<TurnBasedMultiplayer.LoadMatchesResult>() {
-//
-//                @Override
-//                public void onResult(TurnBasedMultiplayer.LoadMatchesResult loadMatchesResult) {
-//                    mCurrentMatch = loadMatchesResult.getMatches().getMyTurnMatches().get(0);
-//                    takeFirstTurn();
-//                }
-//            };
-//            Games.TurnBasedMultiplayer.loadMatchesByStatus(mGoogleApiClient, TurnBasedMatch.MATCH_TURN_STATUS_ALL).setResultCallback(loadMatchesResultResultCallback);
-//            takeFirstTurn();
-//        }
     }
 
     public void joinMatch() {
         if (mCurrentMatch == null) {
+            // TODO: Get rid of this select current match intent!
             Intent joinMatchIntent = Games.TurnBasedMultiplayer.getInboxIntent(mGoogleApiClient);
             startActivityForResult(joinMatchIntent, RC_WAITING_ROOM);
             Games.TurnBasedMultiplayer
@@ -475,12 +520,28 @@ public class MainActivity extends AppCompatActivity
         mEditor.putString("matchId", mCurrentMatchId);
         mEditor.commit();
 
-        Firebase firebaseRef = new Firebase(Constants.FIREBASE_URL_TEAM + "/" + "");
-        firebaseListening();
-        firebaseRef.child(mCurrentMatchId).setValue(wholeParty);
+        Firebase teamFirebaseRef = new Firebase(Constants.FIREBASE_URL_TEAM + "/" + "")
+                .child(mCurrentMatchId);
+        teamFirebaseRef.child("matchStart")
+                .setValue(mCurrentMatch.getCreationTimestamp());
+        teamFirebaseRef.child("matchDuration")
+                .setValue(mMatchDuraution);
+        teamFirebaseRef.child("lastSafehouseId")
+                .setValue(mLastSafeHouseId);
+        teamFirebaseRef.child("nextSafehouseId")
+                .setValue(mNextSafeHouseId);
+        Firebase playerFirebase = teamFirebaseRef
+                .child("players");
+        for (int i = 0; i < wholeParty.size(); i++) {
+            playerFirebase
+                    .child("p_" + (i + 1))
+                    .setValue(wholeParty.get(i));
+        }
         firebaseListening();
 
+        mUserFirebaseRef.child("teamId").setValue(mCurrentMatchId);
         matchIdTextView.setText(mCurrentMatchId);
+        saveSafehouse();
     }
 
     @Override
