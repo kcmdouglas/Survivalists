@@ -7,4 +7,40 @@
 
     <!-- TODO: Remove or change this placeholder text -->
     <string name="hello_blank_fragment">Hello blank fragment</string>
+
+    <string-array name="dialogArray">
+        <item>You came across an abandoned camp ground&#8230;</item>
+        <item>You found a half-eaten deer carcass&#8230;</item>
+        <item>You saw a cache of food strung up in a tree&#8230;</item>
+    </string-array>
+    <!--<string-array name="choiceA">-->
+        <!--<item>Inspect</item>-->
+        <!--<item></item>-->
+        <!--<item></item>-->
+    <!--</string-array>-->
+    <!--<string-array name="choiceB">-->
+        <!--<item></item>-->
+        <!--<item></item>-->
+        <!--<item></item>-->
+    <!--</string-array>-->
+    <string-array name="resultA">
+        <item>You inspect the camp, and in typical Goldilocks fashion, a zombie family comes back from their hike in the woods and attacks. Bummer.</item>
+        <item>The deer corpse reanimates! A zombie deer, who would\'ve thought?</item>
+        <item>You cut it down and open the box. Unfortunately, someone lives an alternative lifestyle&#8230;</item>
+    </string-array>
+    <string-array name="resultB">
+        <item>Probably for the best&#8212;there\'s still steam coming from the campfire&#8230;</item>
+        <item>Did you just see it twitch&#8230;? Better pick up the speed&#8230;</item>
+        <item>You\'re right, someone put in the work to hoist all that up there. However, you found something on the ground! All not is lost!</item>
+    </string-array>
+    <string-array name="resultAConsequence">
+        <item>-15 HEALTH</item>
+        <item>-5 HEALTH</item>
+        <item>50 TOFU DOGS OBTAINED</item>
+    </string-array>
+    <string-array name="resultBConsequence">
+        <item>NO EFFECT</item>
+        <item>LASTING FEAR OF WOODLAND CREATURES</item>
+        <item>2 GRANOLA BARS ADDED TO INVENTORY</item>
+    </string-array>
 </resources>
