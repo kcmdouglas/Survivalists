@@ -2,6 +2,7 @@ package com.eyecuelab.survivalists.ui;
 
 import android.app.Activity;
 import android.app.AlarmManager;
+import android.app.Fragment;
 import android.app.PendingIntent;
 import android.content.Context;
 import android.content.SharedPreferences;
@@ -13,6 +14,9 @@ import android.hardware.SensorManager;
 import android.os.Build;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
+import android.support.annotation.Nullable;
+import android.support.v4.app.DialogFragment;
+import android.support.v4.app.FragmentActivity;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.View;
@@ -26,6 +30,7 @@ import com.eyecuelab.survivalists.Constants;
 import com.eyecuelab.survivalists.R;
 import com.eyecuelab.survivalists.models.User;
 import com.eyecuelab.survivalists.models.SafeHouse;
+import com.eyecuelab.survivalists.services.GooglePlayGamesService;
 import com.eyecuelab.survivalists.util.CampaignEndAlarmReceiver;
 import com.eyecuelab.survivalists.util.StepResetAlarmReceiver;
 import com.eyecuelab.survivalists.util.StepResetResultReceiver;
@@ -61,13 +66,10 @@ import butterknife.Bind;
 import butterknife.ButterKnife;
 
 public class MainActivity extends AppCompatActivity
-        implements View.OnClickListener, SensorEventListener, GoogleApiClient.ConnectionCallbacks,
-        GoogleApiClient.OnConnectionFailedListener, OnTurnBasedMatchUpdateReceivedListener {
+        implements View.OnClickListener, SensorEventListener, OnTurnBasedMatchUpdateReceivedListener {
 
     @Bind(R.id.stepTextView) TextView counter;
     @Bind(R.id.dailyStepsTextView) TextView dailyCounter;
-    @Bind(R.id.sign_in_button) SignInButton signInButton;
-    @Bind(R.id.sign_out_button) Button signOutButton;
     @Bind(R.id.findPlayersButton) Button findPlayersButton;
     @Bind(R.id.endMatchButton) Button endMatchButton;
     @Bind(R.id.playerTextView) TextView playersTextView;
@@ -77,6 +79,8 @@ public class MainActivity extends AppCompatActivity
     @Bind(R.id.userNameTextView) TextView userNameTextView;
     @Bind(R.id.stepEditText) EditText manualStepSetter;
     @Bind(R.id.safehouseTextView) TextView safehouseTextView;
+    @Bind(R.id.sign_in_button) SignInButton signInButton;
+    @Bind(R.id.sign_out_button) Button signOutButton;
 
     private int stepsInSensor;
     private int previousDayStepCount;
@@ -102,11 +106,6 @@ public class MainActivity extends AppCompatActivity
     private static final int RC_SELECT_PLAYERS = 200;
     private static final int RC_WAITING_ROOM = 300;
 
-    private boolean mResolvingConnectionFailure = false;
-    private boolean mAutoStartSignInFlow = true;
-    private boolean mSignInCLicked = false;
-    private boolean mExplicitSignOut = false;
-    private boolean mInSignInFlow = false;
     private Firebase mFirebaseRef;
     private Firebase mUserFirebaseRef;
     private int mockCounter;
@@ -119,9 +118,6 @@ public class MainActivity extends AppCompatActivity
     @Override
     protected void onStart() {
         super.onStart();
-        if (!mInSignInFlow && !mExplicitSignOut) {
-            mGoogleApiClient.connect();
-        }
         mockCounter = stepsInSensor;
     }
 
@@ -149,19 +145,13 @@ public class MainActivity extends AppCompatActivity
         mSharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
         mEditor = mSharedPreferences.edit();
 
-        //Google Play Games client and correlating buttons
-        mGoogleApiClient = new GoogleApiClient.Builder(this)
-                .addConnectionCallbacks(this)
-                .addOnConnectionFailedListener(this)
-                .addApi(Games.API)
-                .addScope(Games.SCOPE_GAMES)
-                .build();
+        connectToGoogleApi();
 
-        signInButton.setOnClickListener(this);
-        signOutButton.setOnClickListener(this);
         findPlayersButton.setOnClickListener(this);
         endMatchButton.setOnClickListener(this);
         testButton.setOnClickListener(this);
+        signInButton.setOnClickListener(this);
+        signOutButton.setOnClickListener(this);
 
         dailyCounter.setText(Integer.toString(dailySteps));
         counter.setText(Integer.toString(stepsInSensor));
@@ -173,10 +163,6 @@ public class MainActivity extends AppCompatActivity
         Gson gson = new Gson();
         mNextSafehouse = gson.fromJson(safehouseJson, SafeHouse.class);
 
-        if (mNextSafehouse != null) {
-            Toast.makeText(MainActivity.this, "YAYA! " + mNextSafehouse.getHouseName(), Toast.LENGTH_SHORT).show();
-        }
-
         mMatchDuraution = "30";
         mLastSafeHouseId = "0";
         mNextSafeHouseId = "1";
@@ -186,16 +172,15 @@ public class MainActivity extends AppCompatActivity
     @Override
     protected void onResume() {
         super.onResume();
-        mGoogleApiClient.reconnect();
         Sensor countSensor = mSensorManager.getDefaultSensor(Sensor.TYPE_STEP_COUNTER);
         if (countSensor != null) {
             mSensorManager.registerListener(this, countSensor, SensorManager.SENSOR_DELAY_GAME);
         }
-        if (mCurrentMatch != null) {
-            matchIdTextView.setText(mCurrentMatch.getMatchId());
-        }
-        if(mCurrentPlayerId != null) {
-        }
+//        if (mCurrentMatch != null) {
+//            matchIdTextView.setText(mCurrentMatch.getMatchId());
+//        }
+//        if(mCurrentPlayerId != null) {
+//        }
     }
 
     @Override
@@ -283,114 +268,120 @@ public class MainActivity extends AppCompatActivity
     }
 
 
-
-
-
     //GOOGLE GAMES API LOGIC BEGINS HERE
-    //TODO: Move this logic to a separate service class
-    @Override
-    public void onConnected(Bundle connectionHint) {
-        signInButton.setVisibility(View.GONE);
-        signOutButton.setVisibility(View.VISIBLE);
-        mCurrentPlayerId = Games.Players.getCurrentPlayerId(mGoogleApiClient);
-        if (mCurrentMatch != null) {
-            Games.TurnBasedMultiplayer
-                    .loadMatch(mGoogleApiClient, mCurrentMatch.getMatchId());
+    private void connectToGoogleApi() {
+        GooglePlayGamesService.connectToGooglePlay(this.getApplicationContext());
 
-            matchIdTextView.setText(mCurrentMatchId);
-        }
-
-        //Load current match
-        loadMatch();
-
-        Games.TurnBasedMultiplayer.registerMatchUpdateListener(mGoogleApiClient, this);
-
-        String userName = Games.Players.getCurrentPlayer(mGoogleApiClient).getDisplayName();
-
-        //Save to shared preferences
-        mEditor.putString("userId", mCurrentPlayerId);
-        mEditor.putString("userName", userName);
-        mEditor.commit();
-
-        userIdTextView.setText(mCurrentPlayerId);
-        String greeting = "Hello " + userName;
-        userNameTextView.setText(greeting);
-
-        //Save user info to firebase
-        mUserFirebaseRef = new Firebase(Constants.FIREBASE_URL_USERS + "/" + mCurrentPlayerId);
-        mUserFirebaseRef.child("displayName")
-                .setValue(userName);
-        mUserFirebaseRef.child("atSafeHouse")
-                .setValue(false);
-
-        if (mCurrentMatch == null) {
-            mUserFirebaseRef.child("joinedMatch")
-                    .setValue(false);
-        } else {
-            mUserFirebaseRef.child("joinedMatch")
-                    .setValue(true);
-            Firebase teamFirebaseRef = new Firebase(Constants.FIREBASE_URL_TEAM + "/" + mCurrentMatchId);
-            teamFirebaseRef.addListenerForSingleValueEvent(new ValueEventListener() {
-                @Override
-                public void onDataChange(DataSnapshot dataSnapshot) {
-                    mLastSafeHouseId = dataSnapshot.child("lastSafehouseId").getValue().toString();
-                    mNextSafeHouseId = dataSnapshot.child("nextSafehouseId").getValue().toString();
-                    safehouseTextView.setText(mNextSafeHouseId);
-                }
-
-                @Override
-                public void onCancelled(FirebaseError firebaseError) {}
-            });
-        }
-        firebaseListening();
-
-
+//        new GoogleApiClient.ConnectionCallbacks() {
+//            @Override
+//            public void onConnected(Bundle bundle) {
+//                mGoogleApiClient = GooglePlayGamesService.getGoogleApiClient();
+//                mCurrentPlayerId = Games.Players.getCurrentPlayerId(mGoogleApiClient);
+//
+//                GooglePlayGamesService.reconnectToGooglePlay();
+//
+//                Log.d("Google API SERVICE", "Got to on connected service");
+//
+//                if (mCurrentMatch != null) {
+//                    Games.TurnBasedMultiplayer
+//                            .loadMatch(mGoogleApiClient, mCurrentMatch.getMatchId());
+//
+//                    matchIdTextView.setText(mCurrentMatchId);
+//                }
+//
+//                //Load current match
+//                loadMatch();
+//
+//                String userName = Games.Players.getCurrentPlayer(mGoogleApiClient).getDisplayName();
+//
+//                //Save to shared preferences
+//                mEditor.putString("userId", mCurrentPlayerId);
+//                mEditor.putString("userName", userName);
+//                mEditor.commit();
+//
+//                userIdTextView.setText(mCurrentPlayerId);
+//                String greeting = "Hello " + userName;
+//                userNameTextView.setText(greeting);
+//
+//                //Save user info to firebase
+//                mUserFirebaseRef = new Firebase(Constants.FIREBASE_URL_USERS + "/" + mCurrentPlayerId);
+//                mUserFirebaseRef.child("displayName")
+//                        .setValue(userName);
+//                mUserFirebaseRef.child("atSafeHouse")
+//                        .setValue(false);
+//
+//                if (mCurrentMatch == null) {
+//                    mUserFirebaseRef.child("joinedMatch")
+//                            .setValue(false);
+//                } else {
+//                    mUserFirebaseRef.child("joinedMatch")
+//                            .setValue(true);
+//                    Firebase teamFirebaseRef = new Firebase(Constants.FIREBASE_URL_TEAM + "/" + mCurrentMatchId);
+//                    teamFirebaseRef.addListenerForSingleValueEvent(new ValueEventListener() {
+//                        @Override
+//                        public void onDataChange(DataSnapshot dataSnapshot) {
+//                            mLastSafeHouseId = dataSnapshot.child("lastSafehouseId").getValue().toString();
+//                            mNextSafeHouseId = dataSnapshot.child("nextSafehouseId").getValue().toString();
+//                            safehouseTextView.setText(mNextSafeHouseId);
+//                        }
+//
+//                        @Override
+//                        public void onCancelled(FirebaseError firebaseError) {}
+//                    });
+//                }
+//                firebaseListening();
+//
+//            }
+//
+//            @Override
+//            public void onConnectionSuspended(int i) {
+//                Log.d("PROBLEM", "Connection suspended");
+//                mGoogleApiClient.reconnect();
+//            }
+//        });
     }
 
-    @Override
-    public void onConnectionSuspended(int i) {
-        Toast.makeText(this, "Connection suspended, reconnecting", Toast.LENGTH_LONG).show();
-        mGoogleApiClient.connect();
-    }
-
-    @Override
-    public void onConnectionFailed(ConnectionResult connectionResult) {
-        if (mResolvingConnectionFailure) {
-            return;
-        }
-        if (mSignInCLicked || mAutoStartSignInFlow) {
-            mAutoStartSignInFlow = false;
-            mSignInCLicked = false;
-            mResolvingConnectionFailure = true;
-        }
-        if (!BaseGameUtils.resolveConnectionFailure(this,
-                mGoogleApiClient, connectionResult, RC_SIGN_IN, "Sign in error!")) {
-            mResolvingConnectionFailure = false;
-        }
-    }
+//
+//    @Override
+//    public void onConnectionSuspended(int i) {
+//        Toast.makeText(this, "Connection suspended, reconnecting", Toast.LENGTH_LONG).show();
+//        mGoogleApiClient.connect();
+//    }
+//
+//    @Override
+//    public void onConnectionFailed(ConnectionResult connectionResult) {
+//        if (mResolvingConnectionFailure) {
+//            return;
+//        }
+//        if (mSignInCLicked || mAutoStartSignInFlow) {
+//            mAutoStartSignInFlow = false;
+//            mSignInCLicked = false;
+//            mResolvingConnectionFailure = true;
+//        }
+//        if (!BaseGameUtils.resolveConnectionFailure(this,
+//                mGoogleApiClient, connectionResult, RC_SIGN_IN, "Sign in error!")) {
+//            mResolvingConnectionFailure = false;
+//        }
+//    }
 
     @Override
     public void onClick(View view) {
-        if (view == signInButton) {
-            mSignInCLicked = true;
-            mGoogleApiClient.reconnect();
-            signInButton.setVisibility(View.GONE);
-            signOutButton.setVisibility(View.VISIBLE);
-        } else if (view == signOutButton) {
-            mExplicitSignOut = true;
-            if (mGoogleApiClient != null && mGoogleApiClient.isConnected()) {
-                Games.signOut(mGoogleApiClient);
-                mGoogleApiClient.disconnect();
-            }
-            mSignInCLicked = false;
-            signInButton.setVisibility(View.VISIBLE);
-            signOutButton.setVisibility(View.GONE);
-        } else if (view == findPlayersButton) {
-            findPlayers();
-        } else if (view == endMatchButton) {
-            endMatch();
-        } else if (view == testButton) {
-            testMethod();
+        switch (view.getId()) {
+            case R.id.findPlayersButton:
+                findPlayers();
+                break;
+            case R.id.endMatchButton:
+                endMatch();
+                break;
+            case R.id.sign_in_button:
+                connectToGoogleApi();
+                break;
+            case R.id.sign_out_button:
+                GooglePlayGamesService.disconnectGoogleApi();
+                break;
+            case R.id.testButton:
+                testMethod();
+                break;
         }
     }
 
