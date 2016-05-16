@@ -36,7 +36,7 @@
             android:exported="true"
             android:label="BackgroundStepService">
             <intent-filter>
-                <action android:name="com.eyecuelab.survivalists.util.ActivityRecognition.RestartSensor"/>
+                <action android:name="com.eyecuelab.survivalists.util.BackgroundStepReceiver"/>
             </intent-filter>
         </receiver>
 

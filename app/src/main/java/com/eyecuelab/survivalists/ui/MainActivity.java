@@ -206,7 +206,7 @@ public class MainActivity extends FragmentActivity
         mNextSafeHouseId = "1";
 
         //initialize background step service to keep persistent pedometer
-        mBackgroundStepService = new BackgroundStepService();
+        mBackgroundStepService = new BackgroundStepService(mContext);
         mBackgroundStepServiceIntent = new Intent(mContext, mBackgroundStepService.getClass());
         if(!isBackgroundStepServiceRunning(mBackgroundStepService.getClass()))
         {
