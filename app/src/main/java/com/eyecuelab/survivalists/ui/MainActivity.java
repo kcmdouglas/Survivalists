@@ -99,7 +99,7 @@ public class MainActivity extends FragmentActivity
 
     private User mCurrentUser;
 
-//    Flags to indicate return activity
+    //    Flags to indicate return activity
     private static final int RC_SIGN_IN =  100;
     private static final int RC_SELECT_PLAYERS = 200;
     private static final int RC_WAITING_ROOM = 300;
@@ -510,12 +510,12 @@ public class MainActivity extends FragmentActivity
         super.onActivityResult(request, response, data);
 
         if (response != Activity.RESULT_OK) {
-        //user canceled or something went wrong
+            //user canceled or something went wrong
             return;
         }
 
         if (request == RC_SELECT_PLAYERS) {
-        //user returning from select players
+            //user returning from select players
 
             joinMatch();
 
@@ -580,8 +580,8 @@ public class MainActivity extends FragmentActivity
         queryRef.addChildEventListener(new ChildEventListener() {
             @Override
             public void onChildAdded(DataSnapshot dataSnapshot, String s) {
-                    Log.d("Firebase Update", "New Match: " + dataSnapshot.getKey());
-                    Log.d("Firebase Update", "Players: " + dataSnapshot.getValue());
+                Log.d("Firebase Update", "New Match: " + dataSnapshot.getKey());
+                Log.d("Firebase Update", "Players: " + dataSnapshot.getValue());
             }
 
             @Override

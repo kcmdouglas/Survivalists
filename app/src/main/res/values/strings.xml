@@ -5,9 +5,6 @@
     <string name="app_id">722002543580</string>
     <string name="facebook_app_id">553054811522621</string>
 
-    <!-- TODO: Remove or change this placeholder text -->
-    <string name="hello_blank_fragment">Hello blank fragment</string>
-
     <string-array name="dialogArray">
         <item>You came across an abandoned camp ground&#8230;</item>
         <item>You found a half-eaten deer carcass&#8230;</item>
