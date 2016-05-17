@@ -32,6 +32,7 @@ import com.eyecuelab.survivalists.models.User;
 import com.eyecuelab.survivalists.models.SafeHouse;
 import com.eyecuelab.survivalists.services.BackgroundStepService;
 import com.eyecuelab.survivalists.util.CampaignEndAlarmReceiver;
+import com.eyecuelab.survivalists.util.StepResetAlarmReceiver;
 import com.eyecuelab.survivalists.util.StepResetResultReceiver;
 import com.facebook.FacebookSdk;
 import com.facebook.appevents.AppEventsLogger;
@@ -83,7 +84,7 @@ public class MainActivity extends FragmentActivity
 
     private int stepsInSensor;
     private int previousDayStepCount;
-    private int dailySteps = 10;
+    private int dailySteps;
     private String mCurrentMatchId;
     private String mMatchDuraution;
     private String mLastSafeHouseId;
@@ -100,7 +101,7 @@ public class MainActivity extends FragmentActivity
 
     private User mCurrentUser;
 
-    //    Flags to indicate return activity
+    //Flags to indicate return activity
     private static final int RC_SIGN_IN =  100;
     private static final int RC_SELECT_PLAYERS = 200;
     private static final int RC_WAITING_ROOM = 300;
@@ -123,8 +124,13 @@ public class MainActivity extends FragmentActivity
 
     //Event Variables
     private int mStackLevel;
+    private boolean eventOneInitiated;
+    private boolean eventTwoInitiated;
+    private boolean eventThreeInitiated;
+    private boolean eventFourInitiated;
+    private boolean eventFiveInitiated;
 
-
+    private boolean isRecurringAlarmSet;
 
     @Override
     protected void onStart() {
@@ -173,17 +179,6 @@ public class MainActivity extends FragmentActivity
         endMatchButton.setOnClickListener(this);
         testButton.setOnClickListener(this);
 
-
-        //Initialize BackgroundStepService to run database injections and constant step updates
-        mBackgroundStepService = new BackgroundStepService(mContext);
-        mBackgroundStepServiceIntent = new Intent(mContext, mBackgroundStepService.getClass());
-        if(!isBackgroundStepServiceRunning(mBackgroundStepService.getClass()))
-        {
-            startService(mBackgroundStepServiceIntent);
-        }
-
-
-
         mCurrentMatchId = mSharedPreferences.getString("matchId", null);
 
         //pull next safehouse object from shared preferences
@@ -205,8 +200,27 @@ public class MainActivity extends FragmentActivity
         stepsInSensor = mSharedPreferences.getInt(Constants.PREFERENCES_STEPS_IN_SENSOR_KEY, 0);
         counter.setText(Integer.toString(stepsInSensor));
 
-    }
+        eventOneInitiated = mSharedPreferences.getBoolean(Constants.PREFERENCES_INITIATE_EVENT_1, false);
+        eventTwoInitiated = mSharedPreferences.getBoolean(Constants.PREFERENCES_INITIATE_EVENT_2, false);
+        eventThreeInitiated = mSharedPreferences.getBoolean(Constants.PREFERENCES_INITIATE_EVENT_3, false);
+        eventFourInitiated = mSharedPreferences.getBoolean(Constants.PREFERENCES_INITIATE_EVENT_4, false);
+        eventFiveInitiated = mSharedPreferences.getBoolean(Constants.PREFERENCES_INITIATE_EVENT_5, false);
 
+        //Set recurring alarm
+        if(!isRecurringAlarmSet) {
+            isRecurringAlarmSet = true;
+            initiateDailyCountResetService();
+        }
+
+        //Initialize BackgroundStepService to run database injections and constant step updates
+        mBackgroundStepService = new BackgroundStepService(mContext);
+        mBackgroundStepServiceIntent = new Intent(mContext, mBackgroundStepService.getClass());
+        if(!isBackgroundStepServiceRunning(mBackgroundStepService.getClass()))
+        {
+            startService(mBackgroundStepServiceIntent);
+        }
+
+    }
 
     @Override
     protected void onResume() {
@@ -305,8 +319,6 @@ public class MainActivity extends FragmentActivity
             });
         }
         firebaseListening();
-
-
     }
 
     @Override
@@ -639,7 +651,53 @@ public class MainActivity extends FragmentActivity
         //TODO: Create endCampaign method
 
 
-        mEditor.putInt(Constants.PREFERENCES_PREVIOUS_STEPS_KEY, 0).commit();
+        //mEditor.putInt(Constants.PREFERENCES_PREVIOUS_STEPS_KEY, 0).commit();
+
+    }
+
+
+    private void initializeEventDialogFragments() {
+        int eventOneSteps = mSharedPreferences.getInt(Constants.PREFERENCES_EVENT_1_STEPS, -1);
+        int eventTwoSteps = mSharedPreferences.getInt(Constants.PREFERENCES_EVENT_2_STEPS, -1);
+        int eventThreeSteps = mSharedPreferences.getInt(Constants.PREFERENCES_EVENT_3_STEPS, -1);
+        int eventFourSteps = mSharedPreferences.getInt(Constants.PREFERENCES_EVENT_4_STEPS, -1);
+        int eventFiveSteps = mSharedPreferences.getInt(Constants.PREFERENCES_EVENT_5_STEPS, -1);
+
+        if ((eventOneSteps > -1) && (eventOneSteps <= dailySteps) && !(eventOneInitiated)) {
+            eventOneInitiated = true;
+            mEditor.putBoolean(Constants.PREFERENCES_INITIATE_EVENT_1, true).apply();
+            Log.v("Event One:", "Initiated");
+            showEventDialog();
+        }
+
+        if ((eventTwoSteps > -1) && (eventTwoSteps <= dailySteps) && !(eventTwoInitiated)) {
+            eventTwoInitiated = true;
+            mEditor.putBoolean(Constants.PREFERENCES_INITIATE_EVENT_2, true).apply();
+            Log.v("Event Two:", "Initiated");
+            showEventDialog();
+
+        }
+
+        if ((eventThreeSteps > -1) && (eventThreeSteps <= dailySteps) && !(eventThreeInitiated)) {
+            eventThreeInitiated = true;
+            mEditor.putBoolean(Constants.PREFERENCES_INITIATE_EVENT_3, true).apply();
+            Log.v("Event Three:", "Initiated");
+            showEventDialog();
+        }
+
+        if ((eventFourSteps > -1) && (eventFourSteps <= dailySteps) && !(eventFourInitiated)) {
+            eventFourInitiated = true;
+            mEditor.putBoolean(Constants.PREFERENCES_INITIATE_EVENT_4, true).apply();
+            Log.v("Event Four:", "Initiated");
+            showEventDialog();
+        }
+
+        if ((eventFiveSteps > -1) && (eventFiveSteps <= dailySteps) && !(eventFiveInitiated)) {
+            eventFiveInitiated = true;
+            mEditor.putBoolean(Constants.PREFERENCES_INITIATE_EVENT_5, true).apply();
+            Log.v("Event Five:", "Initiated");
+            showEventDialog();
+        }
 
     }
 
@@ -660,16 +718,28 @@ public class MainActivity extends FragmentActivity
 
     @Override
     public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String key) {
-        if(key.equals(Constants.PREFERENCES_DAILY_STEPS)) {
-            dailySteps = mSharedPreferences.getInt(Constants.PREFERENCES_DAILY_STEPS, 0);
-
-            dailyCounter.setText(Integer.toString(dailySteps));
-        }
 
         if(key.equals(Constants.PREFERENCES_STEPS_IN_SENSOR_KEY)) {
             stepsInSensor = mSharedPreferences.getInt(Constants.PREFERENCES_STEPS_IN_SENSOR_KEY, 0);
+            dailySteps = mSharedPreferences.getInt(Constants.PREFERENCES_DAILY_STEPS, 0);
+            dailyCounter.setText(Integer.toString(dailySteps));
             counter.setText(Integer.toString(stepsInSensor));
+            initializeEventDialogFragments();
         }
+
+    }
+
+    public void initiateDailyCountResetService() {
+        Intent intent = new Intent(this, StepResetAlarmReceiver.class);
+        //Sets a recurring alarm just before midnight daily to trigger BroadcastReceiver
+        Calendar calendar = Calendar.getInstance();
+        calendar.set(Calendar.HOUR_OF_DAY, 23);
+        calendar.set(Calendar.MINUTE, 59);
+        calendar.set(Calendar.SECOND, 0);
+        calendar.set(Calendar.MILLISECOND, 0);
+        PendingIntent pi = PendingIntent.getBroadcast(this, StepResetAlarmReceiver.REQUEST_CODE, intent, PendingIntent.FLAG_UPDATE_CURRENT);
+        AlarmManager am = (AlarmManager) getApplicationContext().getSystemService(Context.ALARM_SERVICE);
+        am.setRepeating(AlarmManager.RTC_WAKEUP, calendar.getTimeInMillis(), AlarmManager.INTERVAL_DAY, pi);
 
     }
 }

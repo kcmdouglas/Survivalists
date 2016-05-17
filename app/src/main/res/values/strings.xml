@@ -11,14 +11,14 @@
         <item>You saw a cache of food strung up in a tree&#8230;</item>
     </string-array>
     <!--<string-array name="choiceA">-->
-        <!--<item>Inspect</item>-->
-        <!--<item></item>-->
-        <!--<item></item>-->
+    <!--<item>Inspect</item>-->
+    <!--<item></item>-->
+    <!--<item></item>-->
     <!--</string-array>-->
     <!--<string-array name="choiceB">-->
-        <!--<item></item>-->
-        <!--<item></item>-->
-        <!--<item></item>-->
+    <!--<item></item>-->
+    <!--<item></item>-->
+    <!--<item></item>-->
     <!--</string-array>-->
     <string-array name="resultA">
         <item>You inspect the camp, and in typical Goldilocks fashion, a zombie family comes back from their hike in the woods and attacks. Bummer.</item>
@@ -40,4 +40,7 @@
         <item>LASTING FEAR OF WOODLAND CREATURES</item>
         <item>2 GRANOLA BARS ADDED TO INVENTORY</item>
     </string-array>
+
+    <!-- TODO: Remove or change this placeholder text -->
+    <string name="hello_blank_fragment">Hello blank fragment</string>
 </resources>
