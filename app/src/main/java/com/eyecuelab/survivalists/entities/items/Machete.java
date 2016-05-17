@@ -7,8 +7,7 @@ import com.eyecuelab.survivalists.entities.interfaces.Weapon;
  * Created by eyecue on 5/16/16.
  */
 public class Machete implements Weapon {
-    private int damageInflicted = 2;
-
+    private int damageInflicted = 5;
     public boolean equipped;
 
     @Override
@@ -17,8 +16,13 @@ public class Machete implements Weapon {
     }
 
     @Override
+    public String getName() {
+        return "Machete";
+    }
+
+    @Override
     public String getDescription() {
-        return "The weapon of choice for uprising in tropical countries, also efficient at dispatching zombies.";
+        return "The weapon of choice for uprisings in tropical countries, also efficient at dispatching zombies.";
     }
 
     @Override

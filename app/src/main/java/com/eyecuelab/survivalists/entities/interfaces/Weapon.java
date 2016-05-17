@@ -7,6 +7,8 @@ public interface Weapon {
 
     public int useWeapon(int enemyHP);
 
+    public String getName();
+
     public String getDescription();
 
     public void drop();

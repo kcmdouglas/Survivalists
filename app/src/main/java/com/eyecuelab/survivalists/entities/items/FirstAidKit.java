@@ -3,25 +3,25 @@ package com.eyecuelab.survivalists.entities.items;
 import com.eyecuelab.survivalists.entities.interfaces.Inventory;
 
 /**
- * Created by eyecue on 5/16/16.
+ * Created by eyecue on 5/17/16.
  */
-public class CannedSoup implements Inventory {
+public class FirstAidKit implements Inventory {
     public boolean equipped;
     public int itemEffect = 5;
 
     @Override
-    public int useItem(int hunger) {
-        return hunger + itemEffect;
+    public int useItem(int health) {
+        return health + itemEffect;
     }
 
     @Override
     public String getName() {
-        return "Tomato Soup";
+        return "First Aid Kit";
     }
 
     @Override
     public String getDescription() {
-        return "Cold soup from the can never tasted so good.";
+        return "Bandages and morphine will get you through this... for now.";
     }
 
     @Override

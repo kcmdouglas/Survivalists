@@ -10,8 +10,13 @@ public class WaterBottle implements Inventory {
     public int itemEffect = 1;
 
     @Override
-    public int useItem(int health) {
-        return health + itemEffect;
+    public int useItem(int hunger) {
+        return hunger + itemEffect;
+    }
+
+    @Override
+    public String getName() {
+        return "Water Bottle";
     }
 
     @Override

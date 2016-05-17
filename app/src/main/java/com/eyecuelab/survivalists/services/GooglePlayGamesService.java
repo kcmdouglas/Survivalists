@@ -1,9 +1,7 @@
 package com.eyecuelab.survivalists.services;
 
 import android.content.Context;
-import android.view.View;
 
-import com.eyecuelab.survivalists.R;
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.games.Games;
 

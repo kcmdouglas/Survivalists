@@ -3,11 +3,11 @@ package com.eyecuelab.survivalists.entities.items;
 import com.eyecuelab.survivalists.entities.interfaces.Inventory;
 
 /**
- * Created by eyecue on 5/16/16.
+ * Created by eyecue on 5/17/16.
  */
-public class CannedSoup implements Inventory {
+public class TurkeyJerky implements Inventory {
     public boolean equipped;
-    public int itemEffect = 5;
+    private int itemEffect = 10;
 
     @Override
     public int useItem(int hunger) {
@@ -16,12 +16,12 @@ public class CannedSoup implements Inventory {
 
     @Override
     public String getName() {
-        return "Tomato Soup";
+        return "Turkey Jerky";
     }
 
     @Override
     public String getDescription() {
-        return "Cold soup from the can never tasted so good.";
+        return "The turkey gods must be smiling on you.";
     }
 
     @Override
