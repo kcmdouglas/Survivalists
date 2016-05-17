@@ -89,13 +89,8 @@ public class BackgroundStepService extends Service implements SensorEventListene
         mEditor.putInt(Constants.PREFERENCES_STEPS_IN_SENSOR_KEY, stepsInSensor);
         mEditor.putInt(Constants.PREFERENCES_DAILY_STEPS, dailySteps);
         mEditor.commit();
-
-//        dailyCounter.setText(Integer.toString(dailySteps));
-//        counter.setText(Integer.toString(stepsInSensor));
         String dailyStepsString = Integer.toString(dailySteps);
 
-
-        //initiateDailyCountResetService(stepsInSensor);
 
         if((mCurrentPlayerId != null) && (dailySteps % 10 < 1)) {
             Firebase firebaseStepsRef = new Firebase(Constants.FIREBASE_URL_STEPS + "/" + mCurrentPlayerId + "/");

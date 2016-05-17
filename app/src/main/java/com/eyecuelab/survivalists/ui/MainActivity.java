@@ -240,7 +240,7 @@ public class MainActivity extends FragmentActivity
     protected void onPause() {
         super.onPause();
         SharedPreferences pref = PreferenceManager.getDefaultSharedPreferences(this);
-        //pref.unregisterOnSharedPreferenceChangeListener(this);
+        pref.unregisterOnSharedPreferenceChangeListener(this);
     }
 
     @Override
@@ -318,8 +318,6 @@ public class MainActivity extends FragmentActivity
             });
         }
         firebaseListening();
-
-
     }
 
     @Override
@@ -365,7 +363,7 @@ public class MainActivity extends FragmentActivity
         } else if (view == endMatchButton) {
             endMatch();
         } else if (view == testButton) {
-            testMethod();
+
         }
     }
 
@@ -391,13 +389,6 @@ public class MainActivity extends FragmentActivity
 
             }
         });
-    }
-
-    public void testMethod() {
-//        String stepsInThings = manualStepSetter.getText().toString();
-//        if (stepsInThings != "") {
-//            dailySteps = Integer.parseInt(stepsInThings);
-//        }
     }
 
     public void loadMatch() {
@@ -725,11 +716,8 @@ public class MainActivity extends FragmentActivity
 
     }
 
-
     public void initiateDailyCountResetService() {
-        //Bundles the number of steps in the sensor
         Intent intent = new Intent(this, StepResetAlarmReceiver.class);
-
         //Sets a recurring alarm just before midnight daily to trigger BroadcastReceiver
         Calendar calendar = Calendar.getInstance();
         calendar.set(Calendar.HOUR_OF_DAY, 23);
