@@ -10,12 +10,10 @@ import android.preference.PreferenceManager;
 import com.eyecuelab.survivalists.Constants;
 import com.eyecuelab.survivalists.util.StepResetResultReceiver;
 
-import java.util.ArrayList;
-
 /**
  * Created by eyecuelab on 5/12/16.
  */
-public class StepResetIntentService extends IntentService {
+public class StepResetIntentService extends IntentService implements SharedPreferences.OnSharedPreferenceChangeListener{
 
     private SharedPreferences mSharedPreferences;
     private SharedPreferences.Editor mEditor;
@@ -27,11 +25,10 @@ public class StepResetIntentService extends IntentService {
         mSharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
         mEditor = mSharedPreferences.edit();
 
-        int totalSteps = bundle.getInt("endOfDaySteps");
-        int dailySteps = bundle.getInt("dailySteps");
-        String currentPlayerId = bundle.getString("currentPlayerId");
+        int totalSteps = mSharedPreferences.getInt(Constants.PREFERENCES_STEPS_IN_SENSOR_KEY, 0);
 
         mEditor.putInt(Constants.PREFERENCES_PREVIOUS_STEPS_KEY, totalSteps).apply();
+        mEditor.putInt(Constants.PREFERENCES_DAILY_STEPS, 0).apply();
 
         int numberOfEvents = (int) (Math.random() * 5 + 1);
         resetEventCounts(numberOfEvents);
@@ -41,50 +38,70 @@ public class StepResetIntentService extends IntentService {
 
     public void resetEventCounts(int events) {
 
-        int eventOneSteps = 0;
-        int eventTwoSteps = 0;
-        int eventThreeSteps = 0;
-        int eventFourSteps = 0;
-        int eventFiveSteps = 0;
+        int eventOneSteps = (int) (Math.random() * 500 + 1);
+        int eventTwoSteps = (int) (Math.random() * (750 + 350) +350);
+        int eventThreeSteps = (int) (Math.random() * (1000 + 650) + 650);
+        int eventFourSteps = (int) (Math.random() * (1500 + 1000) + 100);
+        int eventFiveSteps = (int) (Math.random() * (2000 + 1500) + 1500);
 
         switch(events) {
             case 1:
-                eventOneSteps = (int) (Math.random() * 500 + 1);
+                mEditor.putInt(Constants.PREFERENCES_EVENT_1_STEPS, eventOneSteps);
+                mEditor.putInt(Constants.PREFERENCES_EVENT_2_STEPS, -1);
+                mEditor.putInt(Constants.PREFERENCES_EVENT_3_STEPS, -1);
+                mEditor.putInt(Constants.PREFERENCES_EVENT_4_STEPS, -1);
+                mEditor.putInt(Constants.PREFERENCES_EVENT_5_STEPS, -1);
+                mEditor.commit();
                 break;
             case 2:
-                eventOneSteps = (int) (Math.random() * 500 + 1);
-                eventTwoSteps = (int) (Math.random() * (750 + 350) +350);
+                mEditor.putInt(Constants.PREFERENCES_EVENT_1_STEPS, eventOneSteps);
+                mEditor.putInt(Constants.PREFERENCES_EVENT_2_STEPS, eventTwoSteps);
+                mEditor.putInt(Constants.PREFERENCES_EVENT_3_STEPS, -1);
+                mEditor.putInt(Constants.PREFERENCES_EVENT_4_STEPS, -1);
+                mEditor.putInt(Constants.PREFERENCES_EVENT_5_STEPS, -1);
+                mEditor.commit();
                 break;
             case 3:
-                eventOneSteps = (int) (Math.random() * 500 + 1);
-                eventTwoSteps = (int) (Math.random() * (750 + 350) +350);
-                eventThreeSteps = (int) (Math.random() * (1000 + 650) + 650);
+                mEditor.putInt(Constants.PREFERENCES_EVENT_1_STEPS, eventOneSteps);
+                mEditor.putInt(Constants.PREFERENCES_EVENT_2_STEPS, eventTwoSteps);
+                mEditor.putInt(Constants.PREFERENCES_EVENT_3_STEPS, eventThreeSteps);
+                mEditor.putInt(Constants.PREFERENCES_EVENT_4_STEPS, -1);
+                mEditor.putInt(Constants.PREFERENCES_EVENT_5_STEPS, -1);
+                mEditor.commit();
                 break;
             case 4:
-                eventOneSteps = (int) (Math.random() * 500 + 1);
-                eventTwoSteps = (int) (Math.random() * (750 + 350) +350);
-                eventThreeSteps = (int) (Math.random() * (1000 + 650) + 650);
-                eventFourSteps = (int) (Math.random() * (1500 + 1000) + 100);
+                mEditor.putInt(Constants.PREFERENCES_EVENT_1_STEPS, eventOneSteps);
+                mEditor.putInt(Constants.PREFERENCES_EVENT_2_STEPS, eventTwoSteps);
+                mEditor.putInt(Constants.PREFERENCES_EVENT_3_STEPS, eventThreeSteps);
+                mEditor.putInt(Constants.PREFERENCES_EVENT_4_STEPS, eventFourSteps);
+                mEditor.putInt(Constants.PREFERENCES_EVENT_5_STEPS, -1);
+                mEditor.commit();
                 break;
             case 5:
-                eventOneSteps = (int) (Math.random() * 500 + 1);
-                eventTwoSteps = (int) (Math.random() * (750 + 350) +350);
-                eventThreeSteps = (int) (Math.random() * (1000 + 650) + 650);
-                eventFourSteps = (int) (Math.random() * (1500 + 1000) + 100);
-                eventFiveSteps = (int) (Math.random() * (2000 + 1500) + 1500);
+                mEditor.putInt(Constants.PREFERENCES_EVENT_1_STEPS, eventOneSteps);
+                mEditor.putInt(Constants.PREFERENCES_EVENT_2_STEPS, eventTwoSteps);
+                mEditor.putInt(Constants.PREFERENCES_EVENT_3_STEPS, eventThreeSteps);
+                mEditor.putInt(Constants.PREFERENCES_EVENT_4_STEPS, eventFourSteps);
+                mEditor.putInt(Constants.PREFERENCES_EVENT_5_STEPS, eventFiveSteps);
+                mEditor.commit();
                 break;
         }
 
-        ArrayList<Integer> eventSteps = new ArrayList<>();
-        eventSteps.add(eventOneSteps);
-        eventSteps.add(eventTwoSteps);
-        eventSteps.add(eventThreeSteps);
-        eventSteps.add(eventFourSteps);
-        eventSteps.add(eventFiveSteps);
+        mEditor.putBoolean(Constants.PREFERENCES_INITIATE_EVENT_1, false);
+        mEditor.putBoolean(Constants.PREFERENCES_INITIATE_EVENT_2, false);
+        mEditor.putBoolean(Constants.PREFERENCES_INITIATE_EVENT_3, false);
+        mEditor.putBoolean(Constants.PREFERENCES_INITIATE_EVENT_4, false);
+        mEditor.putBoolean(Constants.PREFERENCES_INITIATE_EVENT_5, false);
+        mEditor.commit();
 
     }
 
     public StepResetIntentService() {
         super("StepResetIntentService");
+    }
+
+    @Override
+    public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String key) {
+
     }
 }

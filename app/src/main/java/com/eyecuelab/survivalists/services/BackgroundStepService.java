@@ -18,6 +18,7 @@ import android.util.Log;
 import android.widget.Toast;
 
 import com.eyecuelab.survivalists.Constants;
+import com.eyecuelab.survivalists.util.BackgroundStepReceiver;
 import com.eyecuelab.survivalists.util.StepResetAlarmReceiver;
 import com.firebase.client.ChildEventListener;
 import com.firebase.client.DataSnapshot;
@@ -41,6 +42,12 @@ public class BackgroundStepService extends Service implements SensorEventListene
 
     public BackgroundStepService() {}
 
+    SharedPreferences mSharedPreferences;
+    SharedPreferences.Editor mEditor;
+    int previousDayStepCount;
+    String mCurrentPlayerId;
+    int dailySteps;
+
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
         super.onStartCommand(intent, flags, startId);
@@ -51,6 +58,10 @@ public class BackgroundStepService extends Service implements SensorEventListene
         if (countSensor != null) {
             mSensorManager.registerListener((SensorEventListener) this, countSensor, SensorManager.SENSOR_DELAY_NORMAL);
         }
+
+        mSharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
+        mEditor = mSharedPreferences.edit();
+        mCurrentPlayerId = mSharedPreferences.getString(Constants.PREFERENCES_GOOGLE_PLAYER_ID, null);
 
         return START_STICKY;
     }
@@ -65,13 +76,9 @@ public class BackgroundStepService extends Service implements SensorEventListene
     //STEP SENSOR LOGIC AND FIREBASE CALLS
     @Override
     public void onSensorChanged(SensorEvent event) {
-        SharedPreferences mSharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
-        SharedPreferences.Editor mEditor= mSharedPreferences.edit();
+        previousDayStepCount = mSharedPreferences.getInt(Constants.PREFERENCES_PREVIOUS_STEPS_KEY, 0);
 
-        String mCurrentPlayerId = mSharedPreferences.getString(Constants.PREFERENCES_GOOGLE_PLAYER_ID, null);
-        int previousDayStepCount = mSharedPreferences.getInt(Constants.PREFERENCES_PREVIOUS_STEPS_KEY, 0);
         int stepsInSensor = (int) event.values[0];
-        int dailySteps;
 
         if(stepsInSensor < previousDayStepCount) {
             dailySteps =+ stepsInSensor;
@@ -88,7 +95,7 @@ public class BackgroundStepService extends Service implements SensorEventListene
         String dailyStepsString = Integer.toString(dailySteps);
 
 
-        initiateDailyCountResetService(stepsInSensor);
+        //initiateDailyCountResetService(stepsInSensor);
 
         if((mCurrentPlayerId != null) && (dailySteps % 10 < 1)) {
             Firebase firebaseStepsRef = new Firebase(Constants.FIREBASE_URL_STEPS + "/" + mCurrentPlayerId + "/");
@@ -109,8 +116,6 @@ public class BackgroundStepService extends Service implements SensorEventListene
     public void onAccuracyChanged(Sensor sensor, int accuracy) {}
 
     private void firebaseStepListener() {
-        SharedPreferences mSharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
-        String mCurrentPlayerId = mSharedPreferences.getString(Constants.PREFERENCES_GOOGLE_PLAYER_ID, null);
 
         Firebase firebaseStepsRef = new Firebase(Constants.FIREBASE_URL_STEPS + "/" + mCurrentPlayerId);
         Query queryRef = firebaseStepsRef.orderByValue();
@@ -144,25 +149,14 @@ public class BackgroundStepService extends Service implements SensorEventListene
         });
     }
 
-    public void initiateDailyCountResetService(int stepsInSensor) {
-        //Bundles the number of steps in the sensor
-        Intent intent = new Intent(this, StepResetAlarmReceiver.class);
-        Bundle bundle = new Bundle();
 
-        bundle.putInt("endOfDaySteps", stepsInSensor);
-
-        intent.putExtras(bundle);
-        //Sets a recurring alarm just before midnight daily to trigger BroadcastReceiver
-        Calendar calendar = Calendar.getInstance();
-        calendar.set(Calendar.HOUR_OF_DAY, 23);
-        calendar.set(Calendar.MINUTE, 59);
-        calendar.set(Calendar.SECOND, 0);
-        calendar.set(Calendar.MILLISECOND, 0);
-        PendingIntent pi = PendingIntent.getBroadcast(this, StepResetAlarmReceiver.REQUEST_CODE, intent, PendingIntent.FLAG_UPDATE_CURRENT);
-        AlarmManager am = (AlarmManager) getApplicationContext().getSystemService(Context.ALARM_SERVICE);
-        am.setRepeating(AlarmManager.RTC_WAKEUP, calendar.getTimeInMillis(), AlarmManager.INTERVAL_DAY, pi);
-
-    }
+//    @Override
+//    public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String key) {
+//        if(key.equals(Constants.PREFERENCES_PREVIOUS_STEPS_KEY)) {
+//            previousDayStepCount = mSharedPreferences.getInt(Constants.PREFERENCES_PREVIOUS_STEPS_KEY, 0);
+//        }
+//
+//    }
 
 
     @Nullable

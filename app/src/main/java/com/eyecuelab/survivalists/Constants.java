@@ -25,4 +25,9 @@ public class Constants {
     public static final String PREFERENCES_EVENT_3_STEPS = "eventThreeSteps";
     public static final String PREFERENCES_EVENT_4_STEPS = "eventFourSteps";
     public static final String PREFERENCES_EVENT_5_STEPS = "eventFiveSteps";
+    public static final String PREFERENCES_INITIATE_EVENT_1 = "initiateEvent1";
+    public static final String PREFERENCES_INITIATE_EVENT_2 = "initiateEvent2";
+    public static final String PREFERENCES_INITIATE_EVENT_3 = "initiateEvent3";
+    public static final String PREFERENCES_INITIATE_EVENT_4 = "initiateEvent4";
+    public static final String PREFERENCES_INITIATE_EVENT_5 = "initiateEvent5";
 }
