@@ -15,6 +15,11 @@ public class WaterBottle implements Inventory {
     }
 
     @Override
+    public String getName() {
+        return "Water Bottle";
+    }
+
+    @Override
     public String getDescription() {
         return "Stay hydrated, stay healthy.";
     }
