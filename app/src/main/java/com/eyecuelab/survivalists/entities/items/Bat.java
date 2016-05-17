@@ -16,6 +16,11 @@ public class Bat implements Weapon {
     }
 
     @Override
+    public String getName() {
+        return "Baseball Bat";
+    }
+
+    @Override
     public String getDescription() {
         return "This Louisville Slugger will come in handy.";
     }
