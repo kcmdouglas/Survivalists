@@ -1,27 +1,27 @@
 package com.eyecuelab.survivalists.entities.items;
 
-import com.eyecuelab.survivalists.entities.interfaces.Inventory;
+import com.eyecuelab.survivalists.entities.interfaces.Weapon;
 
 /**
- * Created by eyecue on 5/16/16.
+ * Created by eyecue on 5/17/16.
  */
-public class CannedSoup implements Inventory {
+public class GolfClub implements Weapon {
+    private int damageInflicted = 1;
     public boolean equipped;
-    public int itemEffect = 5;
 
     @Override
-    public int useItem(int hunger) {
-        return hunger + itemEffect;
+    public int useWeapon(int enemyHP) {
+        return enemyHP - damageInflicted;
     }
 
     @Override
     public String getName() {
-        return "Tomato Soup";
+        return "Wood Driver";
     }
 
     @Override
     public String getDescription() {
-        return "Cold soup from the can never tasted so good.";
+        return "Your slice will finally come in handy.";
     }
 
     @Override

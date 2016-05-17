@@ -5,7 +5,9 @@ package com.eyecuelab.survivalists.entities.interfaces;
  */
 public interface Inventory {
 
-    public int useItem(int health);
+    public int useItem(int effectedCharacteristic);
+
+    public String getName();
 
     public String getDescription();
 
