@@ -26,7 +26,7 @@ public class CharacterDetailActivity extends AppCompatActivity {
         setContentView(R.layout.activity_character_detail);
         ButterKnife.bind(this);
         mCharacters = Parcels.unwrap(getIntent().getParcelableExtra("characters"));
-        int startingPosition = 0;
+        int startingPosition = 3;
         adapterViewPager = new CharacterPagerAdapter(getSupportFragmentManager(), mCharacters);
         mViewPager.setAdapter(adapterViewPager);
         mViewPager.setCurrentItem(startingPosition);

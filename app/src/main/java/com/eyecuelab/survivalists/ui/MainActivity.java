@@ -63,6 +63,7 @@ import org.parceler.Parcels;
 
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.Collections;
 
 import butterknife.Bind;
 import butterknife.ButterKnife;
@@ -674,7 +675,17 @@ public class MainActivity extends FragmentActivity
         //TODO: Create endCampaign method
 
 
-        //mEditor.putInt(Constants.PREFERENCES_PREVIOUS_STEPS_KEY, 0).commit();
+        mEditor.putInt(Constants.PREFERENCES_PREVIOUS_STEPS_KEY, 0).commit();
+        ArrayList<Character> characterSelectorList = new ArrayList<>();
+
+
+        //TODO: Character selection shuffling--move to a new function?
+        for(int i = 0; i < mCharacters.size(); i++) {
+            Character character = mCharacters.get(i);
+            characterSelectorList.add(character);
+        }
+
+        Collections.shuffle(characterSelectorList);
 
     }
 

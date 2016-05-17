@@ -4,15 +4,13 @@ import com.eyecuelab.survivalists.entities.interfaces.Inventory;
 
 import java.util.ArrayList;
 
-/**
- * Created by eyecuelab on 5/10/16.
- */
 public class User {
     public String UID;
     public String displayName;
     public String teamId;
     public boolean atSafeHouse;
     public boolean joinedMatch;
+    public Character playedCharacter;
     ArrayList<Inventory> inventoryItems;
     ArrayList<String> interactionsWithCharacterA;
     ArrayList<String> interactionsWithCharacterB;
@@ -22,12 +20,10 @@ public class User {
     public User() {
     }
 
-    public User (String UID, String  displayName, String teamId, boolean atSafeHouse, boolean joinedMatch) {
+    public User (String UID, String  displayName, String teamId) {
         this.UID = UID;
         this.displayName = displayName;
         this.teamId = teamId;
-        this.atSafeHouse = atSafeHouse;
-        this.joinedMatch = joinedMatch;
     }
 
     public String getUID() {
@@ -74,9 +70,7 @@ public class User {
         return inventoryItems;
     }
 
-    public void setInventoryItems(ArrayList<Inventory> inventoryItems) {
-        this.inventoryItems = inventoryItems;
-    }
+    public void setInventoryItems(ArrayList<Inventory> inventoryItems) { this.inventoryItems = inventoryItems; }
 
     public ArrayList<String> getInteractionsWithCharacterA() {
         return interactionsWithCharacterA;
@@ -94,4 +88,7 @@ public class User {
         return interactionsWithCharacterD;
     }
 
+    public void setPlayedCharacter(Character playedCharacter) { this.playedCharacter = playedCharacter; }
+
+    public Character getPlayedCharacter() { return playedCharacter; }
 }
