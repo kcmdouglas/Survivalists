@@ -1,24 +1,29 @@
 package com.eyecuelab.survivalists.models;
 
-/**
- * Created by eyecuelab on 5/10/16.
- */
+import com.eyecuelab.survivalists.entities.interfaces.Inventory;
+
+import java.util.ArrayList;
+
 public class User {
     public String UID;
     public String displayName;
     public String teamId;
     public boolean atSafeHouse;
     public boolean joinedMatch;
+    public Character playedCharacter;
+    ArrayList<Inventory> inventoryItems;
+    ArrayList<String> interactionsWithCharacterA;
+    ArrayList<String> interactionsWithCharacterB;
+    ArrayList<String> interactionsWithCharacterC;
+    ArrayList<String> interactionsWithCharacterD;
 
     public User() {
     }
 
-    public User (String UID, String  displayName, String teamId, boolean atSafeHouse, boolean joinedMatch) {
+    public User (String UID, String  displayName, String teamId) {
         this.UID = UID;
         this.displayName = displayName;
         this.teamId = teamId;
-        this.atSafeHouse = atSafeHouse;
-        this.joinedMatch = joinedMatch;
     }
 
     public String getUID() {
@@ -60,4 +65,30 @@ public class User {
     public void setJoinedMatch(boolean joinedMatch) {
         this.joinedMatch = joinedMatch;
     }
+
+    public ArrayList<Inventory> getInventoryItems() {
+        return inventoryItems;
+    }
+
+    public void setInventoryItems(ArrayList<Inventory> inventoryItems) { this.inventoryItems = inventoryItems; }
+
+    public ArrayList<String> getInteractionsWithCharacterA() {
+        return interactionsWithCharacterA;
+    }
+
+    public ArrayList<String> getInteractionsWithCharacterB() {
+        return interactionsWithCharacterB;
+    }
+
+    public ArrayList<String> getInteractionsWithCharacterC() {
+        return interactionsWithCharacterC;
+    }
+
+    public ArrayList<String> getInteractionsWithCharacterD() {
+        return interactionsWithCharacterD;
+    }
+
+    public void setPlayedCharacter(Character playedCharacter) { this.playedCharacter = playedCharacter; }
+
+    public Character getPlayedCharacter() { return playedCharacter; }
 }

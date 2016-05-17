@@ -28,6 +28,7 @@ import android.widget.Toast;
 
 import com.eyecuelab.survivalists.Constants;
 import com.eyecuelab.survivalists.R;
+import com.eyecuelab.survivalists.models.Character;
 import com.eyecuelab.survivalists.models.User;
 import com.eyecuelab.survivalists.models.SafeHouse;
 import com.eyecuelab.survivalists.services.BackgroundStepService;
@@ -58,8 +59,11 @@ import com.google.android.gms.games.multiplayer.turnbased.TurnBasedMultiplayer;
 import com.google.example.games.basegameutils.BaseGameUtils;
 import com.google.gson.Gson;
 
+import org.parceler.Parcels;
+
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.Collections;
 
 import butterknife.Bind;
 import butterknife.ButterKnife;
@@ -81,6 +85,7 @@ public class MainActivity extends FragmentActivity
     @Bind(R.id.userNameTextView) TextView userNameTextView;
     @Bind(R.id.stepEditText) EditText manualStepSetter;
     @Bind(R.id.safehouseTextView) TextView safehouseTextView;
+    @Bind(R.id.characterButton) Button characterButton;
 
     private int stepsInSensor;
     private int previousDayStepCount;
@@ -131,6 +136,7 @@ public class MainActivity extends FragmentActivity
     private boolean eventFiveInitiated;
 
     private boolean isRecurringAlarmSet;
+    ArrayList<Character> mCharacters;
 
     @Override
     protected void onStart() {
@@ -178,6 +184,7 @@ public class MainActivity extends FragmentActivity
         findPlayersButton.setOnClickListener(this);
         endMatchButton.setOnClickListener(this);
         testButton.setOnClickListener(this);
+        characterButton.setOnClickListener(this);
 
         mCurrentMatchId = mSharedPreferences.getString("matchId", null);
 
@@ -206,6 +213,7 @@ public class MainActivity extends FragmentActivity
         eventFourInitiated = mSharedPreferences.getBoolean(Constants.PREFERENCES_INITIATE_EVENT_4, false);
         eventFiveInitiated = mSharedPreferences.getBoolean(Constants.PREFERENCES_INITIATE_EVENT_5, false);
 
+        //TODO: Move daily alarm setting to the startGame function
         //Set recurring alarm
         if(!isRecurringAlarmSet) {
             isRecurringAlarmSet = true;
@@ -219,6 +227,17 @@ public class MainActivity extends FragmentActivity
         {
             startService(mBackgroundStepServiceIntent);
         }
+
+        mCharacters = new ArrayList<>();
+        Character characterA = new Character("characterA", 22, 100, null);
+        Character characterB = new Character("characterB", 80, 100, null);
+        Character characterC = new Character("characterC", 44, 100, null);
+        Character characterD = new Character("characterD", 120, 100, null);
+        mCharacters.add(characterA);
+        mCharacters.add(characterB);
+        mCharacters.add(characterC);
+        mCharacters.add(characterD);
+
 
     }
 
@@ -371,6 +390,11 @@ public class MainActivity extends FragmentActivity
             case R.id.testButton:
                 testMethod();
                 break;
+            case R.id.characterButton:
+                Intent intent  = new Intent(mContext, CharacterDetailActivity.class);
+                intent.putExtra("position", 0);
+                intent.putExtra("characters", Parcels.wrap(mCharacters));
+                mContext.startActivity(intent);
         }
     }
 
@@ -651,7 +675,17 @@ public class MainActivity extends FragmentActivity
         //TODO: Create endCampaign method
 
 
-        //mEditor.putInt(Constants.PREFERENCES_PREVIOUS_STEPS_KEY, 0).commit();
+        mEditor.putInt(Constants.PREFERENCES_PREVIOUS_STEPS_KEY, 0).commit();
+        ArrayList<Character> characterSelectorList = new ArrayList<>();
+
+
+        //TODO: Character selection shuffling--move to a new function?
+        for(int i = 0; i < mCharacters.size(); i++) {
+            Character character = mCharacters.get(i);
+            characterSelectorList.add(character);
+        }
+
+        Collections.shuffle(characterSelectorList);
 
     }
 
