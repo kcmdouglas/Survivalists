@@ -7,23 +7,31 @@ import android.support.v4.app.Fragment;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.TextView;
 
 import com.eyecuelab.survivalists.R;
+import com.eyecuelab.survivalists.models.Character;
+
+import org.parceler.Parcels;
+
+import butterknife.Bind;
+import butterknife.ButterKnife;
 
 public class CharacterDetailFragment extends Fragment {
+    @Bind(R.id.nameTextView) TextView nameTextView;
+    @Bind(R.id.ageTExtView) TextView ageTextView;
+    @Bind(R.id.healthTextView) TextView healthTextView;
 
-    private OnFragmentInteractionListener mListener;
+    private Character mCharacter;
 
     public CharacterDetailFragment() {
         // Required empty public constructor
     }
 
-
-    public static CharacterDetailFragment newInstance(String param1, String param2) {
+    public static CharacterDetailFragment newInstance(Character character) {
         CharacterDetailFragment fragment = new CharacterDetailFragment();
         Bundle args = new Bundle();
-//        args.putString(ARG_PARAM1, param1);
-//        args.putString(ARG_PARAM2, param2);
+        args.putParcelable("character", Parcels.wrap(character));
         fragment.setArguments(args);
         return fragment;
     }
@@ -31,35 +39,20 @@ public class CharacterDetailFragment extends Fragment {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        mCharacter = Parcels.unwrap(getArguments().getParcelable("character"));
 
     }
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
-        // Inflate the layout for this fragment
-        return inflater.inflate(R.layout.fragment_character_detail, container, false);
+        View view = inflater.inflate(R.layout.fragment_character_detail, container, false);
+        ButterKnife.bind(this, view);
+        nameTextView.setText("Name: " + mCharacter.getName());
+        ageTextView.setText("Age: " + Integer.toString(mCharacter.getAge()));
+        healthTextView.setText("Health: " + Integer.toString(mCharacter.getHealth()));
+
+        return view;
     }
 
-    @Override
-    public void onAttach(Context context) {
-        super.onAttach(context);
-        if (context instanceof OnFragmentInteractionListener) {
-            mListener = (OnFragmentInteractionListener) context;
-        } else {
-            throw new RuntimeException(context.toString()
-                    + " must implement OnFragmentInteractionListener");
-        }
-    }
-
-    @Override
-    public void onDetach() {
-        super.onDetach();
-        mListener = null;
-    }
-
-    public interface OnFragmentInteractionListener {
-        // TODO: Update argument type and name
-        void onFragmentInteraction(Uri uri);
-    }
 }

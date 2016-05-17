@@ -19,7 +19,6 @@ public class User {
     ArrayList<String> interactionsWithCharacterC;
     ArrayList<String> interactionsWithCharacterD;
 
-
     public User() {
     }
 
@@ -70,4 +69,29 @@ public class User {
     public void setJoinedMatch(boolean joinedMatch) {
         this.joinedMatch = joinedMatch;
     }
+
+    public ArrayList<Inventory> getInventoryItems() {
+        return inventoryItems;
+    }
+
+    public void setInventoryItems(ArrayList<Inventory> inventoryItems) {
+        this.inventoryItems = inventoryItems;
+    }
+
+    public ArrayList<String> getInteractionsWithCharacterA() {
+        return interactionsWithCharacterA;
+    }
+
+    public ArrayList<String> getInteractionsWithCharacterB() {
+        return interactionsWithCharacterB;
+    }
+
+    public ArrayList<String> getInteractionsWithCharacterC() {
+        return interactionsWithCharacterC;
+    }
+
+    public ArrayList<String> getInteractionsWithCharacterD() {
+        return interactionsWithCharacterD;
+    }
+
 }
