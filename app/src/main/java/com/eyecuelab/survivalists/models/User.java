@@ -1,5 +1,9 @@
 package com.eyecuelab.survivalists.models;
 
+import com.eyecuelab.survivalists.entities.interfaces.Inventory;
+
+import java.util.ArrayList;
+
 /**
  * Created by eyecuelab on 5/10/16.
  */
@@ -9,6 +13,12 @@ public class User {
     public String teamId;
     public boolean atSafeHouse;
     public boolean joinedMatch;
+    ArrayList<Inventory> inventoryItems;
+    ArrayList<String> interactionsWithCharacterA;
+    ArrayList<String> interactionsWithCharacterB;
+    ArrayList<String> interactionsWithCharacterC;
+    ArrayList<String> interactionsWithCharacterD;
+
 
     public User() {
     }
