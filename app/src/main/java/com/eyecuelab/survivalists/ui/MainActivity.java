@@ -41,6 +41,7 @@ import com.firebase.client.Firebase;
 import com.firebase.client.FirebaseError;
 import com.firebase.client.Query;
 import com.firebase.client.ValueEventListener;
+import com.google.android.gms.common.AccountPicker;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.SignInButton;
 import com.google.android.gms.common.api.GoogleApiClient;
@@ -332,26 +333,32 @@ public class MainActivity extends FragmentActivity
 
     @Override
     public void onClick(View view) {
-        if (view == signInButton) {
-            mSignInCLicked = true;
-            mGoogleApiClient.reconnect();
-            signInButton.setVisibility(View.GONE);
-            signOutButton.setVisibility(View.VISIBLE);
-        } else if (view == signOutButton) {
-            mExplicitSignOut = true;
-            if (mGoogleApiClient != null && mGoogleApiClient.isConnected()) {
-                Games.signOut(mGoogleApiClient);
-                mGoogleApiClient.disconnect();
-            }
-            mSignInCLicked = false;
-            signInButton.setVisibility(View.VISIBLE);
-            signOutButton.setVisibility(View.GONE);
-        } else if (view == findPlayersButton) {
-            findPlayers();
-        } else if (view == endMatchButton) {
-            endMatch();
-        } else if (view == testButton) {
-            testMethod();
+        switch (view.getId()) {
+            case R.id.sign_in_button:
+                mSignInCLicked = true;
+                mGoogleApiClient.reconnect();
+                signInButton.setVisibility(View.GONE);
+                signOutButton.setVisibility(View.VISIBLE);
+                break;
+            case R.id.sign_out_button:
+                mExplicitSignOut = true;
+                if (mGoogleApiClient != null && mGoogleApiClient.isConnected()) {
+                    Games.signOut(mGoogleApiClient);
+                    mGoogleApiClient.disconnect();
+                }
+                mSignInCLicked = false;
+                signInButton.setVisibility(View.VISIBLE);
+                signOutButton.setVisibility(View.GONE);
+                break;
+            case R.id.findPlayersButton:
+                findPlayers();
+                break;
+            case R.id.endMatchButton:
+                endMatch();
+                break;
+            case R.id.testButton:
+                testMethod();
+                break;
         }
     }
 
@@ -380,10 +387,9 @@ public class MainActivity extends FragmentActivity
     }
 
     public void testMethod() {
-//        String stepsInThings = manualStepSetter.getText().toString();
-//        if (stepsInThings != "") {
-//            dailySteps = Integer.parseInt(stepsInThings);
-//        }
+        String[] accountTypes = new String[]{"com.google"};
+        Intent intent = AccountPicker.newChooseAccountIntent(null, null, accountTypes, false, null, null, null, null);
+        startActivityForResult(intent, 12345);
     }
 
     public void loadMatch() {
