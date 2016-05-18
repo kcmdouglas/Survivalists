@@ -1,15 +1,18 @@
 package com.eyecuelab.survivalists.models;
 
+import org.parceler.Parcel;
+
 /**
  * Created by eyecue on 5/12/16.
  */
-public class SafeHouse {
-    public String houseId;
-    public String houseName;
-    public String description;
-    public int stepsRequired;
 
-    private boolean arrivedAtSafeHouse = false;
+@Parcel
+public class SafeHouse {
+    String houseId;
+    String houseName;
+    String description;
+    int stepsRequired;
+    boolean arrivedAtSafeHouse = false;
 
     public SafeHouse() {}
 

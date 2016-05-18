@@ -102,6 +102,7 @@ public class MainActivity extends FragmentActivity
     private TurnBasedMatch mCurrentMatch;
     private String mCurrentPlayerId;
     private Sensor countSensor;
+    private SafeHouse mPriorSafehouse;
     private SafeHouse mNextSafehouse;
 
     private User mCurrentUser;
@@ -188,17 +189,12 @@ public class MainActivity extends FragmentActivity
 
         mCurrentMatchId = mSharedPreferences.getString("matchId", null);
 
-        //pull next safehouse object from shared preferences
-        String safehouseJson = mSharedPreferences.getString("nextSafehouse", null);
-        Gson gson = new Gson();
-        mNextSafehouse = gson.fromJson(safehouseJson, SafeHouse.class);
-
         if (mNextSafehouse != null) {
             Toast.makeText(MainActivity.this, "YAYA! " + mNextSafehouse.getHouseName(), Toast.LENGTH_SHORT).show();
         }
 
         mMatchDuraution = "30";
-        mLastSafeHouseId = "0";
+        mLastSafeHouseId = "22";
         mNextSafeHouseId = "1";
 
         //Set counter text based on current shared preferences--these are updated in the shared preferences onChange listener
@@ -238,7 +234,9 @@ public class MainActivity extends FragmentActivity
         mCharacters.add(characterC);
         mCharacters.add(characterD);
 
-
+        String safehouseJson = mSharedPreferences.getString("nextSafehouse", null);
+        Gson gson = new Gson();
+        mNextSafehouse = gson.fromJson(safehouseJson, SafeHouse.class);
     }
 
     @Override
@@ -328,7 +326,7 @@ public class MainActivity extends FragmentActivity
             teamFirebaseRef.addListenerForSingleValueEvent(new ValueEventListener() {
                 @Override
                 public void onDataChange(DataSnapshot dataSnapshot) {
-                    mLastSafeHouseId = dataSnapshot.child("lastSafehouseId").getValue().toString();
+                    String numberFromDatabase = dataSnapshot.child("lastSafehouseId").getValue().toString();
                     mNextSafeHouseId = dataSnapshot.child("nextSafehouseId").getValue().toString();
                     safehouseTextView.setText(mNextSafeHouseId);
                 }
@@ -413,6 +411,9 @@ public class MainActivity extends FragmentActivity
                 String nextSafehouseJson = gson.toJson(nextSafeHouse);
                 mEditor.putString("nextSafehouse", nextSafehouseJson);
                 mEditor.commit();
+                String safehouseJson = mSharedPreferences.getString("nextSafehouse", null);
+                Gson safehouseGson = new Gson();
+                mNextSafehouse = safehouseGson.fromJson(safehouseJson, SafeHouse.class);
             }
 
             @Override
@@ -530,9 +531,9 @@ public class MainActivity extends FragmentActivity
         teamFirebaseRef.child("matchDuration")
                 .setValue(mMatchDuraution);
         teamFirebaseRef.child("lastSafehouseId")
-                .setValue(mLastSafeHouseId);
+                .setValue(0);
         teamFirebaseRef.child("nextSafehouseId")
-                .setValue(mNextSafeHouseId);
+                .setValue(1);
         Firebase playerFirebase = teamFirebaseRef
                 .child("players");
         for (int i = 0; i < wholeParty.size(); i++) {
@@ -701,14 +702,14 @@ public class MainActivity extends FragmentActivity
             eventOneInitiated = true;
             mEditor.putBoolean(Constants.PREFERENCES_INITIATE_EVENT_1, true).apply();
             Log.v("Event One:", "Initiated");
-            showEventDialog();
+            showEventDialog(1);
         }
 
         if ((eventTwoSteps > -1) && (eventTwoSteps <= dailySteps) && !(eventTwoInitiated)) {
             eventTwoInitiated = true;
             mEditor.putBoolean(Constants.PREFERENCES_INITIATE_EVENT_2, true).apply();
             Log.v("Event Two:", "Initiated");
-            showEventDialog();
+            showEventDialog(1);
 
         }
 
@@ -716,38 +717,52 @@ public class MainActivity extends FragmentActivity
             eventThreeInitiated = true;
             mEditor.putBoolean(Constants.PREFERENCES_INITIATE_EVENT_3, true).apply();
             Log.v("Event Three:", "Initiated");
-            showEventDialog();
+            showEventDialog(1);
         }
 
         if ((eventFourSteps > -1) && (eventFourSteps <= dailySteps) && !(eventFourInitiated)) {
             eventFourInitiated = true;
             mEditor.putBoolean(Constants.PREFERENCES_INITIATE_EVENT_4, true).apply();
             Log.v("Event Four:", "Initiated");
-            showEventDialog();
+            showEventDialog(1);
         }
 
         if ((eventFiveSteps > -1) && (eventFiveSteps <= dailySteps) && !(eventFiveInitiated)) {
             eventFiveInitiated = true;
             mEditor.putBoolean(Constants.PREFERENCES_INITIATE_EVENT_5, true).apply();
             Log.v("Event Five:", "Initiated");
-            showEventDialog();
+            showEventDialog(1);
         }
 
     }
 
-    public void showEventDialog() {
+    public void showEventDialog(int type) {
         mStackLevel++;
 
-        FragmentTransaction ft = getSupportFragmentManager().beginTransaction();
-        Fragment prev = getSupportFragmentManager().findFragmentByTag("event");
-        if(prev != null) {
-            ft.remove(prev);
+        if (type==1) {
+            FragmentTransaction ft = getSupportFragmentManager().beginTransaction();
+            Fragment prev = getSupportFragmentManager().findFragmentByTag("event");
+            if(prev != null) {
+                ft.remove(prev);
+            }
+
+            ft.addToBackStack(null);
+
+            DialogFragment frag = EventDialogFragment.newInstance(mStackLevel);
+            frag.show(ft, "fragment_event_dialog");
+        } else if (type==2) {
+            FragmentTransaction ft = getSupportFragmentManager().beginTransaction();
+            Fragment prev = getSupportFragmentManager().findFragmentByTag("safehouse");
+            if(prev != null) {
+                ft.remove(prev);
+            }
+
+            ft.addToBackStack(null);
+
+            DialogFragment frag = EventDialogFragment.newInstance(mStackLevel);
+            frag.show(ft, "fragment_safehouse_dialog");
         }
 
-        ft.addToBackStack(null);
-
-        DialogFragment frag = EventDialogFragment.newInstance(mStackLevel);
-        frag.show(ft, "fragment_event_dialog");
     }
 
     @Override
@@ -759,8 +774,22 @@ public class MainActivity extends FragmentActivity
             dailyCounter.setText(Integer.toString(dailySteps));
             counter.setText(Integer.toString(stepsInSensor));
             initializeEventDialogFragments();
+            checkSafehouseDistance();
         }
 
+    }
+
+    public void checkSafehouseDistance() {
+        //pull next safehouse object from shared preferences
+        if(mNextSafehouse.reachedSafehouse(dailySteps))
+        {
+            mPriorSafehouse = mNextSafehouse;
+            //mLastSafeHouseId = mNextSafeHouseId;
+            mNextSafeHouseId = mNextSafeHouseId +1;
+            //saveSafehouse();
+
+            showEventDialog(2);
+        }
     }
 
     public void initiateDailyCountResetService() {
