@@ -8,7 +8,7 @@ import org.parceler.Parcel;
 
 @Parcel
 public class SafeHouse {
-    String houseId;
+    int houseId;
     String houseName;
     String description;
     int stepsRequired;
@@ -16,14 +16,14 @@ public class SafeHouse {
 
     public SafeHouse() {}
 
-    public SafeHouse(String houseId, String houseName, String description,int stepsRequired) {
+    public SafeHouse(int houseId, String houseName, String description,int stepsRequired) {
         this.houseId = houseId;
         this.houseName = houseName;
         this.description = description;
         this.stepsRequired = stepsRequired;
     }
 
-    public String getHouseId() {
+    public int getHouseId() {
         return houseId;
     }
 

@@ -92,8 +92,8 @@ public class MainActivity extends FragmentActivity
     private int dailySteps;
     private String mCurrentMatchId;
     private String mMatchDuraution;
-    private String mLastSafeHouseId;
-    private String mNextSafeHouseId;
+    private int mLastSafeHouseId;
+    private int mNextSafeHouseId;
     private ArrayList<String> invitees;
     private SharedPreferences mSharedPreferences;
     private SharedPreferences.Editor mEditor;
@@ -189,14 +189,6 @@ public class MainActivity extends FragmentActivity
 
         mCurrentMatchId = mSharedPreferences.getString("matchId", null);
 
-        if (mNextSafehouse != null) {
-            Toast.makeText(MainActivity.this, "YAYA! " + mNextSafehouse.getHouseName(), Toast.LENGTH_SHORT).show();
-        }
-
-        mMatchDuraution = "30";
-        mLastSafeHouseId = "22";
-        mNextSafeHouseId = "1";
-
         //Set counter text based on current shared preferences--these are updated in the shared preferences onChange listener
         dailySteps = mSharedPreferences.getInt(Constants.PREFERENCES_DAILY_STEPS, 0);
         dailyCounter.setText(Integer.toString(dailySteps));
@@ -233,6 +225,9 @@ public class MainActivity extends FragmentActivity
         mCharacters.add(characterB);
         mCharacters.add(characterC);
         mCharacters.add(characterD);
+
+        mNextSafeHouseId = mSharedPreferences.getInt(Constants.PREFERENCES_NEXT_SAFEHOUSE_ID, 1);
+        mLastSafeHouseId = mSharedPreferences.getInt(Constants.PREFERENCES_LAST_SAFEHOUSE_ID, 0);
 
         String safehouseJson = mSharedPreferences.getString("nextSafehouse", null);
         Gson gson = new Gson();
@@ -322,18 +317,20 @@ public class MainActivity extends FragmentActivity
         } else {
             mUserFirebaseRef.child("joinedMatch")
                     .setValue(true);
-            Firebase teamFirebaseRef = new Firebase(Constants.FIREBASE_URL_TEAM + "/" + mCurrentMatchId);
-            teamFirebaseRef.addListenerForSingleValueEvent(new ValueEventListener() {
-                @Override
-                public void onDataChange(DataSnapshot dataSnapshot) {
-                    String numberFromDatabase = dataSnapshot.child("lastSafehouseId").getValue().toString();
-                    mNextSafeHouseId = dataSnapshot.child("nextSafehouseId").getValue().toString();
-                    safehouseTextView.setText(mNextSafeHouseId);
-                }
-
-                @Override
-                public void onCancelled(FirebaseError firebaseError) {}
-            });
+//            Firebase teamFirebaseRef = new Firebase(Constants.FIREBASE_URL_TEAM + "/" + mCurrentMatchId +"");
+//            teamFirebaseRef.addListenerForSingleValueEvent(new ValueEventListener() {
+//                @Override
+//                public void onDataChange(DataSnapshot dataSnapshot) {
+//                    int lastSafehouseId = Integer.valueOf(dataSnapshot.child("lastSafehouseId").getValue().toString());
+//                    int nextSafehouseId = Integer.valueOf(dataSnapshot.child("nextSafehouseId").getValue().toString());
+//                    mEditor.putInt(Constants.PREFERENCES_LAST_SAFEHOUSE_ID, lastSafehouseId);
+//
+//                    safehouseTextView.setText(mNextSafeHouseId);
+//                }
+//
+//                @Override
+//                public void onCancelled(FirebaseError firebaseError) {}
+//            });
         }
         firebaseListening();
     }
@@ -397,7 +394,7 @@ public class MainActivity extends FragmentActivity
     }
 
     public void saveSafehouse() {
-        Firebase safehouseFirebaseRef = new Firebase(Constants.FIREBASE_URL_SAFEHOUSES + "/" + mNextSafeHouseId);
+        Firebase safehouseFirebaseRef = new Firebase(Constants.FIREBASE_URL_SAFEHOUSES + "/" + mNextSafeHouseId +"/");
         safehouseFirebaseRef.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
@@ -506,6 +503,7 @@ public class MainActivity extends FragmentActivity
         byte[] matchData = new byte[1];
         String nextPlayer;
 
+
         mCurrentMatchId = mCurrentMatch.getMatchId();
         String creatorId = Games.Players.getCurrentPlayerId(mGoogleApiClient);
         ArrayList<String> wholeParty = invitees;
@@ -522,25 +520,30 @@ public class MainActivity extends FragmentActivity
         Games.TurnBasedMultiplayer.takeTurn(mGoogleApiClient, mCurrentMatchId, matchData, nextPlayer);
 
         mEditor.putString("matchId", mCurrentMatchId);
+        mEditor.putInt("lastSafehouseId", 0);
+        mEditor.putInt("nextSafehouseId", 1);
         mEditor.commit();
 
-        Firebase teamFirebaseRef = new Firebase(Constants.FIREBASE_URL_TEAM + "/" + "")
-                .child(mCurrentMatchId);
-        teamFirebaseRef.child("matchStart")
-                .setValue(mCurrentMatch.getCreationTimestamp());
-        teamFirebaseRef.child("matchDuration")
-                .setValue(mMatchDuraution);
-        teamFirebaseRef.child("lastSafehouseId")
-                .setValue(0);
-        teamFirebaseRef.child("nextSafehouseId")
-                .setValue(1);
-        Firebase playerFirebase = teamFirebaseRef
-                .child("players");
-        for (int i = 0; i < wholeParty.size(); i++) {
-            playerFirebase
-                    .child("p_" + (i + 1))
-                    .setValue(wholeParty.get(i));
-        }
+
+
+            Firebase teamFirebaseRef = new Firebase(Constants.FIREBASE_URL_TEAM + "/" + "")
+                    .child(mCurrentMatchId);
+            teamFirebaseRef.child("matchStart")
+                    .setValue(mCurrentMatch.getCreationTimestamp());
+            teamFirebaseRef.child("matchDuration")
+                    .setValue(mMatchDuraution);
+            teamFirebaseRef.child("lastSafehouseId")
+                    .setValue(0);
+            teamFirebaseRef.child("nextSafehouseId")
+                    .setValue(1);
+            Firebase playerFirebase = teamFirebaseRef
+                    .child("players");
+            for (int i = 0; i < wholeParty.size(); i++) {
+                playerFirebase
+                        .child("p_" + (i + 1))
+                        .setValue(wholeParty.get(i));
+            }
+
         firebaseListening();
 
         mUserFirebaseRef.child("teamId").setValue(mCurrentMatchId);
@@ -784,12 +787,20 @@ public class MainActivity extends FragmentActivity
         if(mNextSafehouse.reachedSafehouse(dailySteps))
         {
             mPriorSafehouse = mNextSafehouse;
-            //mLastSafeHouseId = mNextSafeHouseId;
-            mNextSafeHouseId = mNextSafeHouseId +1;
-            //saveSafehouse();
+            mLastSafeHouseId = mNextSafehouse.getHouseId();
+            mNextSafeHouseId = mLastSafeHouseId + 1;
+            mEditor.putInt("lastSafehouseId", mLastSafeHouseId);
+            mEditor.putInt("nextSafehouseId", mNextSafeHouseId);
+            mEditor.commit();
+            safehouseTextView.setText(Integer.toString(mNextSafeHouseId));
+            saveSafehouse();
 
             showEventDialog(2);
         }
+    }
+
+    public void updateSafehouse() {
+
     }
 
     public void initiateDailyCountResetService() {
