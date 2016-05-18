@@ -16,7 +16,9 @@ import android.widget.RelativeLayout;
 import android.widget.TextView;
 
 import com.eyecuelab.survivalists.R;
+import com.eyecuelab.survivalists.models.SafeHouse;
 
+import org.parceler.Parcels;
 import org.w3c.dom.Text;
 
 import butterknife.Bind;
@@ -25,10 +27,11 @@ import butterknife.ButterKnife;
 /**
  * Created by eyecuelab on 5/13/16.
  */
-public class SafehouseDialogFragment extends android.support.v4.app.DialogFragment{
+public class SafehouseDialogFragment extends android.support.v4.app.DialogFragment implements View.OnClickListener{
 
     SharedPreferences mSharedPreferences;
     SharedPreferences.Editor mEditor;
+    SafeHouse mSafeHouse;
     @Bind(R.id.safehouseTitle) TextView safehouseTitle;
     @Bind(R.id.safehouseDescription) TextView safehouseDescription;
     @Bind(R.id.safehouseCloseButton) Button safehouseCloseButton;
@@ -36,20 +39,19 @@ public class SafehouseDialogFragment extends android.support.v4.app.DialogFragme
     //Empty constructor required for DialogFragments
     public SafehouseDialogFragment(){}
 
-    public static android.support.v4.app.DialogFragment newInstance(int number) {
-        EventDialogFragment frag = new EventDialogFragment();
-
+    public static android.support.v4.app.DialogFragment newInstance(int number, SafeHouse safehouse) {
+        SafehouseDialogFragment frag = new SafehouseDialogFragment();
         Bundle args = new Bundle();
         args.putInt("number", number);
+        args.putParcelable("safehouse", Parcels.wrap(safehouse));
         frag.setArguments(args);
-
         return frag;
     }
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-
+        mSafeHouse = Parcels.unwrap(getArguments().getParcelable("safehouse"));
         mSharedPreferences = PreferenceManager.getDefaultSharedPreferences(getContext());
         mEditor = mSharedPreferences.edit();
     }
@@ -57,12 +59,26 @@ public class SafehouseDialogFragment extends android.support.v4.app.DialogFragme
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
-        View view = inflater.inflate(R.layout.fragment_event_dialog, container, false);
+        View view = inflater.inflate(R.layout.fragment_safehouse_dialog, container, false);
         super.onViewCreated(view, savedInstanceState);
+        ButterKnife.bind(this, view);
+        safehouseTitle.setText(mSafeHouse.getHouseName());
+        safehouseDescription.setText(mSafeHouse.getDescription());
 
+        safehouseCloseButton.setOnClickListener(this);
 
         return view;
     }
 
 
+    @Override
+    public void onClick(View v) {
+        switch (v.getId()) {
+            case R.id.safehouseCloseButton:
+                dismiss();
+                break;
+        }
+
+
+    }
 }

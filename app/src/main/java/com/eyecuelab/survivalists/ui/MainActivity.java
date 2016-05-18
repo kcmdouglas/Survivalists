@@ -762,7 +762,7 @@ public class MainActivity extends FragmentActivity
 
             ft.addToBackStack(null);
 
-            DialogFragment frag = EventDialogFragment.newInstance(mStackLevel);
+            DialogFragment frag = SafehouseDialogFragment.newInstance(mStackLevel, mPriorSafehouse);
             frag.show(ft, "fragment_safehouse_dialog");
         }
 
