@@ -65,7 +65,9 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import butterknife.Bind;
 import butterknife.ButterKnife;
@@ -682,9 +684,7 @@ public class MainActivity extends FragmentActivity
         }
         //TODO: Create endCampaign method
 
-
         mEditor.putInt(Constants.PREFERENCES_PREVIOUS_STEPS_KEY, 0).commit();
-        ArrayList<Character> characterSelectorList = new ArrayList<>();
         assignRandomCharacters();
     }
 
@@ -697,8 +697,10 @@ public class MainActivity extends FragmentActivity
             //User has initiated the match/ assign random # between 0 - 3
             int randomNumber = (int) Math.round(Math.random() * 3);
 
-            //Assign random character
+            //Assign random character and save to firebase
             mCurrentCharacter = mCharacters.get(randomNumber);
+            characterFirebaseRef.child(mCurrentPlayerId).setValue(mCurrentCharacter.getCharacterId());
+
             remainingCharacters = mCharacters;
             remainingCharacters.remove(randomNumber);
             int unasignedPlayersCount = invitees.size();
@@ -710,10 +712,10 @@ public class MainActivity extends FragmentActivity
 
                     String playerBeingAssignId = invitees.get(randomNumber);
 
-
                     //save assigned character Ids to firebase
-                    characterFirebaseRef.child(playerBeingAssignId)
-                            .setValue(assignedCharacter.getCharacterId());
+                    Map<String, Object> updateMap = new HashMap<>();
+                    updateMap.put(playerBeingAssignId, assignedCharacter.getCharacterId());
+                    characterFirebaseRef.updateChildren(updateMap);
 
                     //remove assigned character and update counter
                     remainingCharacters.remove(assignedCharacter);
