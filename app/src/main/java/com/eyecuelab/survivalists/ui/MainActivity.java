@@ -508,10 +508,8 @@ public class MainActivity extends FragmentActivity
     }
 
     public void takeFirstTurn() {
-        turnData = new byte[1];
-
         String nextPlayer;
-
+        turnData = new byte[1];
 
         mCurrentMatchId = mCurrentMatch.getMatchId();
         String creatorId = Games.Players.getCurrentPlayerId(mGoogleApiClient);
@@ -525,6 +523,8 @@ public class MainActivity extends FragmentActivity
         } else {
             nextPlayer = "p_1";
         }
+
+        Games.TurnBasedMultiplayer.takeTurn(mGoogleApiClient, mCurrentMatchId, turnData, nextPlayer);
 
         mEditor.putString("matchId", mCurrentMatchId);
         mEditor.putInt("lastSafehouseId", 0);
@@ -543,10 +543,13 @@ public class MainActivity extends FragmentActivity
                 .setValue(1);
         Firebase playerFirebase = teamFirebaseRef
                 .child("players");
-        for (int i = 0; i < wholeParty.size(); i++) {
-            playerFirebase
-                    .child("p_" + (i + 1))
-                    .setValue(wholeParty.get(i));
+
+        if (wholeParty != null) {
+            for (int i = 0; i < wholeParty.size(); i++) {
+                playerFirebase
+                        .child("p_" + (i + 1))
+                        .setValue(wholeParty.get(i));
+            }
         }
 
         firebaseListening();
@@ -724,7 +727,7 @@ public class MainActivity extends FragmentActivity
             }
 
         } else {
-            //pull character from firebase
+            //Someone else started the match/ pull character from firebase
             characterFirebaseRef.child(mCurrentPlayerId).addListenerForSingleValueEvent(new ValueEventListener() {
                 @Override
                 public void onDataChange(DataSnapshot dataSnapshot) {
