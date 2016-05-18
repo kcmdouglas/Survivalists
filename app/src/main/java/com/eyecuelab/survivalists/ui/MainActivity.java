@@ -88,20 +88,17 @@ public class MainActivity extends FragmentActivity
     @Bind(R.id.characterButton) Button characterButton;
 
     private int stepsInSensor;
-    private int previousDayStepCount;
     private int dailySteps;
     private String mCurrentMatchId;
-    private String mMatchDuraution;
+    private String mMatchDuration;
     private int mLastSafeHouseId;
     private int mNextSafeHouseId;
     private ArrayList<String> invitees;
     private SharedPreferences mSharedPreferences;
     private SharedPreferences.Editor mEditor;
-    private SensorManager mSensorManager;
     private GoogleApiClient mGoogleApiClient;
     private TurnBasedMatch mCurrentMatch;
     private String mCurrentPlayerId;
-    private Sensor countSensor;
     private SafeHouse mPriorSafehouse;
     private SafeHouse mNextSafehouse;
 
@@ -117,13 +114,9 @@ public class MainActivity extends FragmentActivity
     private boolean mSignInCLicked = false;
     private boolean mExplicitSignOut = false;
     private boolean mInSignInFlow = false;
-    private Firebase mFirebaseRef;
     private Firebase mUserFirebaseRef;
-    private PreferenceActivity mPreferenceActivity;
-
 
     private Context mContext;
-    private StepResetResultReceiver mReceiver;
 
     Intent mBackgroundStepServiceIntent;
     private BackgroundStepService mBackgroundStepService;
@@ -154,18 +147,15 @@ public class MainActivity extends FragmentActivity
 
         //Remove notification bar
         this.getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN, WindowManager.LayoutParams.FLAG_FULLSCREEN);
-
-        //Initialize Facebook SDK
-        FacebookSdk.sdkInitialize(getApplicationContext());
-        AppEventsLogger.activateApp(this);
+//
+//        //Initialize Facebook SDK
+//        FacebookSdk.sdkInitialize(getApplicationContext());
+//        AppEventsLogger.activateApp(this);
 
         //set content view AFTER ABOVE sequence (to avoid crash)
         setContentView(R.layout.activity_main);
         mContext = this;
         ButterKnife.bind(this);
-
-        //Initialize SensorManager
-        mSensorManager = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
 
         //Create Shared Preferences
         mSharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
@@ -216,6 +206,7 @@ public class MainActivity extends FragmentActivity
             startService(mBackgroundStepServiceIntent);
         }
 
+        //TODO: Move to the startGame function
         mCharacters = new ArrayList<>();
         Character characterA = new Character("characterA", 22, 100, null);
         Character characterB = new Character("characterB", 80, 100, null);
@@ -232,6 +223,7 @@ public class MainActivity extends FragmentActivity
         String safehouseJson = mSharedPreferences.getString("nextSafehouse", null);
         Gson gson = new Gson();
         mNextSafehouse = gson.fromJson(safehouseJson, SafeHouse.class);
+        safehouseTextView.setText(mNextSafeHouseId);
     }
 
     @Override
@@ -244,9 +236,7 @@ public class MainActivity extends FragmentActivity
         if(mCurrentPlayerId != null) {
         }
 
-
         mSharedPreferences.registerOnSharedPreferenceChangeListener(this);
-
     }
 
     @Override
@@ -531,7 +521,7 @@ public class MainActivity extends FragmentActivity
             teamFirebaseRef.child("matchStart")
                     .setValue(mCurrentMatch.getCreationTimestamp());
             teamFirebaseRef.child("matchDuration")
-                    .setValue(mMatchDuraution);
+                    .setValue(mMatchDuration);
             teamFirebaseRef.child("lastSafehouseId")
                     .setValue(0);
             teamFirebaseRef.child("nextSafehouseId")
@@ -693,7 +683,6 @@ public class MainActivity extends FragmentActivity
 
     }
 
-
     private void initializeEventDialogFragments() {
         int eventOneSteps = mSharedPreferences.getInt(Constants.PREFERENCES_EVENT_1_STEPS, -1);
         int eventTwoSteps = mSharedPreferences.getInt(Constants.PREFERENCES_EVENT_2_STEPS, -1);
@@ -741,7 +730,6 @@ public class MainActivity extends FragmentActivity
 
     public void showEventDialog(int type) {
         mStackLevel++;
-
         if (type==1) {
             FragmentTransaction ft = getSupportFragmentManager().beginTransaction();
             Fragment prev = getSupportFragmentManager().findFragmentByTag("event");
@@ -765,12 +753,10 @@ public class MainActivity extends FragmentActivity
             DialogFragment frag = SafehouseDialogFragment.newInstance(mStackLevel, mPriorSafehouse);
             frag.show(ft, "fragment_safehouse_dialog");
         }
-
     }
 
     @Override
     public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String key) {
-
         if(key.equals(Constants.PREFERENCES_STEPS_IN_SENSOR_KEY)) {
             stepsInSensor = mSharedPreferences.getInt(Constants.PREFERENCES_STEPS_IN_SENSOR_KEY, 0);
             dailySteps = mSharedPreferences.getInt(Constants.PREFERENCES_DAILY_STEPS, 0);
@@ -779,7 +765,6 @@ public class MainActivity extends FragmentActivity
             initializeEventDialogFragments();
             checkSafehouseDistance();
         }
-
     }
 
     public void checkSafehouseDistance() {
@@ -794,13 +779,8 @@ public class MainActivity extends FragmentActivity
             mEditor.commit();
             safehouseTextView.setText(Integer.toString(mNextSafeHouseId));
             saveSafehouse();
-
             showEventDialog(2);
         }
-    }
-
-    public void updateSafehouse() {
-
     }
 
     public void initiateDailyCountResetService() {
@@ -814,6 +794,5 @@ public class MainActivity extends FragmentActivity
         PendingIntent pi = PendingIntent.getBroadcast(this, StepResetAlarmReceiver.REQUEST_CODE, intent, PendingIntent.FLAG_UPDATE_CURRENT);
         AlarmManager am = (AlarmManager) getApplicationContext().getSystemService(Context.ALARM_SERVICE);
         am.setRepeating(AlarmManager.RTC_WAKEUP, calendar.getTimeInMillis(), AlarmManager.INTERVAL_DAY, pi);
-
     }
 }
