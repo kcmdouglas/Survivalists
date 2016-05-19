@@ -186,7 +186,7 @@
     <Button
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Test Button 2"
+        android:text="Take Turn"
         android:id="@+id/testButton2"
         android:layout_alignBottom="@+id/testButton"
         android:layout_alignParentLeft="true"

@@ -18,7 +18,6 @@ import android.util.Log;
 import android.view.View;
 import android.view.WindowManager;
 import android.widget.Button;
-import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -40,7 +39,6 @@ import com.firebase.client.FirebaseError;
 import com.firebase.client.Query;
 import com.firebase.client.ValueEventListener;
 import com.google.android.gms.common.ConnectionResult;
-import com.google.android.gms.common.GooglePlayServicesNotAvailableException;
 import com.google.android.gms.common.SignInButton;
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.common.api.ResultCallback;
@@ -58,8 +56,6 @@ import org.parceler.Parcels;
 
 import java.util.ArrayList;
 import java.util.Calendar;
-import java.util.HashMap;
-import java.util.Map;
 
 import butterknife.Bind;
 import butterknife.ButterKnife;
@@ -228,8 +224,6 @@ public class MainActivity extends FragmentActivity
         Gson gson = new Gson();
         mNextSafehouse = gson.fromJson(safehouseJson, SafeHouse.class);
         safehouseTextView.setText(Integer.toString(mNextSafeHouseId));
-
-        createCampaign(30);
     }
 
     @Override
@@ -389,7 +383,7 @@ public class MainActivity extends FragmentActivity
                 mContext.startActivity(intent);
                 break;
             case R.id.testButton2:
-                takeFirstTurn();
+                takeTurn();
         }
     }
 
@@ -504,11 +498,12 @@ public class MainActivity extends FragmentActivity
         playersTextView.setText("");
     }
 
-    public void takeFirstTurn() {
+    public void takeTurn() {
         try {
             turnData = mCurrentMatch.getData();
         } catch (NullPointerException nullPointer) {
             nullPointer.getStackTrace();
+            Log.v(TAG, "Take first turn without turnData");
         }
 
         if (turnData == null) {
@@ -552,7 +547,7 @@ public class MainActivity extends FragmentActivity
             saveSafehouse();
         }
         turnData = new byte[1];
-        //Take as many turns as there are players to invite all players at once
+        //Take as many turns as there are players, to invite all players at once
         for (int i = 0; i < mCurrentMatch.getParticipantIds().size(); i++) {
             String nextPlayer = mCurrentMatch.getParticipantIds().get(i);
             Games.TurnBasedMultiplayer.takeTurn(mGoogleApiClient, mCurrentMatchId, turnData, nextPlayer);
@@ -613,7 +608,7 @@ public class MainActivity extends FragmentActivity
             playersTextView.setText(playersId.toString());
             matchIdTextView.setText(mCurrentMatchId);
 
-            takeFirstTurn();
+            takeTurn();
         }
 
     }
@@ -806,7 +801,7 @@ public class MainActivity extends FragmentActivity
         PendingIntent pendingIntent = PendingIntent.getBroadcast(this, CampaignEndAlarmReceiver.REQUEST_CODE, intent, 0);
         AlarmManager am = (AlarmManager) getApplicationContext().getSystemService(ALARM_SERVICE);
         am.set(AlarmManager.RTC_WAKEUP, campaignCalendar.getTimeInMillis(), pendingIntent);
-        Log.d("CreateCampaign", "Made it here!");
+        Log.d("CreateCampaign", "Campaign Created");
 
 
 //        mEditor.putInt(Constants.PREFERENCES_PREVIOUS_STEPS_KEY, 0).commit();
