@@ -18,6 +18,8 @@ import android.util.Log;
 import android.widget.Toast;
 
 import com.eyecuelab.survivalists.Constants;
+import com.eyecuelab.survivalists.models.Character;
+import com.eyecuelab.survivalists.models.User;
 import com.eyecuelab.survivalists.util.BackgroundStepReceiver;
 import com.eyecuelab.survivalists.util.StepResetAlarmReceiver;
 import com.firebase.client.ChildEventListener;
@@ -26,6 +28,7 @@ import com.firebase.client.Firebase;
 import com.firebase.client.FirebaseError;
 import com.firebase.client.Query;
 import com.firebase.client.ValueEventListener;
+import com.google.gson.Gson;
 
 import java.util.Calendar;
 import java.util.HashMap;
@@ -64,7 +67,11 @@ public class BackgroundStepService extends Service implements SensorEventListene
         mSharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
         mEditor = mSharedPreferences.edit();
         mCurrentPlayerId = mSharedPreferences.getString(Constants.PREFERENCES_GOOGLE_PLAYER_ID, null);
-
+        String userJson = mSharedPreferences.getString(Constants.PREFERENCES_USER, null);
+        Gson userGson = new Gson();
+        User currentUser = userGson.fromJson(userJson, User.class);
+        playerCharacter = currentUser.getPlayedCharacter();
+        fullnessLevel = playerCharacter.getFullnessLevel();
         return START_STICKY;
     }
 
@@ -102,13 +109,14 @@ public class BackgroundStepService extends Service implements SensorEventListene
             firebaseStepListener();
         }
 
-         if((mCurrentPlayerId != null) && (dailySteps % 50 < 1)) {
-            Firebase firebaseCharacterRef = new Firebase(Constants.FIREBASE_URL_USERS + "/" + mCurrentPlayerId + "/character");
-             Map<String, Object> firebaseHungerLevel = new HashMap<>();
-             firebaseHungerLevel.put("fullness_level", fullnessLevel);
-             firebaseCharacterRef.updateChildren(firebaseHungerLevel);
-             firebaseHungerListener();
-        }
+//         if((mCurrentPlayerId != null) && (dailySteps % 50 < 1)) {
+//
+//             Firebase firebaseCharacterRef = new Firebase(Constants.FIREBASE_URL_USERS + "/" + mCurrentPlayerId + "/character");
+//             Map<String, Object> firebaseHungerLevel = new HashMap<>();
+//             firebaseHungerLevel.put("fullness_level", fullnessLevel);
+//             firebaseCharacterRef.updateChildren(firebaseHungerLevel);
+//             firebaseHungerListener();
+//        }
     }
 
     @Override

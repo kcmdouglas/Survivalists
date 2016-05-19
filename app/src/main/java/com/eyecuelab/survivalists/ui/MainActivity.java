@@ -206,10 +206,10 @@ public class MainActivity extends FragmentActivity
 
         //TODO: Move to the startGame function
         mCharacters = new ArrayList<>();
-        Character characterA = new Character("characterA", 22, 100, null, 0);
-        Character characterB = new Character("characterB", 80, 100, null, 1);
-        Character characterC = new Character("characterC", 44, 100, null, 2);
-        Character characterD = new Character("characterD", 120, 100, null, 3);
+        Character characterA = new Character("characterA", 22, 100, 100, null, 0);
+        Character characterB = new Character("characterB", 80, 100, 100, null, 1);
+        Character characterC = new Character("characterC", 44, 100, 100, null, 2);
+        Character characterD = new Character("characterD", 120, 100, 100, null, 3);
         mCharacters.add(characterA);
         mCharacters.add(characterB);
         mCharacters.add(characterC);
@@ -223,7 +223,7 @@ public class MainActivity extends FragmentActivity
         mNextSafehouse = gson.fromJson(safehouseJson, SafeHouse.class);
         safehouseTextView.setText(Integer.toString(mNextSafeHouseId));
 
-        createCampaign();
+        //createCampaign();
     }
 
     @Override
@@ -541,7 +541,7 @@ public class MainActivity extends FragmentActivity
 
         mUserFirebaseRef.child("teamId").setValue(mCurrentMatchId);
         matchIdTextView.setText(mCurrentMatchId);
-        createCampaign();
+        createCampaign(15);
         saveSafehouse();
     }
 
