@@ -99,12 +99,6 @@ public class BackgroundStepService extends Service implements SensorEventListene
             firebaseStepsRef.updateChildren(firebaseDailySteps);
             firebaseStepListener();
         }
-
-//        if ((mCurrentMatchId != null) && (mNextSafehouse.reachedSafehouse(dailySteps))) {
-//            Toast.makeText(MainActivity.this, "You've reached " + mNextSafehouse.getHouseName(), Toast.LENGTH_SHORT).show();
-//            Toast.makeText(MainActivity.this, mNextSafehouse.getDescription(), Toast.LENGTH_LONG).show();
-//        }
-
     }
 
     @Override
