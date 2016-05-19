@@ -48,6 +48,7 @@ public class BackgroundStepService extends Service implements SensorEventListene
     String mCurrentPlayerId;
     int dailySteps;
     int fullnessLevel;
+    Character playerCharacter;
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {

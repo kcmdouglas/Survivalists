@@ -1,5 +1,7 @@
 package com.eyecuelab.survivalists.models;
 
+import android.util.Log;
+
 import com.eyecuelab.survivalists.entities.interfaces.Inventory;
 import com.eyecuelab.survivalists.entities.interfaces.Weapon;
 
@@ -16,7 +18,7 @@ public class Character {
     Integer fullnessLevel;
     String characterPictureUrl;
     Integer characterId;
-    List<Object> inventory = new ArrayList<Object>();
+    List<Object> inventory = new ArrayList<>();
 
     public Character() {
         //Required blank constructor
@@ -73,6 +75,19 @@ public class Character {
 
     public void setFullnessLevel(Integer fullnessLevel) {
         this.fullnessLevel = fullnessLevel;
+    }
+
+    public List<Object> getInventory () {
+        return inventory;
+    }
+
+    public void addToInventory(Object item) {
+        if (inventory.size() < 16) {
+            inventory.add(item);
+            Log.d("Inventory: ", "Item Added");
+        } else {
+            Log.d("Inventory: ", "Cannot add, inventory full");
+        }
     }
 
 }
