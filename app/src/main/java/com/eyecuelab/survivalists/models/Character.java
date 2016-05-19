@@ -1,6 +1,12 @@
 package com.eyecuelab.survivalists.models;
 
+import com.eyecuelab.survivalists.entities.interfaces.Inventory;
+import com.eyecuelab.survivalists.entities.interfaces.Weapon;
+
 import org.parceler.Parcel;
+
+import java.util.ArrayList;
+import java.util.List;
 
 @Parcel
 public class Character {
@@ -10,6 +16,7 @@ public class Character {
     Integer fullnessLevel;
     String characterPictureUrl;
     Integer characterId;
+    List<Object> inventory = new ArrayList<Object>();
 
     public Character() {
         //Required blank constructor
