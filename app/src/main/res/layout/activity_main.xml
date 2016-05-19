@@ -131,22 +131,8 @@
         android:layout_height="wrap_content"
         android:text="User Name Goes HERE!"
         android:id="@+id/userNameTextView"
-        android:layout_above="@+id/stepEditText"
         android:layout_alignParentLeft="true"
         android:layout_alignParentStart="true" />
-
-    <EditText
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:id="@+id/stepEditText"
-        android:layout_alignTop="@+id/testButton"
-        android:layout_alignParentLeft="true"
-        android:layout_alignParentStart="true"
-        android:hint="Manual Steps"
-        android:layout_alignRight="@+id/textView"
-        android:layout_alignEnd="@+id/textView"
-        android:singleLine="true"
-        android:inputType="number" />
 
     <TextView
         android:layout_width="wrap_content"
@@ -194,6 +180,15 @@
         android:text="Characters"
         android:id="@+id/characterButton"
         android:layout_below="@+id/endMatchButton"
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentStart="true" />
+
+    <Button
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Test Button 2"
+        android:id="@+id/testButton2"
+        android:layout_alignBottom="@+id/testButton"
         android:layout_alignParentLeft="true"
         android:layout_alignParentStart="true" />
 </RelativeLayout>

@@ -89,9 +89,9 @@ public class MainActivity extends FragmentActivity
     @Bind(R.id.matchIdTextView) TextView matchIdTextView;
     @Bind(R.id.userIdTextView) TextView userIdTextView;
     @Bind(R.id.userNameTextView) TextView userNameTextView;
-    @Bind(R.id.stepEditText) EditText manualStepSetter;
     @Bind(R.id.safehouseTextView) TextView safehouseTextView;
     @Bind(R.id.characterButton) Button characterButton;
+    @Bind(R.id.testButton2) Button testButtonTwo;
 
     private int stepsInSensor;
     private int previousDayStepCount;
@@ -194,6 +194,7 @@ public class MainActivity extends FragmentActivity
         endMatchButton.setOnClickListener(this);
         testButton.setOnClickListener(this);
         characterButton.setOnClickListener(this);
+        testButtonTwo.setOnClickListener(this);
 
         mCurrentMatchId = mSharedPreferences.getString("matchId", null);
 
@@ -399,6 +400,9 @@ public class MainActivity extends FragmentActivity
                 intent.putExtra("position", 0);
                 intent.putExtra("characters", Parcels.wrap(mCharacters));
                 mContext.startActivity(intent);
+                break;
+            case R.id.testButton2:
+                takeFirstTurn();
         }
     }
 
@@ -509,55 +513,54 @@ public class MainActivity extends FragmentActivity
 
     public void takeFirstTurn() {
         String nextPlayer;
-        turnData = new byte[1];
+        turnData = mCurrentMatch.getData();
 
-        mCurrentMatchId = mCurrentMatch.getMatchId();
-        String creatorId = Games.Players.getCurrentPlayerId(mGoogleApiClient);
-        ArrayList<String> wholeParty = invitees;
-        if (wholeParty != null) {
-            wholeParty.add(creatorId);
-        }
-
-        if (mCurrentMatch.getLastUpdaterId().equals("p_1")) {
-            nextPlayer = "p_2";
-        } else {
-            nextPlayer = "p_1";
-        }
-
-        Games.TurnBasedMultiplayer.takeTurn(mGoogleApiClient, mCurrentMatchId, turnData, nextPlayer);
-
-        mEditor.putString("matchId", mCurrentMatchId);
-        mEditor.putInt("lastSafehouseId", 0);
-        mEditor.putInt("nextSafehouseId", 1);
-        mEditor.commit();
-
-        Firebase teamFirebaseRef = new Firebase(Constants.FIREBASE_URL_TEAM + "/" + "")
-                .child(mCurrentMatchId);
-        teamFirebaseRef.child("matchStart")
-                .setValue(mCurrentMatch.getCreationTimestamp());
-        teamFirebaseRef.child("matchDuration")
-                .setValue(mMatchDuraution);
-        teamFirebaseRef.child("lastSafehouseId")
-                .setValue(0);
-        teamFirebaseRef.child("nextSafehouseId")
-                .setValue(1);
-        Firebase playerFirebase = teamFirebaseRef
-                .child("players");
-
-        if (wholeParty != null) {
-            for (int i = 0; i < wholeParty.size(); i++) {
-                playerFirebase
-                        .child("p_" + (i + 1))
-                        .setValue(wholeParty.get(i));
+        if (turnData == null) {
+            turnData = new byte[1];
+            mCurrentMatchId = mCurrentMatch.getMatchId();
+            String creatorId = Games.Players.getCurrentPlayerId(mGoogleApiClient);
+            ArrayList<String> wholeParty = invitees;
+            if (wholeParty != null) {
+                wholeParty.add(creatorId);
             }
+
+            //Take as many turns as there are players to invite all players at once
+            for (int i = 0; i < mCurrentMatch.getParticipantIds().size(); i++) {
+                nextPlayer = mCurrentMatch.getParticipantIds().get(i);
+                Games.TurnBasedMultiplayer.takeTurn(mGoogleApiClient, mCurrentMatchId, turnData, nextPlayer);
+            }
+
+            mEditor.putString("matchId", mCurrentMatchId);
+            mEditor.putInt("lastSafehouseId", 0);
+            mEditor.putInt("nextSafehouseId", 1);
+            mEditor.commit();
+
+            Firebase teamFirebaseRef = new Firebase(Constants.FIREBASE_URL_TEAM + "/" + "")
+                    .child(mCurrentMatchId);
+            teamFirebaseRef.child("matchStart")
+                    .setValue(mCurrentMatch.getCreationTimestamp());
+            teamFirebaseRef.child("matchDuration")
+                    .setValue(mMatchDuraution);
+            teamFirebaseRef.child("lastSafehouseId")
+                    .setValue(0);
+            teamFirebaseRef.child("nextSafehouseId")
+                    .setValue(1);
+            Firebase playerFirebase = teamFirebaseRef
+                    .child("players");
+
+            if (wholeParty != null) {
+                for (int i = 0; i < wholeParty.size(); i++) {
+                    playerFirebase
+                            .child("p_" + (i + 1))
+                            .setValue(wholeParty.get(i));
+                }
+            }
+
+            mUserFirebaseRef.child("teamId").setValue(mCurrentMatchId);
+            matchIdTextView.setText(mCurrentMatchId);
+            createCampaign();
+            saveSafehouse();
         }
-
-        firebaseListening();
-
-        mUserFirebaseRef.child("teamId").setValue(mCurrentMatchId);
-        matchIdTextView.setText(mCurrentMatchId);
-        createCampaign();
-        saveSafehouse();
     }
 
     @Override
@@ -709,7 +712,7 @@ public class MainActivity extends FragmentActivity
             int unasignedPlayersCount = invitees.size();
 
             while (unasignedPlayersCount > 0) {
-                for (int i = 0; i <= unasignedPlayersCount; i++) {
+                for (int i = 0; i < unasignedPlayersCount; i++) {
                     randomNumber = (int) Math.round(Math.random() * (invitees.size() - 1));
                     Character assignedCharacter = remainingCharacters.get(randomNumber);
 
@@ -728,15 +731,15 @@ public class MainActivity extends FragmentActivity
 
         } else {
             //Someone else started the match/ pull character from firebase
-            characterFirebaseRef.child(mCurrentPlayerId).addListenerForSingleValueEvent(new ValueEventListener() {
-                @Override
-                public void onDataChange(DataSnapshot dataSnapshot) {
-                    mCurrentCharacter = mCharacters.get(Integer.parseInt(dataSnapshot.getValue().toString()));
-                }
-
-                @Override
-                public void onCancelled(FirebaseError firebaseError) {}
-            });
+//            characterFirebaseRef.child(mCurrentPlayerId).addListenerForSingleValueEvent(new ValueEventListener() {
+//                @Override
+//                public void onDataChange(DataSnapshot dataSnapshot) {
+//                    mCurrentCharacter = mCharacters.get(Integer.parseInt(dataSnapshot.getValue().toString()));
+//                }
+//
+//                @Override
+//                public void onCancelled(FirebaseError firebaseError) {}
+//            });
         }
     }
 
