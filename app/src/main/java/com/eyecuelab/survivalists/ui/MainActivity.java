@@ -3,15 +3,11 @@ package com.eyecuelab.survivalists.ui;
 import android.app.Activity;
 import android.app.ActivityManager;
 import android.app.AlarmManager;
-import android.preference.PreferenceActivity;
 import android.support.v4.app.DialogFragment;
 import android.app.PendingIntent;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.content.Intent;
-import android.hardware.Sensor;
-import android.hardware.SensorManager;
-import android.os.Build;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.support.v4.app.Fragment;
@@ -32,32 +28,25 @@ import com.eyecuelab.survivalists.models.Character;
 import com.eyecuelab.survivalists.models.User;
 import com.eyecuelab.survivalists.models.SafeHouse;
 import com.eyecuelab.survivalists.services.BackgroundStepService;
-import com.eyecuelab.survivalists.services.GooglePlayGamesService;
 import com.eyecuelab.survivalists.util.CampaignEndAlarmReceiver;
 import com.eyecuelab.survivalists.util.InvitationListener;
 import com.eyecuelab.survivalists.util.MatchInitiatedListener;
 import com.eyecuelab.survivalists.util.MatchUpdateListener;
 import com.eyecuelab.survivalists.util.StepResetAlarmReceiver;
-import com.eyecuelab.survivalists.util.StepResetResultReceiver;
-import com.facebook.FacebookSdk;
-import com.facebook.appevents.AppEventsLogger;
 import com.firebase.client.ChildEventListener;
 import com.firebase.client.DataSnapshot;
 import com.firebase.client.Firebase;
 import com.firebase.client.FirebaseError;
 import com.firebase.client.Query;
 import com.firebase.client.ValueEventListener;
-import com.google.android.gms.common.AccountPicker;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.SignInButton;
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.common.api.ResultCallback;
 import com.google.android.gms.games.Games;
 
-import com.google.android.gms.games.multiplayer.Invitation;
 import com.google.android.gms.games.multiplayer.Multiplayer;
 import com.google.android.gms.games.multiplayer.realtime.RoomConfig;
-import com.google.android.gms.games.multiplayer.turnbased.OnTurnBasedMatchUpdateReceivedListener;
 import com.google.android.gms.games.multiplayer.turnbased.TurnBasedMatch;
 import com.google.android.gms.games.multiplayer.turnbased.TurnBasedMatchConfig;
 import com.google.android.gms.games.multiplayer.turnbased.TurnBasedMultiplayer;
@@ -67,11 +56,8 @@ import com.google.gson.Gson;
 import org.parceler.Parcels;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Calendar;
-import java.util.Collections;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 import butterknife.Bind;
@@ -99,21 +85,18 @@ public class MainActivity extends FragmentActivity
     @Bind(R.id.characterButton) Button characterButton;
 
     private int stepsInSensor;
-    private int previousDayStepCount;
     private int dailySteps;
     private String mCurrentMatchId;
-    private String mMatchDuraution;
+    private String mMatchDuration;
     private int mLastSafeHouseId;
     private int mNextSafeHouseId;
     private ArrayList<String> invitees;
     private byte[] turnData;
     private SharedPreferences mSharedPreferences;
     private SharedPreferences.Editor mEditor;
-    private SensorManager mSensorManager;
     private GoogleApiClient mGoogleApiClient;
     private TurnBasedMatch mCurrentMatch;
     private String mCurrentPlayerId;
-    private Sensor countSensor;
     private SafeHouse mPriorSafehouse;
     private SafeHouse mNextSafehouse;
     private Character mCurrentCharacter;
@@ -130,13 +113,9 @@ public class MainActivity extends FragmentActivity
     private boolean mSignInCLicked = false;
     private boolean mExplicitSignOut = false;
     private boolean mInSignInFlow = false;
-    private Firebase mFirebaseRef;
     private Firebase mUserFirebaseRef;
-    private PreferenceActivity mPreferenceActivity;
-
 
     private Context mContext;
-    private StepResetResultReceiver mReceiver;
 
     Intent mBackgroundStepServiceIntent;
     private BackgroundStepService mBackgroundStepService;
@@ -167,18 +146,15 @@ public class MainActivity extends FragmentActivity
 
         //Remove notification bar
         this.getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN, WindowManager.LayoutParams.FLAG_FULLSCREEN);
-
-        //Initialize Facebook SDK
-        FacebookSdk.sdkInitialize(getApplicationContext());
-        AppEventsLogger.activateApp(this);
+//
+//        //Initialize Facebook SDK
+//        FacebookSdk.sdkInitialize(getApplicationContext());
+//        AppEventsLogger.activateApp(this);
 
         //set content view AFTER ABOVE sequence (to avoid crash)
         setContentView(R.layout.activity_main);
         mContext = this;
         ButterKnife.bind(this);
-
-        //Initialize SensorManager
-        mSensorManager = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
 
         //Create Shared Preferences
         mSharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
@@ -228,6 +204,7 @@ public class MainActivity extends FragmentActivity
             startService(mBackgroundStepServiceIntent);
         }
 
+        //TODO: Move to the startGame function
         mCharacters = new ArrayList<>();
         Character characterA = new Character("characterA", 22, 100, null, 0);
         Character characterB = new Character("characterB", 80, 100, null, 1);
@@ -244,6 +221,9 @@ public class MainActivity extends FragmentActivity
         String safehouseJson = mSharedPreferences.getString("nextSafehouse", null);
         Gson gson = new Gson();
         mNextSafehouse = gson.fromJson(safehouseJson, SafeHouse.class);
+        safehouseTextView.setText(Integer.toString(mNextSafeHouseId));
+
+        createCampaign();
     }
 
     @Override
@@ -256,9 +236,7 @@ public class MainActivity extends FragmentActivity
         if(mCurrentPlayerId != null) {
         }
 
-
         mSharedPreferences.registerOnSharedPreferenceChangeListener(this);
-
     }
 
     @Override
@@ -538,19 +516,19 @@ public class MainActivity extends FragmentActivity
         mEditor.putInt("nextSafehouseId", 1);
         mEditor.commit();
 
-        Firebase teamFirebaseRef = new Firebase(Constants.FIREBASE_URL_TEAM + "/" + "")
-                .child(mCurrentMatchId);
-        teamFirebaseRef.child("matchStart")
-                .setValue(mCurrentMatch.getCreationTimestamp());
-        teamFirebaseRef.child("matchDuration")
-                .setValue(mMatchDuraution);
-        teamFirebaseRef.child("lastSafehouseId")
-                .setValue(0);
-        teamFirebaseRef.child("nextSafehouseId")
-                .setValue(1);
+
+            Firebase teamFirebaseRef = new Firebase(Constants.FIREBASE_URL_TEAM + "/" + "")
+                    .child(mCurrentMatchId);
+            teamFirebaseRef.child("matchStart")
+                    .setValue(mCurrentMatch.getCreationTimestamp());
+            teamFirebaseRef.child("matchDuration")
+                    .setValue(mMatchDuration);
+            teamFirebaseRef.child("lastSafehouseId")
+                    .setValue(0);
+            teamFirebaseRef.child("nextSafehouseId")
+                    .setValue(1);
         Firebase playerFirebase = teamFirebaseRef
                 .child("players");
-
         if (wholeParty != null) {
             for (int i = 0; i < wholeParty.size(); i++) {
                 playerFirebase
@@ -663,26 +641,6 @@ public class MainActivity extends FragmentActivity
     }
 
     //CAMPAIGN LOGIC BEGINS HERE
-    public void createCampaign() {
-        //TODO: Set alarm for x Days
-        //Set the Campaign Length here: (Default is 6pm on the 15th day after campaign begins)
-        Calendar campaignCalendar = Calendar.getInstance();
-        campaignCalendar.set(Calendar.DATE, 15);
-        campaignCalendar.set(Calendar.HOUR_OF_DAY, 18);
-
-        Intent intent = new Intent(this, CampaignEndAlarmReceiver.class);
-        PendingIntent pendingIntent = PendingIntent.getBroadcast(getBaseContext(), 1, intent, PendingIntent.FLAG_ONE_SHOT);
-        AlarmManager alarmManager = (AlarmManager) mContext.getSystemService(Context.ALARM_SERVICE);
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
-            alarmManager.setExact(AlarmManager.RTC_WAKEUP, campaignCalendar.getTimeInMillis(), pendingIntent);
-        } else {
-            alarmManager.set(AlarmManager.RTC_WAKEUP, campaignCalendar.getTimeInMillis(), pendingIntent);
-        }
-        //TODO: Create endCampaign method
-
-        mEditor.putInt(Constants.PREFERENCES_PREVIOUS_STEPS_KEY, 0).commit();
-        assignRandomCharacters();
-    }
 
     private void assignRandomCharacters() {
         ArrayList<Character> remainingCharacters;
@@ -733,7 +691,6 @@ public class MainActivity extends FragmentActivity
         }
     }
 
-
     private void initializeEventDialogFragments() {
         int eventOneSteps = mSharedPreferences.getInt(Constants.PREFERENCES_EVENT_1_STEPS, -1);
         int eventTwoSteps = mSharedPreferences.getInt(Constants.PREFERENCES_EVENT_2_STEPS, -1);
@@ -781,7 +738,6 @@ public class MainActivity extends FragmentActivity
 
     public void showEventDialog(int type) {
         mStackLevel++;
-
         if (type==1) {
             FragmentTransaction ft = getSupportFragmentManager().beginTransaction();
             Fragment prev = getSupportFragmentManager().findFragmentByTag("event");
@@ -805,13 +761,11 @@ public class MainActivity extends FragmentActivity
             DialogFragment frag = SafehouseDialogFragment.newInstance(mStackLevel, mPriorSafehouse);
             frag.show(ft, "fragment_safehouse_dialog");
         }
-
     }
 
     @Override
     public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String key) {
-
-        if(key.equals(Constants.PREFERENCES_STEPS_IN_SENSOR_KEY)) {
+        if(key.equals(Constants.PREFERENCES_STEPS_IN_SENSOR_KEY) && (mCurrentMatch != null)) {
             stepsInSensor = mSharedPreferences.getInt(Constants.PREFERENCES_STEPS_IN_SENSOR_KEY, 0);
             dailySteps = mSharedPreferences.getInt(Constants.PREFERENCES_DAILY_STEPS, 0);
             dailyCounter.setText(Integer.toString(dailySteps));
@@ -820,8 +774,10 @@ public class MainActivity extends FragmentActivity
             checkSafehouseDistance();
         }
 
+        //TODO: Add listener for isCampaignEnded boolean to trigger end of game screen
     }
 
+    //TODO: Move most checkSafehouseDistance to BackgroundStepService EXCEPT Dialog triggers
     public void checkSafehouseDistance() {
         //pull next safehouse object from shared preferences
         if(mNextSafehouse.reachedSafehouse(dailySteps))
@@ -834,7 +790,6 @@ public class MainActivity extends FragmentActivity
             mEditor.commit();
             safehouseTextView.setText(Integer.toString(mNextSafeHouseId));
             saveSafehouse();
-
             showEventDialog(2);
         }
     }
@@ -850,6 +805,21 @@ public class MainActivity extends FragmentActivity
         PendingIntent pi = PendingIntent.getBroadcast(this, StepResetAlarmReceiver.REQUEST_CODE, intent, PendingIntent.FLAG_UPDATE_CURRENT);
         AlarmManager am = (AlarmManager) getApplicationContext().getSystemService(Context.ALARM_SERVICE);
         am.setRepeating(AlarmManager.RTC_WAKEUP, calendar.getTimeInMillis(), AlarmManager.INTERVAL_DAY, pi);
-
     }
+
+    public void createCampaign(int campaignLength) {
+        Calendar campaignCalendar = Calendar.getInstance();
+        campaignCalendar.set(Calendar.HOUR, 18);
+        campaignCalendar.add(Calendar.DATE, campaignLength);
+        Intent intent = new Intent(this, CampaignEndAlarmReceiver.class);
+        PendingIntent pendingIntent = PendingIntent.getBroadcast(this, CampaignEndAlarmReceiver.REQUEST_CODE, intent, 0);
+        AlarmManager am = (AlarmManager) getApplicationContext().getSystemService(ALARM_SERVICE);
+        am.set(AlarmManager.RTC_WAKEUP, campaignCalendar.getTimeInMillis(), pendingIntent);
+        Log.d("CreateCampaign", "Made it here!");
+
+
+//        mEditor.putInt(Constants.PREFERENCES_PREVIOUS_STEPS_KEY, 0).commit();
+//        assignRandomCharacters();
+    }
+
 }

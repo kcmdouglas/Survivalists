@@ -8,6 +8,7 @@
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
     <uses-permission android:name="android.permission.WAKE_LOCK" />
+    <uses-permission android:name="android.permission.VIBRATE" />
 
     <application
         android:name=".SurvivalistsApplication"
@@ -26,6 +27,12 @@
         <service
             android:name=".services.BackgroundStepService"
             android:enabled="true" />
+        <service
+            android:name=".services.CampaignEndAlarmService" android:enabled="true" android:exported="false">
+            <intent-filter><action android:name="NOTIFICATION_SERVICE" /></intent-filter>
+        </service>
+
+        <receiver android:name=".util.CampaignEndAlarmReceiver" android:process=":remote" />
 
         <receiver
             android:name=".util.BackgroundStepReceiver"
