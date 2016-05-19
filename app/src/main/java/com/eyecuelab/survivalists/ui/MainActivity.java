@@ -259,12 +259,8 @@ public class MainActivity extends FragmentActivity
         if (mCurrentMatch != null) {
             matchIdTextView.setText(mCurrentMatch.getMatchId());
         }
-        if(mCurrentPlayerId != null) {
-        }
-
 
         mSharedPreferences.registerOnSharedPreferenceChangeListener(this);
-
     }
 
     @Override
@@ -458,9 +454,13 @@ public class MainActivity extends FragmentActivity
             public void onResult(TurnBasedMultiplayer.LoadMatchResult result) {
                 mCurrentMatch = result.getMatch();
                 if (mCurrentMatch != null) {
-                    ArrayList<String> playersId = mCurrentMatch.getParticipantIds();
                     if (mCurrentMatch != null) {
-                        playersTextView.setText(mCurrentMatch.getParticipant(playersId.get(1)).getDisplayName());
+                        ArrayList<String> participantNames = new ArrayList<>();
+                        ArrayList<String> participantIds = mCurrentMatch.getParticipantIds();
+                        for (int i = 0; i < participantIds.size(); i++) {
+                            participantNames.add(mCurrentMatch.getParticipant(participantIds.get(i)).getDisplayName());
+                        }
+                        playersTextView.setText(participantNames.toString());
                     }
                 }
             }
@@ -507,8 +507,7 @@ public class MainActivity extends FragmentActivity
                 mEditor.putString("matchId", "Please create match");
                 mEditor.commit();
                 mCurrentMatch = null;
-                matchIdTextView.setText("");
-                playersTextView.setText("");
+                mCurrentMatchId = null;
             }
         };
 
@@ -521,10 +520,12 @@ public class MainActivity extends FragmentActivity
         } else {
             Toast.makeText(this, "Not connected to match", Toast.LENGTH_SHORT).show();
         }
+
+        matchIdTextView.setText("");
+        playersTextView.setText("");
     }
 
     public void takeFirstTurn() {
-        String nextPlayer;
         try {
             turnData = mCurrentMatch.getData();
         } catch (NullPointerException nullPointer) {
@@ -532,18 +533,11 @@ public class MainActivity extends FragmentActivity
         }
 
         if (turnData == null) {
-            turnData = new byte[1];
             mCurrentMatchId = mCurrentMatch.getMatchId();
             String creatorId = Games.Players.getCurrentPlayerId(mGoogleApiClient);
             ArrayList<String> wholeParty = invitees;
             if (wholeParty != null) {
                 wholeParty.add(creatorId);
-            }
-
-            //Take as many turns as there are players to invite all players at once
-            for (int i = 0; i < mCurrentMatch.getParticipantIds().size(); i++) {
-                nextPlayer = mCurrentMatch.getParticipantIds().get(i);
-                Games.TurnBasedMultiplayer.takeTurn(mGoogleApiClient, mCurrentMatchId, turnData, nextPlayer);
             }
 
             mEditor.putString("matchId", mCurrentMatchId);
@@ -576,6 +570,12 @@ public class MainActivity extends FragmentActivity
             matchIdTextView.setText(mCurrentMatchId);
             createCampaign();
             saveSafehouse();
+        }
+        turnData = new byte[1];
+        //Take as many turns as there are players to invite all players at once
+        for (int i = 0; i < mCurrentMatch.getParticipantIds().size(); i++) {
+            String nextPlayer = mCurrentMatch.getParticipantIds().get(i);
+            Games.TurnBasedMultiplayer.takeTurn(mGoogleApiClient, mCurrentMatchId, turnData, nextPlayer);
         }
     }
 
@@ -624,11 +624,15 @@ public class MainActivity extends FragmentActivity
         } else if (request == RC_WAITING_ROOM) {
             //user returning from join match
             mCurrentMatch = data.getParcelableExtra(Multiplayer.EXTRA_TURN_BASED_MATCH);
-            ArrayList<String> playersId = mCurrentMatch.getParticipantIds();
+            mCurrentMatchId = mCurrentMatch.getMatchId();
 
-            if (mCurrentMatch != null) {
-                playersTextView.setText(mCurrentMatch.getParticipant(playersId.get(1)).getDisplayName());
-            }
+            ArrayList<String> playersId = mCurrentMatch.getParticipantIds();
+            mEditor.putString("matchId", mCurrentMatchId);
+            mEditor.commit();
+
+            playersTextView.setText(playersId.toString());
+            matchIdTextView.setText(mCurrentMatchId);
+
             takeFirstTurn();
         }
 
