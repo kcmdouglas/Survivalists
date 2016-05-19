@@ -32,7 +32,11 @@ import com.eyecuelab.survivalists.models.Character;
 import com.eyecuelab.survivalists.models.User;
 import com.eyecuelab.survivalists.models.SafeHouse;
 import com.eyecuelab.survivalists.services.BackgroundStepService;
+import com.eyecuelab.survivalists.services.GooglePlayGamesService;
 import com.eyecuelab.survivalists.util.CampaignEndAlarmReceiver;
+import com.eyecuelab.survivalists.util.InvitationListener;
+import com.eyecuelab.survivalists.util.MatchInitiatedListener;
+import com.eyecuelab.survivalists.util.MatchUpdateListener;
 import com.eyecuelab.survivalists.util.StepResetAlarmReceiver;
 import com.eyecuelab.survivalists.util.StepResetResultReceiver;
 import com.facebook.FacebookSdk;
@@ -50,6 +54,7 @@ import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.common.api.ResultCallback;
 import com.google.android.gms.games.Games;
 
+import com.google.android.gms.games.multiplayer.Invitation;
 import com.google.android.gms.games.multiplayer.Multiplayer;
 import com.google.android.gms.games.multiplayer.realtime.RoomConfig;
 import com.google.android.gms.games.multiplayer.turnbased.OnTurnBasedMatchUpdateReceivedListener;
@@ -74,7 +79,7 @@ import butterknife.ButterKnife;
 
 public class MainActivity extends FragmentActivity
         implements View.OnClickListener, GoogleApiClient.ConnectionCallbacks,
-        GoogleApiClient.OnConnectionFailedListener, OnTurnBasedMatchUpdateReceivedListener, SharedPreferences.OnSharedPreferenceChangeListener {
+        GoogleApiClient.OnConnectionFailedListener, SharedPreferences.OnSharedPreferenceChangeListener {
 
     private static final String TAG = "MainActivity";
 
@@ -185,7 +190,6 @@ public class MainActivity extends FragmentActivity
                 .addConnectionCallbacks(this)
                 .addOnConnectionFailedListener(this)
                 .addApi(Games.API)
-                .addScope(Games.SCOPE_GAMES)
                 .build();
 
         signInButton.setOnClickListener(this);
@@ -297,10 +301,13 @@ public class MainActivity extends FragmentActivity
             matchIdTextView.setText(mCurrentMatchId);
         }
 
+        Games.setViewForPopups(mGoogleApiClient, getCurrentFocus());
+
         //Load current match
         loadMatch();
 
-        Games.TurnBasedMultiplayer.registerMatchUpdateListener(mGoogleApiClient, this);
+        Games.TurnBasedMultiplayer.registerMatchUpdateListener(mGoogleApiClient, new MatchUpdateListener());
+        Games.Invitations.registerInvitationListener(mGoogleApiClient, new InvitationListener());
 
         String userName = Games.Players.getCurrentPlayer(mGoogleApiClient).getDisplayName();
 
@@ -469,7 +476,7 @@ public class MainActivity extends FragmentActivity
             Intent joinMatchIntent = Games.TurnBasedMultiplayer.getInboxIntent(mGoogleApiClient);
             startActivityForResult(joinMatchIntent, RC_WAITING_ROOM);
             Games.TurnBasedMultiplayer
-                    .registerMatchUpdateListener(mGoogleApiClient, MainActivity.this);
+                    .registerMatchUpdateListener(mGoogleApiClient, new MatchUpdateListener());
         } else {
             Toast.makeText(this, "You are already connected to match " + mCurrentMatchId, Toast.LENGTH_LONG).show();
         }
@@ -597,19 +604,13 @@ public class MainActivity extends FragmentActivity
                     .addInvitedPlayers(invitees)
                     .setAutoMatchCriteria(automatchCriteria)
                     .build();
-            //Create a callback when the match is initiated
-            ResultCallback<TurnBasedMultiplayer.InitiateMatchResult> initiateMatchResultResultCallback = new ResultCallback<TurnBasedMultiplayer.InitiateMatchResult>() {
-                @Override
-                public void onResult(TurnBasedMultiplayer.InitiateMatchResult result) {
-                    processResult(result);
-                }
-            };
+
             //Build match
             Games.TurnBasedMultiplayer
                     .createMatch(mGoogleApiClient, turnBasedMatchConfig)
-                    .setResultCallback(initiateMatchResultResultCallback);
+                    .setResultCallback(new MatchInitiatedListener());
 
-            Games.TurnBasedMultiplayer.registerMatchUpdateListener(mGoogleApiClient, MainActivity.this);
+            Games.TurnBasedMultiplayer.registerMatchUpdateListener(mGoogleApiClient, new MatchUpdateListener());
 
         } else if (request == RC_WAITING_ROOM) {
             //user returning from join match
@@ -664,15 +665,7 @@ public class MainActivity extends FragmentActivity
         });
     }
 
-    @Override
-    public void onTurnBasedMatchReceived(TurnBasedMatch turnBasedMatch) {}
-
-    @Override
-    public void onTurnBasedMatchRemoved(String s) {}
-
-
     //CAMPAIGN LOGIC BEGINS HERE
-
     public void createCampaign() {
         //TODO: Set alarm for x Days
         //Set the Campaign Length here: (Default is 6pm on the 15th day after campaign begins)
@@ -851,10 +844,6 @@ public class MainActivity extends FragmentActivity
 
             showEventDialog(2);
         }
-    }
-
-    public void updateSafehouse() {
-
     }
 
     public void initiateDailyCountResetService() {
