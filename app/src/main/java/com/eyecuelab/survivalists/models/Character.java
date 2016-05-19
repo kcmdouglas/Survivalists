@@ -1,10 +1,6 @@
 package com.eyecuelab.survivalists.models;
 
-import com.eyecuelab.survivalists.entities.interfaces.Inventory;
-
 import org.parceler.Parcel;
-
-import java.util.ArrayList;
 
 @Parcel
 public class Character {
@@ -12,16 +8,18 @@ public class Character {
     Integer age;
     Integer health;
     String characterPictureUrl;
+    int characterId;
 
     public Character() {
         //Required blank constructor
     }
 
-    public Character(String name, Integer age, Integer health, String characterPictureUrl) {
+    public Character(String name, Integer age, Integer health, String characterPictureUrl, int characterId) {
         this.name = name;
         this.age = age;
         this.health = health;
         this.characterPictureUrl = characterPictureUrl;
+        this.characterId = characterId;
     }
 
     public String getName() {
@@ -55,4 +53,9 @@ public class Character {
     public void setCharacterPictureUrl(String characterPictureUrl) {
         this.characterPictureUrl = characterPictureUrl;
     }
+
+    public int getCharacterId() {
+        return characterId;
+    }
+
 }
