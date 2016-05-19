@@ -32,6 +32,7 @@ import com.eyecuelab.survivalists.models.Character;
 import com.eyecuelab.survivalists.models.User;
 import com.eyecuelab.survivalists.models.SafeHouse;
 import com.eyecuelab.survivalists.services.BackgroundStepService;
+import com.eyecuelab.survivalists.services.CampaignEndAlarmService;
 import com.eyecuelab.survivalists.services.GooglePlayGamesService;
 import com.eyecuelab.survivalists.util.CampaignEndAlarmReceiver;
 import com.eyecuelab.survivalists.util.InvitationListener;
@@ -236,6 +237,8 @@ public class MainActivity extends FragmentActivity
         Gson gson = new Gson();
         mNextSafehouse = gson.fromJson(safehouseJson, SafeHouse.class);
         safehouseTextView.setText(Integer.toString(mNextSafeHouseId));
+
+        createCampaign();
     }
 
     @Override
@@ -653,26 +656,6 @@ public class MainActivity extends FragmentActivity
     }
 
     //CAMPAIGN LOGIC BEGINS HERE
-    public void createCampaign() {
-        //TODO: Set alarm for x Days
-        //Set the Campaign Length here: (Default is 6pm on the 15th day after campaign begins)
-        Calendar campaignCalendar = Calendar.getInstance();
-        campaignCalendar.set(Calendar.DATE, 15);
-        campaignCalendar.set(Calendar.HOUR_OF_DAY, 18);
-
-        Intent intent = new Intent(this, CampaignEndAlarmReceiver.class);
-        PendingIntent pendingIntent = PendingIntent.getBroadcast(getBaseContext(), 1, intent, PendingIntent.FLAG_ONE_SHOT);
-        AlarmManager alarmManager = (AlarmManager) mContext.getSystemService(Context.ALARM_SERVICE);
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
-            alarmManager.setExact(AlarmManager.RTC_WAKEUP, campaignCalendar.getTimeInMillis(), pendingIntent);
-        } else {
-            alarmManager.set(AlarmManager.RTC_WAKEUP, campaignCalendar.getTimeInMillis(), pendingIntent);
-        }
-        //TODO: Create endCampaign method
-
-        mEditor.putInt(Constants.PREFERENCES_PREVIOUS_STEPS_KEY, 0).commit();
-//        assignRandomCharacters();
-    }
 
     private void assignRandomCharacters() {
         ArrayList<Character> remainingCharacters;
@@ -797,7 +780,7 @@ public class MainActivity extends FragmentActivity
 
     @Override
     public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String key) {
-        if(key.equals(Constants.PREFERENCES_STEPS_IN_SENSOR_KEY)) {
+        if(key.equals(Constants.PREFERENCES_STEPS_IN_SENSOR_KEY) && (mCurrentMatch != null)) {
             stepsInSensor = mSharedPreferences.getInt(Constants.PREFERENCES_STEPS_IN_SENSOR_KEY, 0);
             dailySteps = mSharedPreferences.getInt(Constants.PREFERENCES_DAILY_STEPS, 0);
             dailyCounter.setText(Integer.toString(dailySteps));
@@ -836,4 +819,34 @@ public class MainActivity extends FragmentActivity
         AlarmManager am = (AlarmManager) getApplicationContext().getSystemService(Context.ALARM_SERVICE);
         am.setRepeating(AlarmManager.RTC_WAKEUP, calendar.getTimeInMillis(), AlarmManager.INTERVAL_DAY, pi);
     }
+
+    public void createCampaign() {
+        Calendar campaignCalendar = Calendar.getInstance();
+        campaignCalendar.add(Calendar.MINUTE, 5);
+        Intent intent = new Intent(this, CampaignEndAlarmReceiver.class);
+        PendingIntent pendingIntent = PendingIntent.getBroadcast(this, CampaignEndAlarmReceiver.REQUEST_CODE, intent, 0);
+        AlarmManager am = (AlarmManager) getApplicationContext().getSystemService(ALARM_SERVICE);
+        am.set(AlarmManager.RTC_WAKEUP, campaignCalendar.getTimeInMillis(), pendingIntent);
+        Log.d("CreateCampaign", "Made it here!");
+
+//        //TODO: Set alarm for x Days
+//        //Set the Campaign Length here: (Default is 6pm on the 15th day after campaign begins)
+//        Calendar campaignCalendar = Calendar.getInstance();
+//        campaignCalendar.set(Calendar.DATE, 15);
+//        campaignCalendar.set(Calendar.HOUR_OF_DAY, 18);
+//
+//        Intent intent = new Intent(this, CampaignEndAlarmReceiver.class);
+//        PendingIntent pendingIntent = PendingIntent.getBroadcast(getBaseContext(), 1, intent, PendingIntent.FLAG_ONE_SHOT);
+//        AlarmManager alarmManager = (AlarmManager) mContext.getSystemService(Context.ALARM_SERVICE);
+//        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
+//            alarmManager.setExact(AlarmManager.RTC_WAKEUP, campaignCalendar.getTimeInMillis(), pendingIntent);
+//        } else {
+//            alarmManager.set(AlarmManager.RTC_WAKEUP, campaignCalendar.getTimeInMillis(), pendingIntent);
+//        }
+//        //TODO: Create endCampaign method
+//
+//        mEditor.putInt(Constants.PREFERENCES_PREVIOUS_STEPS_KEY, 0).commit();
+////        assignRandomCharacters();
+    }
+
 }
