@@ -3,15 +3,11 @@ package com.eyecuelab.survivalists.ui;
 import android.app.Activity;
 import android.app.ActivityManager;
 import android.app.AlarmManager;
-import android.preference.PreferenceActivity;
 import android.support.v4.app.DialogFragment;
 import android.app.PendingIntent;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.content.Intent;
-import android.hardware.Sensor;
-import android.hardware.SensorManager;
-import android.os.Build;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.support.v4.app.Fragment;
@@ -32,33 +28,25 @@ import com.eyecuelab.survivalists.models.Character;
 import com.eyecuelab.survivalists.models.User;
 import com.eyecuelab.survivalists.models.SafeHouse;
 import com.eyecuelab.survivalists.services.BackgroundStepService;
-import com.eyecuelab.survivalists.services.CampaignEndAlarmService;
-import com.eyecuelab.survivalists.services.GooglePlayGamesService;
 import com.eyecuelab.survivalists.util.CampaignEndAlarmReceiver;
 import com.eyecuelab.survivalists.util.InvitationListener;
 import com.eyecuelab.survivalists.util.MatchInitiatedListener;
 import com.eyecuelab.survivalists.util.MatchUpdateListener;
 import com.eyecuelab.survivalists.util.StepResetAlarmReceiver;
-import com.eyecuelab.survivalists.util.StepResetResultReceiver;
-import com.facebook.FacebookSdk;
-import com.facebook.appevents.AppEventsLogger;
 import com.firebase.client.ChildEventListener;
 import com.firebase.client.DataSnapshot;
 import com.firebase.client.Firebase;
 import com.firebase.client.FirebaseError;
 import com.firebase.client.Query;
 import com.firebase.client.ValueEventListener;
-import com.google.android.gms.common.AccountPicker;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.SignInButton;
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.common.api.ResultCallback;
 import com.google.android.gms.games.Games;
 
-import com.google.android.gms.games.multiplayer.Invitation;
 import com.google.android.gms.games.multiplayer.Multiplayer;
 import com.google.android.gms.games.multiplayer.realtime.RoomConfig;
-import com.google.android.gms.games.multiplayer.turnbased.OnTurnBasedMatchUpdateReceivedListener;
 import com.google.android.gms.games.multiplayer.turnbased.TurnBasedMatch;
 import com.google.android.gms.games.multiplayer.turnbased.TurnBasedMatchConfig;
 import com.google.android.gms.games.multiplayer.turnbased.TurnBasedMultiplayer;
@@ -68,11 +56,8 @@ import com.google.gson.Gson;
 import org.parceler.Parcels;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Calendar;
-import java.util.Collections;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 import butterknife.Bind;
@@ -788,6 +773,8 @@ public class MainActivity extends FragmentActivity
             initializeEventDialogFragments();
             checkSafehouseDistance();
         }
+
+        //TODO: Add listener for isCampaignEnded boolean to trigger end of game screen
     }
 
     //TODO: Move most checkSafehouseDistance to BackgroundStepService EXCEPT Dialog triggers
@@ -820,33 +807,19 @@ public class MainActivity extends FragmentActivity
         am.setRepeating(AlarmManager.RTC_WAKEUP, calendar.getTimeInMillis(), AlarmManager.INTERVAL_DAY, pi);
     }
 
-    public void createCampaign() {
+    public void createCampaign(int campaignLength) {
         Calendar campaignCalendar = Calendar.getInstance();
-        campaignCalendar.add(Calendar.MINUTE, 5);
+        campaignCalendar.set(Calendar.HOUR, 18);
+        campaignCalendar.add(Calendar.DATE, campaignLength);
         Intent intent = new Intent(this, CampaignEndAlarmReceiver.class);
         PendingIntent pendingIntent = PendingIntent.getBroadcast(this, CampaignEndAlarmReceiver.REQUEST_CODE, intent, 0);
         AlarmManager am = (AlarmManager) getApplicationContext().getSystemService(ALARM_SERVICE);
         am.set(AlarmManager.RTC_WAKEUP, campaignCalendar.getTimeInMillis(), pendingIntent);
         Log.d("CreateCampaign", "Made it here!");
 
-//        //TODO: Set alarm for x Days
-//        //Set the Campaign Length here: (Default is 6pm on the 15th day after campaign begins)
-//        Calendar campaignCalendar = Calendar.getInstance();
-//        campaignCalendar.set(Calendar.DATE, 15);
-//        campaignCalendar.set(Calendar.HOUR_OF_DAY, 18);
-//
-//        Intent intent = new Intent(this, CampaignEndAlarmReceiver.class);
-//        PendingIntent pendingIntent = PendingIntent.getBroadcast(getBaseContext(), 1, intent, PendingIntent.FLAG_ONE_SHOT);
-//        AlarmManager alarmManager = (AlarmManager) mContext.getSystemService(Context.ALARM_SERVICE);
-//        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
-//            alarmManager.setExact(AlarmManager.RTC_WAKEUP, campaignCalendar.getTimeInMillis(), pendingIntent);
-//        } else {
-//            alarmManager.set(AlarmManager.RTC_WAKEUP, campaignCalendar.getTimeInMillis(), pendingIntent);
-//        }
-//        //TODO: Create endCampaign method
-//
+
 //        mEditor.putInt(Constants.PREFERENCES_PREVIOUS_STEPS_KEY, 0).commit();
-////        assignRandomCharacters();
+//        assignRandomCharacters();
     }
 
 }

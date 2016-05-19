@@ -4,11 +4,9 @@ import android.app.IntentService;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
-import android.os.ResultReceiver;
 import android.preference.PreferenceManager;
 
 import com.eyecuelab.survivalists.Constants;
-import com.eyecuelab.survivalists.util.StepResetResultReceiver;
 
 /**
  * Created by eyecuelab on 5/12/16.
