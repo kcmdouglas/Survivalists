@@ -231,7 +231,7 @@ public class MainActivity extends FragmentActivity
         String safehouseJson = mSharedPreferences.getString("nextSafehouse", null);
         Gson gson = new Gson();
         mNextSafehouse = gson.fromJson(safehouseJson, SafeHouse.class);
-        safehouseTextView.setText(mNextSafeHouseId);
+        safehouseTextView.setText(Integer.toString(mNextSafeHouseId));
     }
 
     @Override
@@ -678,7 +678,7 @@ public class MainActivity extends FragmentActivity
         //TODO: Create endCampaign method
 
         mEditor.putInt(Constants.PREFERENCES_PREVIOUS_STEPS_KEY, 0).commit();
-        assignRandomCharacters();
+//        assignRandomCharacters();
     }
 
     private void assignRandomCharacters() {
