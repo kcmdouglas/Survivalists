@@ -7,17 +7,19 @@ public class Character {
     String name;
     Integer age;
     Integer health;
+    Integer fullnessLevel;
     String characterPictureUrl;
-    int characterId;
+    Integer characterId;
 
     public Character() {
         //Required blank constructor
     }
 
-    public Character(String name, Integer age, Integer health, String characterPictureUrl, int characterId) {
+    public Character(String name, Integer age, Integer health, Integer fullnessLevel, String characterPictureUrl, Integer characterId) {
         this.name = name;
         this.age = age;
         this.health = health;
+        this.fullnessLevel = fullnessLevel
         this.characterPictureUrl = characterPictureUrl;
         this.characterId = characterId;
     }
@@ -56,6 +58,14 @@ public class Character {
 
     public int getCharacterId() {
         return characterId;
+    }
+
+    public int getFullnessLevel() {
+        return fullnessLevel;
+    }
+
+    public void setFullnessLevel(Integer fullnessLevel) {
+        this.fullnessLevel = fullnessLevel;
     }
 
 }
