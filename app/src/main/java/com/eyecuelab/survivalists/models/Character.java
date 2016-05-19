@@ -26,7 +26,7 @@ public class Character {
         this.name = name;
         this.age = age;
         this.health = health;
-        this.fullnessLevel = fullnessLevel
+        this.fullnessLevel = fullnessLevel;
         this.characterPictureUrl = characterPictureUrl;
         this.characterId = characterId;
     }

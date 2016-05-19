@@ -47,6 +47,7 @@ public class BackgroundStepService extends Service implements SensorEventListene
     int previousDayStepCount;
     String mCurrentPlayerId;
     int dailySteps;
+    int fullnessLevel;
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
@@ -99,6 +100,14 @@ public class BackgroundStepService extends Service implements SensorEventListene
             firebaseStepsRef.updateChildren(firebaseDailySteps);
             firebaseStepListener();
         }
+
+         if((mCurrentPlayerId != null) && (dailySteps % 50 < 1)) {
+            Firebase firebaseCharacterRef = new Firebase(Constants.FIREBASE_URL_USERS + "/" + mCurrentPlayerId + "/character");
+             Map<String, Object> firebaseHungerLevel = new HashMap<>();
+             firebaseHungerLevel.put("fullness_level", fullnessLevel);
+             firebaseCharacterRef.updateChildren(firebaseHungerLevel);
+             firebaseHungerListener();
+        }
     }
 
     @Override
@@ -108,6 +117,40 @@ public class BackgroundStepService extends Service implements SensorEventListene
 
         Firebase firebaseStepsRef = new Firebase(Constants.FIREBASE_URL_STEPS + "/" + mCurrentPlayerId);
         Query queryRef = firebaseStepsRef.orderByValue();
+
+        queryRef.addChildEventListener(new ChildEventListener() {
+            @Override
+            public void onChildAdded(DataSnapshot dataSnapshot, String s) {
+                Log.d("Firebase Update", dataSnapshot.getKey());
+                Log.d("Firebase Update", dataSnapshot.getValue().toString());
+            }
+
+            @Override
+            public void onChildChanged(DataSnapshot dataSnapshot, String s) {}
+
+            @Override
+            public void onChildRemoved(DataSnapshot dataSnapshot) {}
+
+            @Override
+            public void onChildMoved(DataSnapshot dataSnapshot, String s) {}
+
+            @Override
+            public void onCancelled(FirebaseError firebaseError) {}
+        });
+
+        queryRef.addValueEventListener(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {}
+
+            @Override
+            public void onCancelled(FirebaseError firebaseError) {}
+        });
+    }
+
+    private void firebaseHungerListener() {
+
+        Firebase firebaseCharacterRef = new Firebase(Constants.FIREBASE_URL_USERS + "/" + mCurrentPlayerId + "/character");
+        Query queryRef = firebaseCharacterRef.orderByValue();
 
         queryRef.addChildEventListener(new ChildEventListener() {
             @Override
