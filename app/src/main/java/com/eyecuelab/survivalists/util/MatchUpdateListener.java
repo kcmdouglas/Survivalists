@@ -13,7 +13,7 @@ public class MatchUpdateListener implements OnTurnBasedMatchUpdateReceivedListen
 
     @Override
     public void onTurnBasedMatchReceived(TurnBasedMatch turnBasedMatch) {
-        Log.v(TAG, turnBasedMatch.getMatchNumber() + "");
+        Log.v(TAG, turnBasedMatch.getData().toString().getBytes().toString());
     }
 
     @Override
