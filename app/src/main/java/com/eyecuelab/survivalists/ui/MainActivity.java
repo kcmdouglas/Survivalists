@@ -713,7 +713,11 @@ public class MainActivity extends FragmentActivity
 
             while (unasignedPlayersCount > 0) {
                 for (int i = 0; i < unasignedPlayersCount; i++) {
-                    randomNumber = (int) Math.round(Math.random() * (invitees.size() - 1));
+                    randomNumber = (int) Math.round(Math.random() * invitees.size() - 1);
+
+                    Log.v(TAG, randomNumber + "");
+                    Log.v(TAG, unasignedPlayersCount + "");
+
                     Character assignedCharacter = remainingCharacters.get(randomNumber);
 
                     String playerBeingAssignId = invitees.get(randomNumber);
