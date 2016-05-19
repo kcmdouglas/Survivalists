@@ -767,6 +767,7 @@ public class MainActivity extends FragmentActivity
         }
     }
 
+    //TODO: Move most checkSafehouseDistance to BackgroundStepService EXCEPT Dialog triggers
     public void checkSafehouseDistance() {
         //pull next safehouse object from shared preferences
         if(mNextSafehouse.reachedSafehouse(dailySteps))
