@@ -556,14 +556,18 @@ public class MainActivity extends FragmentActivity
         Log.v(TAG, "Last Player: " + mCurrentMatch.getLastUpdaterId());
 
         ArrayList<Participant> allPlayers = mCurrentMatch.getParticipants();
-
-        for (int i = 0; i < allPlayers.size(); i++) {
-            String invitedPlayer = allPlayers.get(i).getParticipantId();
-            Games.TurnBasedMultiplayer.takeTurn(mGoogleApiClient, mCurrentMatchId, turnData, invitedPlayer);
-            Log.v(TAG, "Invited Player: " + invitedPlayer);
+        int nextPlayerNumber = Integer.parseInt(mCurrentMatch.getLastUpdaterId().substring(2));
+        try {
+            String nextPlayerId = allPlayers.get(nextPlayerNumber).getParticipantId();
+            Games.TurnBasedMultiplayer.takeTurn(mGoogleApiClient, mCurrentMatchId, turnData, nextPlayerId);
+            Log.v(TAG, "NextPlayer: " + nextPlayerId);
+        } catch (IndexOutOfBoundsException indexOutOfBonds) {
+            Games.TurnBasedMultiplayer.takeTurn(mGoogleApiClient, mCurrentMatchId, turnData, mCurrentMatch.getPendingParticipantId());
+            Log.v(TAG, "Catch NextPlayer: " + mCurrentMatch.getPendingParticipantId());
         }
 
         Games.TurnBasedMultiplayer.registerMatchUpdateListener(mGoogleApiClient, new MatchUpdateListener());
+
     }
 
     @Override
