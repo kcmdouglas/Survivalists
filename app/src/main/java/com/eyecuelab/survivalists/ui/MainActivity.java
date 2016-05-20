@@ -547,14 +547,12 @@ public class MainActivity extends FragmentActivity
             matchIdTextView.setText(mCurrentMatchId);
             createCampaign(15);
             saveSafehouse();
-<<<<<<< HEAD
             turnData = new byte[1];
             //Take as many turns as there are players, to invite all players at once
             for (int i = 0; i < mCurrentMatch.getParticipantIds().size(); i++) {
                 String nextPlayer = mCurrentMatch.getParticipantIds().get(i);
                 Games.TurnBasedMultiplayer.takeTurn(mGoogleApiClient, mCurrentMatchId, turnData, nextPlayer);
             }
-=======
             assignRandomCharacters();
         }
         turnData = new byte[1];
@@ -564,21 +562,20 @@ public class MainActivity extends FragmentActivity
         switch (mCurrentMatch.getPendingParticipantId()) {
             case "p_1":
                 number = 2;
-                nextPlayer = "p_" + String.valueOf(number);
+                nextPlayer = "p_" + Integer.toString(number);
                 break;
             case "p_2":
                 number = 3;
-                nextPlayer = "p_" + String.valueOf(number);
+                nextPlayer = "p_" + Integer.toString(number);
                 break;
             case "p_3":
                 number = 4;
-                nextPlayer = "p_" + String.valueOf(number);
+                nextPlayer = "p_" + Integer.toString(number);
                 break;
             case "p_4":
                 number = 1;
-                nextPlayer = "p_" + String.valueOf(number);
+                nextPlayer = "p_" + Integer.toString(number);
                 break;
->>>>>>> 98d848719650ffbf08be2ef55c2255ad55926cf8
         }
 
         Games.TurnBasedMultiplayer.takeTurn(mGoogleApiClient, mCurrentMatchId, turnData, nextPlayer);
