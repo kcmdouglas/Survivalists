@@ -30,6 +30,7 @@ import com.eyecuelab.survivalists.services.BackgroundStepService;
 import com.eyecuelab.survivalists.util.CampaignEndAlarmReceiver;
 import com.eyecuelab.survivalists.util.InvitationListener;
 import com.eyecuelab.survivalists.util.MatchInitiatedListener;
+import com.eyecuelab.survivalists.util.MatchStartedListener;
 import com.eyecuelab.survivalists.util.MatchUpdateListener;
 import com.eyecuelab.survivalists.util.StepResetAlarmReceiver;
 import com.firebase.client.ChildEventListener;
@@ -46,6 +47,7 @@ import com.google.android.gms.games.Games;
 
 import com.google.android.gms.games.multiplayer.Multiplayer;
 import com.google.android.gms.games.multiplayer.realtime.RoomConfig;
+import com.google.android.gms.games.multiplayer.turnbased.OnTurnBasedMatchUpdateReceivedListener;
 import com.google.android.gms.games.multiplayer.turnbased.TurnBasedMatch;
 import com.google.android.gms.games.multiplayer.turnbased.TurnBasedMatchConfig;
 import com.google.android.gms.games.multiplayer.turnbased.TurnBasedMultiplayer;
@@ -545,13 +547,42 @@ public class MainActivity extends FragmentActivity
             matchIdTextView.setText(mCurrentMatchId);
             createCampaign(15);
             saveSafehouse();
+<<<<<<< HEAD
             turnData = new byte[1];
             //Take as many turns as there are players, to invite all players at once
             for (int i = 0; i < mCurrentMatch.getParticipantIds().size(); i++) {
                 String nextPlayer = mCurrentMatch.getParticipantIds().get(i);
                 Games.TurnBasedMultiplayer.takeTurn(mGoogleApiClient, mCurrentMatchId, turnData, nextPlayer);
             }
+=======
+            assignRandomCharacters();
         }
+        turnData = new byte[1];
+        String nextPlayer = null;
+
+        int number;
+        switch (mCurrentMatch.getPendingParticipantId()) {
+            case "p_1":
+                number = 2;
+                nextPlayer = "p_" + String.valueOf(number);
+                break;
+            case "p_2":
+                number = 3;
+                nextPlayer = "p_" + String.valueOf(number);
+                break;
+            case "p_3":
+                number = 4;
+                nextPlayer = "p_" + String.valueOf(number);
+                break;
+            case "p_4":
+                number = 1;
+                nextPlayer = "p_" + String.valueOf(number);
+                break;
+>>>>>>> 98d848719650ffbf08be2ef55c2255ad55926cf8
+        }
+
+        Games.TurnBasedMultiplayer.takeTurn(mGoogleApiClient, mCurrentMatchId, turnData, nextPlayer);
+        Games.TurnBasedMultiplayer.registerMatchUpdateListener(mGoogleApiClient, new MatchUpdateListener());
     }
 
     @Override
@@ -586,7 +617,6 @@ public class MainActivity extends FragmentActivity
             TurnBasedMatchConfig turnBasedMatchConfig = TurnBasedMatchConfig.builder()
                     .setAutoMatchCriteria(automatchCriteria)
                     .addInvitedPlayers(invitees)
-                    .setAutoMatchCriteria(automatchCriteria)
                     .build();
 
             //Build match
@@ -654,7 +684,7 @@ public class MainActivity extends FragmentActivity
 
         if (turnData == null) {
             for (int i = 0; i < invitees.size(); i++) {
-                int randomNumber = (int) (Math.random() * 5);
+                int randomNumber = (int) (Math.random() * 4);
 
                 Character assignedCharacter = remainingCharacters.get(randomNumber);
                 String playerBeingAssignId = invitees.get(i);
