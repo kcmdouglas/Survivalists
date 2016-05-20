@@ -46,6 +46,8 @@ import com.google.android.gms.common.api.ResultCallback;
 import com.google.android.gms.games.Games;
 
 import com.google.android.gms.games.multiplayer.Multiplayer;
+import com.google.android.gms.games.multiplayer.Participant;
+import com.google.android.gms.games.multiplayer.ParticipantResult;
 import com.google.android.gms.games.multiplayer.realtime.RoomConfig;
 import com.google.android.gms.games.multiplayer.turnbased.OnTurnBasedMatchUpdateReceivedListener;
 import com.google.android.gms.games.multiplayer.turnbased.TurnBasedMatch;
@@ -158,7 +160,6 @@ public class MainActivity extends FragmentActivity
         //Create Shared Preferences
         mSharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
         mEditor = mSharedPreferences.edit();
-
 
         //Google Play Games client and correlating buttons
         mGoogleApiClient = new GoogleApiClient.Builder(this)
@@ -556,29 +557,18 @@ public class MainActivity extends FragmentActivity
             assignRandomCharacters();
         }
         turnData = new byte[1];
-        String nextPlayer = null;
 
-        int number;
-        switch (mCurrentMatch.getPendingParticipantId()) {
-            case "p_1":
-                number = 2;
-                nextPlayer = "p_" + Integer.toString(number);
-                break;
-            case "p_2":
-                number = 3;
-                nextPlayer = "p_" + Integer.toString(number);
-                break;
-            case "p_3":
-                number = 4;
-                nextPlayer = "p_" + Integer.toString(number);
-                break;
-            case "p_4":
-                number = 1;
-                nextPlayer = "p_" + Integer.toString(number);
-                break;
+        Log.v(TAG, "Players in Party: " + mCurrentMatch.getParticipants().size());
+        Log.v(TAG, "Last Player: " + mCurrentMatch.getLastUpdaterId());
+
+        ArrayList<Participant> allPlayers = mCurrentMatch.getParticipants();
+
+        for (int i = 0; i < allPlayers.size(); i++) {
+            String invitedPlayer = allPlayers.get(i).getParticipantId();
+            Games.TurnBasedMultiplayer.takeTurn(mGoogleApiClient, mCurrentMatchId, turnData, invitedPlayer);
+            Log.v(TAG, "Invited Player: " + invitedPlayer);
         }
 
-        Games.TurnBasedMultiplayer.takeTurn(mGoogleApiClient, mCurrentMatchId, turnData, nextPlayer);
         Games.TurnBasedMultiplayer.registerMatchUpdateListener(mGoogleApiClient, new MatchUpdateListener());
     }
 
