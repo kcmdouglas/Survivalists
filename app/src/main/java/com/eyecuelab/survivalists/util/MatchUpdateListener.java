@@ -2,6 +2,7 @@ package com.eyecuelab.survivalists.util;
 
 import android.util.Log;
 
+import com.eyecuelab.survivalists.ui.MainActivity;
 import com.google.android.gms.games.multiplayer.turnbased.OnTurnBasedMatchUpdateReceivedListener;
 import com.google.android.gms.games.multiplayer.turnbased.TurnBasedMatch;
 
@@ -13,7 +14,7 @@ public class MatchUpdateListener implements OnTurnBasedMatchUpdateReceivedListen
 
     @Override
     public void onTurnBasedMatchReceived(TurnBasedMatch turnBasedMatch) {
-        Log.v(TAG, turnBasedMatch.getData().toString().getBytes().toString());
+        Log.v(TAG, turnBasedMatch.getData().toString());
     }
 
     @Override
