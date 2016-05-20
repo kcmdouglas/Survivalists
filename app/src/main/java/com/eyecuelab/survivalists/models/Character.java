@@ -18,7 +18,7 @@ public class Character {
     Integer fullnessLevel;
     String characterPictureUrl;
     Integer characterId;
-    List<Object> inventory = new ArrayList<>();
+    ArrayList<Object> inventory = new ArrayList<Object>();
 
     public Character() {
         //Required blank constructor

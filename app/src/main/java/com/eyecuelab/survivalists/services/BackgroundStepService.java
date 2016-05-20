@@ -67,11 +67,11 @@ public class BackgroundStepService extends Service implements SensorEventListene
         mSharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
         mEditor = mSharedPreferences.edit();
         mCurrentPlayerId = mSharedPreferences.getString(Constants.PREFERENCES_GOOGLE_PLAYER_ID, null);
-        String userJson = mSharedPreferences.getString(Constants.PREFERENCES_USER, null);
-        Gson userGson = new Gson();
-        User currentUser = userGson.fromJson(userJson, User.class);
-        playerCharacter = currentUser.getPlayedCharacter();
-        fullnessLevel = playerCharacter.getFullnessLevel();
+//        String userJson = mSharedPreferences.getString(Constants.PREFERENCES_USER, null);
+//        Gson userGson = new Gson();
+//        User currentUser = userGson.fromJson(userJson, User.class);
+//        playerCharacter = currentUser.getPlayedCharacter();
+//        fullnessLevel = playerCharacter.getFullnessLevel();
         return START_STICKY;
     }
 

@@ -18,7 +18,6 @@ import android.util.Log;
 import android.view.View;
 import android.view.WindowManager;
 import android.widget.Button;
-import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -57,8 +56,6 @@ import org.parceler.Parcels;
 
 import java.util.ArrayList;
 import java.util.Calendar;
-import java.util.HashMap;
-import java.util.Map;
 
 import butterknife.Bind;
 import butterknife.ButterKnife;
@@ -80,9 +77,9 @@ public class MainActivity extends FragmentActivity
     @Bind(R.id.matchIdTextView) TextView matchIdTextView;
     @Bind(R.id.userIdTextView) TextView userIdTextView;
     @Bind(R.id.userNameTextView) TextView userNameTextView;
-    @Bind(R.id.stepEditText) EditText manualStepSetter;
     @Bind(R.id.safehouseTextView) TextView safehouseTextView;
     @Bind(R.id.characterButton) Button characterButton;
+    @Bind(R.id.testButton2) Button testButtonTwo;
 
     private int stepsInSensor;
     private int dailySteps;
@@ -174,6 +171,7 @@ public class MainActivity extends FragmentActivity
         endMatchButton.setOnClickListener(this);
         testButton.setOnClickListener(this);
         characterButton.setOnClickListener(this);
+        testButtonTwo.setOnClickListener(this);
 
         mCurrentMatchId = mSharedPreferences.getString("matchId", null);
 
@@ -210,10 +208,14 @@ public class MainActivity extends FragmentActivity
         Character characterB = new Character("characterB", 80, 100, 100, null, 1);
         Character characterC = new Character("characterC", 44, 100, 100, null, 2);
         Character characterD = new Character("characterD", 120, 100, 100, null, 3);
+        Character characterE = new Character("characterE", 100, 100, 100, null, 4);
+        Character characterF = new Character("characterF", 90, 100, 100, null, 5);
         mCharacters.add(characterA);
         mCharacters.add(characterB);
         mCharacters.add(characterC);
         mCharacters.add(characterD);
+        mCharacters.add(characterE);
+        mCharacters.add(characterF);
 
         mNextSafeHouseId = mSharedPreferences.getInt(Constants.PREFERENCES_NEXT_SAFEHOUSE_ID, 1);
         mLastSafeHouseId = mSharedPreferences.getInt(Constants.PREFERENCES_LAST_SAFEHOUSE_ID, 0);
@@ -222,8 +224,6 @@ public class MainActivity extends FragmentActivity
         Gson gson = new Gson();
         mNextSafehouse = gson.fromJson(safehouseJson, SafeHouse.class);
         safehouseTextView.setText(Integer.toString(mNextSafeHouseId));
-
-        //createCampaign();
     }
 
     @Override
@@ -233,9 +233,6 @@ public class MainActivity extends FragmentActivity
         if (mCurrentMatch != null) {
             matchIdTextView.setText(mCurrentMatch.getMatchId());
         }
-        if(mCurrentPlayerId != null) {
-        }
-
         mSharedPreferences.registerOnSharedPreferenceChangeListener(this);
     }
 
@@ -384,6 +381,9 @@ public class MainActivity extends FragmentActivity
                 intent.putExtra("position", 0);
                 intent.putExtra("characters", Parcels.wrap(mCharacters));
                 mContext.startActivity(intent);
+                break;
+            case R.id.testButton2:
+                takeTurn();
         }
     }
 
@@ -427,9 +427,13 @@ public class MainActivity extends FragmentActivity
             public void onResult(TurnBasedMultiplayer.LoadMatchResult result) {
                 mCurrentMatch = result.getMatch();
                 if (mCurrentMatch != null) {
-                    ArrayList<String> playersId = mCurrentMatch.getParticipantIds();
                     if (mCurrentMatch != null) {
-                        playersTextView.setText(mCurrentMatch.getParticipant(playersId.get(1)).getDisplayName());
+                        ArrayList<String> participantNames = new ArrayList<>();
+                        ArrayList<String> participantIds = mCurrentMatch.getParticipantIds();
+                        for (int i = 0; i < participantIds.size(); i++) {
+                            participantNames.add(mCurrentMatch.getParticipant(participantIds.get(i)).getDisplayName());
+                        }
+                        playersTextView.setText(participantNames.toString());
                     }
                 }
             }
@@ -476,8 +480,7 @@ public class MainActivity extends FragmentActivity
                 mEditor.putString("matchId", "Please create match");
                 mEditor.commit();
                 mCurrentMatch = null;
-                matchIdTextView.setText("");
-                playersTextView.setText("");
+                mCurrentMatchId = null;
             }
         };
 
@@ -490,32 +493,31 @@ public class MainActivity extends FragmentActivity
         } else {
             Toast.makeText(this, "Not connected to match", Toast.LENGTH_SHORT).show();
         }
+
+        matchIdTextView.setText("");
+        playersTextView.setText("");
     }
 
-    public void takeFirstTurn() {
-        String nextPlayer;
-        turnData = new byte[1];
-
-        mCurrentMatchId = mCurrentMatch.getMatchId();
-        String creatorId = Games.Players.getCurrentPlayerId(mGoogleApiClient);
-        ArrayList<String> wholeParty = invitees;
-        if (wholeParty != null) {
-            wholeParty.add(creatorId);
+    public void takeTurn() {
+        try {
+            turnData = mCurrentMatch.getData();
+        } catch (NullPointerException nullPointer) {
+            nullPointer.getStackTrace();
+            Log.v(TAG, "Take first turn without turnData");
         }
 
-        if (mCurrentMatch.getLastUpdaterId().equals("p_1")) {
-            nextPlayer = "p_2";
-        } else {
-            nextPlayer = "p_1";
-        }
+        if (turnData == null) {
+            mCurrentMatchId = mCurrentMatch.getMatchId();
+            String creatorId = Games.Players.getCurrentPlayerId(mGoogleApiClient);
+            ArrayList<String> wholeParty = invitees;
+            if (wholeParty != null) {
+                wholeParty.add(creatorId);
+            }
 
-        Games.TurnBasedMultiplayer.takeTurn(mGoogleApiClient, mCurrentMatchId, turnData, nextPlayer);
-
-        mEditor.putString("matchId", mCurrentMatchId);
-        mEditor.putInt("lastSafehouseId", 0);
-        mEditor.putInt("nextSafehouseId", 1);
-        mEditor.commit();
-
+            mEditor.putString("matchId", mCurrentMatchId);
+            mEditor.putInt("lastSafehouseId", 0);
+            mEditor.putInt("nextSafehouseId", 1);
+            mEditor.commit();
 
             Firebase teamFirebaseRef = new Firebase(Constants.FIREBASE_URL_TEAM + "/" + "")
                     .child(mCurrentMatchId);
@@ -527,26 +529,33 @@ public class MainActivity extends FragmentActivity
                     .setValue(0);
             teamFirebaseRef.child("nextSafehouseId")
                     .setValue(1);
-        Firebase playerFirebase = teamFirebaseRef
-                .child("players");
-        if (wholeParty != null) {
-            for (int i = 0; i < wholeParty.size(); i++) {
-                playerFirebase
-                        .child("p_" + (i + 1))
-                        .setValue(wholeParty.get(i));
+            Firebase playerFirebase = teamFirebaseRef
+                    .child("players");
+            if (wholeParty != null) {
+                for (int i = 0; i < wholeParty.size(); i++) {
+                    playerFirebase
+                            .child("p_" + (i + 1))
+                            .setValue(wholeParty.get(i));
+                }
+            }
+
+            firebaseListening();
+
+            mUserFirebaseRef.child("teamId").setValue(mCurrentMatchId);
+            matchIdTextView.setText(mCurrentMatchId);
+            createCampaign(15);
+            saveSafehouse();
+            turnData = new byte[1];
+            //Take as many turns as there are players, to invite all players at once
+            for (int i = 0; i < mCurrentMatch.getParticipantIds().size(); i++) {
+                String nextPlayer = mCurrentMatch.getParticipantIds().get(i);
+                Games.TurnBasedMultiplayer.takeTurn(mGoogleApiClient, mCurrentMatchId, turnData, nextPlayer);
             }
         }
-
-        firebaseListening();
-
-        mUserFirebaseRef.child("teamId").setValue(mCurrentMatchId);
-        matchIdTextView.setText(mCurrentMatchId);
-        createCampaign(15);
-        saveSafehouse();
     }
 
     @Override
-    public void onActivityResult(final int request, int response, Intent data) {
+    public void onActivityResult (final int request, int response, Intent data){
         super.onActivityResult(request, response, data);
 
         if (response != Activity.RESULT_OK) {
@@ -590,22 +599,21 @@ public class MainActivity extends FragmentActivity
         } else if (request == RC_WAITING_ROOM) {
             //user returning from join match
             mCurrentMatch = data.getParcelableExtra(Multiplayer.EXTRA_TURN_BASED_MATCH);
-            ArrayList<String> playersId = mCurrentMatch.getParticipantIds();
+            mCurrentMatchId = mCurrentMatch.getMatchId();
 
-            if (mCurrentMatch != null) {
-                playersTextView.setText(mCurrentMatch.getParticipant(playersId.get(1)).getDisplayName());
-            }
-            takeFirstTurn();
+            ArrayList<String> playersId = mCurrentMatch.getParticipantIds();
+            mEditor.putString("matchId", mCurrentMatchId);
+            mEditor.commit();
+
+            playersTextView.setText(playersId.toString());
+            matchIdTextView.setText(mCurrentMatchId);
+
+            takeTurn();
         }
 
     }
 
-    private void processResult(TurnBasedMultiplayer.InitiateMatchResult result) {
-        Toast.makeText(MainActivity.this, "YAY!", Toast.LENGTH_LONG).show();
-        mCurrentMatch = result.getMatch();
-        mCurrentMatchId = mCurrentMatch.getMatchId();
-        takeFirstTurn();
-    }
+
 
     private void firebaseListening() {
         Firebase firebaseRef = new Firebase(Constants.FIREBASE_URL_TEAM + "/" + "");
@@ -613,10 +621,7 @@ public class MainActivity extends FragmentActivity
 
         queryRef.addChildEventListener(new ChildEventListener() {
             @Override
-            public void onChildAdded(DataSnapshot dataSnapshot, String s) {
-                Log.d("Firebase Update", "MatchId: " + dataSnapshot.getKey());
-                Log.d("Firebase Update", "MatchInfo: " + dataSnapshot.getValue());
-            }
+            public void onChildAdded(DataSnapshot dataSnapshot, String s) {}
 
             @Override
             public void onChildChanged(DataSnapshot dataSnapshot, String s) {}
@@ -643,52 +648,35 @@ public class MainActivity extends FragmentActivity
     //CAMPAIGN LOGIC BEGINS HERE
 
     private void assignRandomCharacters() {
-        ArrayList<Character> remainingCharacters;
+        ArrayList<Character> remainingCharacters = new ArrayList<>(mCharacters);
         turnData = mCurrentMatch.getData();
         Firebase characterFirebaseRef = new Firebase(Constants.FIREBASE_URL_TEAM + "/" + mCurrentMatchId + "/characters");
 
         if (turnData == null) {
-            //User has initiated the match/ assign random # between 0 - 3
-            int randomNumber = (int) Math.round(Math.random() * 3);
+            for (int i = 0; i < invitees.size(); i++) {
+                int randomNumber = (int) (Math.random() * 5);
 
-            //Assign random character and save to firebase
-            mCurrentCharacter = mCharacters.get(randomNumber);
-            characterFirebaseRef.child(mCurrentPlayerId).setValue(mCurrentCharacter.getCharacterId());
+                Character assignedCharacter = remainingCharacters.get(randomNumber);
+                String playerBeingAssignId = invitees.get(i);
 
-            remainingCharacters = mCharacters;
-            remainingCharacters.remove(randomNumber);
-            int unasignedPlayersCount = invitees.size();
+                //save assigned character Ids to firebase
+                characterFirebaseRef.child(playerBeingAssignId)
+                        .setValue(assignedCharacter.getCharacterId());
 
-            while (unasignedPlayersCount > 0) {
-                for (int i = 0; i <= unasignedPlayersCount; i++) {
-                    randomNumber = (int) Math.round(Math.random() * (invitees.size() - 1));
-                    Character assignedCharacter = remainingCharacters.get(randomNumber);
-
-                    String playerBeingAssignId = invitees.get(randomNumber);
-
-                    //save assigned character Ids to firebase
-                    Map<String, Object> updateMap = new HashMap<>();
-                    updateMap.put(playerBeingAssignId, assignedCharacter.getCharacterId());
-                    characterFirebaseRef.updateChildren(updateMap);
-
-                    //remove assigned character and update counter
-                    remainingCharacters.remove(assignedCharacter);
-                    unasignedPlayersCount -= 1;
-                }
+                //remove assigned character and update counter
+                remainingCharacters.remove(assignedCharacter);
             }
-
-        } else {
-            //Someone else started the match/ pull character from firebase
-            characterFirebaseRef.child(mCurrentPlayerId).addListenerForSingleValueEvent(new ValueEventListener() {
-                @Override
-                public void onDataChange(DataSnapshot dataSnapshot) {
-                    mCurrentCharacter = mCharacters.get(Integer.parseInt(dataSnapshot.getValue().toString()));
-                }
-
-                @Override
-                public void onCancelled(FirebaseError firebaseError) {}
-            });
         }
+
+        //Pull the character assigned to the current user
+        characterFirebaseRef.child(mCurrentPlayerId).addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                mCurrentCharacter = mCharacters.get(dataSnapshot.getValue().hashCode());
+            }
+            @Override
+            public void onCancelled(FirebaseError firebaseError) {}
+        });
     }
 
     private void initializeEventDialogFragments() {
@@ -815,7 +803,7 @@ public class MainActivity extends FragmentActivity
         PendingIntent pendingIntent = PendingIntent.getBroadcast(this, CampaignEndAlarmReceiver.REQUEST_CODE, intent, 0);
         AlarmManager am = (AlarmManager) getApplicationContext().getSystemService(ALARM_SERVICE);
         am.set(AlarmManager.RTC_WAKEUP, campaignCalendar.getTimeInMillis(), pendingIntent);
-        Log.d("CreateCampaign", "Made it here!");
+        Log.d("CreateCampaign", "Campaign Created");
 
 
 //        mEditor.putInt(Constants.PREFERENCES_PREVIOUS_STEPS_KEY, 0).commit();
