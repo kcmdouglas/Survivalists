@@ -789,18 +789,18 @@ public class MainActivity extends FragmentActivity
     //TODO: Move most checkSafehouseDistance to BackgroundStepService EXCEPT Dialog triggers
     public void checkSafehouseDistance() {
         //pull next safehouse object from shared preferences
-        if(mNextSafehouse.reachedSafehouse(dailySteps))
-        {
-            mPriorSafehouse = mNextSafehouse;
-            mLastSafeHouseId = mNextSafehouse.getHouseId();
-            mNextSafeHouseId = mLastSafeHouseId + 1;
-            mEditor.putInt("lastSafehouseId", mLastSafeHouseId);
-            mEditor.putInt("nextSafehouseId", mNextSafeHouseId);
-            mEditor.commit();
-            safehouseTextView.setText(Integer.toString(mNextSafeHouseId));
-            saveSafehouse();
-            showEventDialog(2);
-        }
+//        if(mNextSafehouse.reachedSafehouse(dailySteps))
+//        {
+//            mPriorSafehouse = mNextSafehouse;
+//            mLastSafeHouseId = mNextSafehouse.getHouseId();
+//            mNextSafeHouseId = mLastSafeHouseId + 1;
+//            mEditor.putInt("lastSafehouseId", mLastSafeHouseId);
+//            mEditor.putInt("nextSafehouseId", mNextSafeHouseId);
+//            mEditor.commit();
+//            safehouseTextView.setText(Integer.toString(mNextSafeHouseId));
+//            saveSafehouse();
+//            showEventDialog(2);
+//        }
     }
 
     public void initiateDailyCountResetService() {
