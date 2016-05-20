@@ -37,6 +37,7 @@ import com.firebase.client.ChildEventListener;
 import com.firebase.client.DataSnapshot;
 import com.firebase.client.Firebase;
 import com.firebase.client.FirebaseError;
+import com.firebase.client.FirebaseException;
 import com.firebase.client.Query;
 import com.firebase.client.ValueEventListener;
 import com.google.android.gms.common.ConnectionResult;
@@ -564,7 +565,12 @@ public class MainActivity extends FragmentActivity
         ArrayList<Participant> allPlayers = mCurrentMatch.getParticipants();
         int nextPlayerNumber = Integer.parseInt(mCurrentMatch.getLastUpdaterId().substring(2));
         try {
+            //
             String nextPlayerId = allPlayers.get(nextPlayerNumber).getParticipantId();
+            Games.TurnBasedMultiplayer.takeTurn(mGoogleApiClient, mCurrentMatchId, turnData, nextPlayerId);
+
+            //Grab the next player if the previous didn't work
+            nextPlayerId = allPlayers.get(nextPlayerNumber + 1).getParticipantId();
             Games.TurnBasedMultiplayer.takeTurn(mGoogleApiClient, mCurrentMatchId, turnData, nextPlayerId);
             Log.v(TAG, "NextPlayer: " + nextPlayerId);
         } catch (IndexOutOfBoundsException indexOutOfBonds) {
@@ -677,15 +683,20 @@ public class MainActivity extends FragmentActivity
             for (int i = 0; i < invitees.size(); i++) {
                 int randomNumber = (int) (Math.random() * 4);
 
-                Character assignedCharacter = remainingCharacters.get(randomNumber);
-                String playerBeingAssignId = invitees.get(i);
+                try {
+                    Character assignedCharacter = remainingCharacters.get(randomNumber);
+                    String playerBeingAssignId = invitees.get(i);
 
-                //save assigned character Ids to firebase
-                characterFirebaseRef.child(playerBeingAssignId)
-                        .setValue(assignedCharacter.getCharacterId());
+                    //save assigned character Ids to firebase
+                    characterFirebaseRef.child(playerBeingAssignId)
+                            .setValue(assignedCharacter.getCharacterId());
 
-                //remove assigned character and update counter
-                remainingCharacters.remove(assignedCharacter);
+                    //remove assigned character and update counter
+                    remainingCharacters.remove(assignedCharacter);
+
+                } catch (IndexOutOfBoundsException indexOutOfBounds) {
+                    indexOutOfBounds.getStackTrace();
+                }
             }
         }
 
@@ -693,7 +704,11 @@ public class MainActivity extends FragmentActivity
         characterFirebaseRef.child(mCurrentPlayerId).addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
-                mCurrentCharacter = mCharacters.get(dataSnapshot.getValue().hashCode());
+                try {
+                    mCurrentCharacter = mCharacters.get(dataSnapshot.getValue().hashCode());
+                } catch (NullPointerException nullPointer) {
+                    mCurrentCharacter = null;
+                }
             }
             @Override
             public void onCancelled(FirebaseError firebaseError) {}
