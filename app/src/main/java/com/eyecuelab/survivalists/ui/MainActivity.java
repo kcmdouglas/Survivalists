@@ -162,12 +162,7 @@ public class MainActivity extends FragmentActivity
         mSharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
         mEditor = mSharedPreferences.edit();
 
-        //Google Play Games client and correlating buttons
-        mGoogleApiClient = new GoogleApiClient.Builder(this)
-                .addConnectionCallbacks(this)
-                .addOnConnectionFailedListener(this)
-                .addApi(Games.API)
-                .build();
+        initializeGoogleApi();
 
         signInButton.setOnClickListener(this);
         signOutButton.setOnClickListener(this);
@@ -294,45 +289,26 @@ public class MainActivity extends FragmentActivity
         mEditor.putString("userName", userName);
         mEditor.commit();
 
+        saveUserInfoToFirebase();
+
         userIdTextView.setText(mCurrentPlayerId);
         String greeting = "Hello " + userName;
         userNameTextView.setText(greeting);
 
         //Save user info to firebase
         mUserFirebaseRef = new Firebase(Constants.FIREBASE_URL_USERS + "/" + mCurrentPlayerId);
-        mUserFirebaseRef.child("displayName")
-                .setValue(userName);
-        mUserFirebaseRef.child("atSafeHouse")
-                .setValue(false);
+        mUserFirebaseRef.child("displayName").setValue(userName);
+        mUserFirebaseRef.child("atSafeHouse").setValue(false);
 
         if (mCurrentMatch == null) {
-            mUserFirebaseRef.child("joinedMatch")
-                    .setValue(false);
+            mUserFirebaseRef.child("joinedMatch").setValue(false);
         } else {
-            mUserFirebaseRef.child("joinedMatch")
-                    .setValue(true);
-
-//            Firebase teamFirebaseRef = new Firebase(Constants.FIREBASE_URL_TEAM + "/" + mCurrentMatchId +"");
-//            teamFirebaseRef.addListenerForSingleValueEvent(new ValueEventListener() {
-//                @Override
-//                public void onDataChange(DataSnapshot dataSnapshot) {
-//                    int lastSafehouseId = Integer.valueOf(dataSnapshot.child("lastSafehouseId").getValue().toString());
-//                    int nextSafehouseId = Integer.valueOf(dataSnapshot.child("nextSafehouseId").getValue().toString());
-//                    mEditor.putInt(Constants.PREFERENCES_LAST_SAFEHOUSE_ID, lastSafehouseId);
-//
-//                    safehouseTextView.setText(mNextSafeHouseId);
-//                }
-//
-//                @Override
-//                public void onCancelled(FirebaseError firebaseError) {}
-//            });
+            mUserFirebaseRef.child("joinedMatch").setValue(true);
         }
-        firebaseListening();
     }
 
     @Override
     public void onConnectionSuspended(int i) {
-        Toast.makeText(this, "Connection suspended, reconnecting", Toast.LENGTH_LONG).show();
         mGoogleApiClient.connect();
     }
 
@@ -388,6 +364,28 @@ public class MainActivity extends FragmentActivity
                 break;
             case R.id.testButton2:
                 takeTurn();
+        }
+    }
+
+    public void initializeGoogleApi() {
+        mGoogleApiClient = new GoogleApiClient.Builder(this)
+                .addConnectionCallbacks(this)
+                .addOnConnectionFailedListener(this)
+                .addApi(Games.API)
+                .build();
+    }
+
+    public void saveUserInfoToFirebase() {
+        String userName = Games.Players.getCurrentPlayer(mGoogleApiClient).getDisplayName();
+        mUserFirebaseRef = new Firebase(Constants.FIREBASE_URL_USERS + "/" + mCurrentPlayerId + "/");
+
+        if (mCurrentMatch != null) {
+            mUserFirebaseRef.child("displayName").setValue(userName);
+            mUserFirebaseRef.child("atSafeHouse").setValue(false);
+            //Update in match boolean
+            mUserFirebaseRef.child("joinedMatch").setValue(true);
+        } else {
+            mUserFirebaseRef.child("joinedMatch").setValue(false);
         }
     }
 
@@ -481,10 +479,6 @@ public class MainActivity extends FragmentActivity
             @Override
             public void onResult(TurnBasedMultiplayer.CancelMatchResult result) {
                 Toast.makeText(MainActivity.this, "You Killed The Match!", Toast.LENGTH_SHORT).show();
-                mEditor.putString("matchId", "Please create match");
-                mEditor.commit();
-                mCurrentMatch = null;
-                mCurrentMatchId = null;
             }
         };
 
@@ -498,6 +492,10 @@ public class MainActivity extends FragmentActivity
             Toast.makeText(this, "Not connected to match", Toast.LENGTH_SHORT).show();
         }
 
+        mEditor.putString("matchId", null);
+        mEditor.commit();
+        mCurrentMatch = null;
+        mCurrentMatchId = null;
         matchIdTextView.setText("");
         playersTextView.setText("");
     }
@@ -525,16 +523,11 @@ public class MainActivity extends FragmentActivity
 
             Firebase teamFirebaseRef = new Firebase(Constants.FIREBASE_URL_TEAM + "/" + "")
                     .child(mCurrentMatchId);
-            teamFirebaseRef.child("matchStart")
-                    .setValue(mCurrentMatch.getCreationTimestamp());
-            teamFirebaseRef.child("matchDuration")
-                    .setValue(mMatchDuration);
-            teamFirebaseRef.child("lastSafehouseId")
-                    .setValue(0);
-            teamFirebaseRef.child("nextSafehouseId")
-                    .setValue(1);
-            Firebase playerFirebase = teamFirebaseRef
-                    .child("players");
+            teamFirebaseRef.child("matchStart").setValue(mCurrentMatch.getCreationTimestamp());
+            teamFirebaseRef.child("matchDuration").setValue(mMatchDuration);
+            teamFirebaseRef.child("lastSafehouseId").setValue(0);
+            teamFirebaseRef.child("nextSafehouseId").setValue(1);
+            Firebase playerFirebase = teamFirebaseRef.child("players");
             if (wholeParty != null) {
                 for (int i = 0; i < wholeParty.size(); i++) {
                     playerFirebase
@@ -543,8 +536,6 @@ public class MainActivity extends FragmentActivity
                 }
             }
 
-            firebaseListening();
-
             mUserFirebaseRef.child("teamId").setValue(mCurrentMatchId);
             matchIdTextView.setText(mCurrentMatchId);
             createCampaign(30);
@@ -552,9 +543,6 @@ public class MainActivity extends FragmentActivity
             assignRandomCharacters();
         }
         turnData = new byte[1];
-
-        Log.v(TAG, "Players in Party: " + mCurrentMatch.getParticipants().size());
-        Log.v(TAG, "Last Player: " + mCurrentMatch.getLastUpdaterId());
 
         ArrayList<Participant> allPlayers = mCurrentMatch.getParticipants();
         int nextPlayerNumber = Integer.parseInt(mCurrentMatch.getLastUpdaterId().substring(2));
@@ -566,14 +554,10 @@ public class MainActivity extends FragmentActivity
             //Grab the next player in case the previous above didn't work
             nextPlayerId = allPlayers.get(nextPlayerNumber + 1).getParticipantId();
             Games.TurnBasedMultiplayer.takeTurn(mGoogleApiClient, mCurrentMatchId, turnData, nextPlayerId);
-            Log.v(TAG, "NextPlayer: " + nextPlayerId);
         } catch (IndexOutOfBoundsException indexOutOfBonds) {
             Games.TurnBasedMultiplayer.takeTurn(mGoogleApiClient, mCurrentMatchId, turnData, mCurrentMatch.getPendingParticipantId());
-            Log.v(TAG, "Catch NextPlayer: " + mCurrentMatch.getPendingParticipantId());
         }
-
         Games.TurnBasedMultiplayer.registerMatchUpdateListener(mGoogleApiClient, new MatchUpdateListener());
-
     }
 
     @Override
@@ -634,36 +618,6 @@ public class MainActivity extends FragmentActivity
 
     }
 
-    private void firebaseListening() {
-        Firebase firebaseRef = new Firebase(Constants.FIREBASE_URL_TEAM + "/" + "");
-        Query queryRef = firebaseRef.orderByValue();
-
-        queryRef.addChildEventListener(new ChildEventListener() {
-            @Override
-            public void onChildAdded(DataSnapshot dataSnapshot, String s) {}
-
-            @Override
-            public void onChildChanged(DataSnapshot dataSnapshot, String s) {}
-
-            @Override
-            public void onChildRemoved(DataSnapshot dataSnapshot) {}
-
-            @Override
-            public void onChildMoved(DataSnapshot dataSnapshot, String s) {}
-
-            @Override
-            public void onCancelled(FirebaseError firebaseError) {}
-        });
-
-        queryRef.addValueEventListener(new ValueEventListener() {
-            @Override
-            public void onDataChange(DataSnapshot dataSnapshot) {}
-
-            @Override
-            public void onCancelled(FirebaseError firebaseError) {}
-        });
-    }
-
     //CAMPAIGN LOGIC BEGINS HERE
 
     private void assignRandomCharacters() {
@@ -671,7 +625,7 @@ public class MainActivity extends FragmentActivity
         turnData = mCurrentMatch.getData();
         Firebase characterFirebaseRef = new Firebase(Constants.FIREBASE_URL_TEAM + "/" + mCurrentMatchId + "/characters");
 
-        if (turnData == null) {
+        if (turnData == null && invitees != null) {
             for (int i = 0; i < invitees.size(); i++) {
                 int randomNumber = (int) (Math.random() * 4);
 
