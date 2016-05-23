@@ -1,6 +1,5 @@
 package com.eyecuelab.survivalists.models;
 
-import com.eyecuelab.survivalists.entities.interfaces.Inventory;
 
 import org.parceler.Parcel;
 
