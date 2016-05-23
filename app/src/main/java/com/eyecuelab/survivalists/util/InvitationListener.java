@@ -18,7 +18,7 @@ public class InvitationListener extends MainActivity
     @Override
     public void onInvitationReceived(final Invitation invitation) {
         Log.v(TAG, "invitation: " + invitation.getInviter().getDisplayName());
-        showToast("Invitation received from: " + invitation.getInviter());
+        invitationReceived(invitation);
     }
 
     @Override
