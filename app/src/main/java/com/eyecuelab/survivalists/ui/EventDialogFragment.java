@@ -58,6 +58,9 @@ public class EventDialogFragment extends android.support.v4.app.DialogFragment i
                              Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_event_dialog, container, false);
         super.onViewCreated(view, savedInstanceState);
+
+
+
         dialogDescription = (TextView) view.findViewById(R.id.dialogDescription);
         dialogConsequence = (TextView) view.findViewById(R.id.dialogConsequence);
         dialogTitle = (TextView) view.findViewById(R.id.dialogTitle);

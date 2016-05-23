@@ -11,7 +11,6 @@ public class User {
     public boolean atSafeHouse;
     public boolean joinedMatch;
     public Character playedCharacter;
-    ArrayList<Inventory> inventoryItems;
     ArrayList<String> interactionsWithCharacterA;
     ArrayList<String> interactionsWithCharacterB;
     ArrayList<String> interactionsWithCharacterC;
@@ -65,12 +64,6 @@ public class User {
     public void setJoinedMatch(boolean joinedMatch) {
         this.joinedMatch = joinedMatch;
     }
-
-    public ArrayList<Inventory> getInventoryItems() {
-        return inventoryItems;
-    }
-
-    public void setInventoryItems(ArrayList<Inventory> inventoryItems) { this.inventoryItems = inventoryItems; }
 
     public ArrayList<String> getInteractionsWithCharacterA() {
         return interactionsWithCharacterA;

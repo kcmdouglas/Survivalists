@@ -207,12 +207,12 @@ public class MainActivity extends FragmentActivity
 
         //TODO: Move to the startGame function
         mCharacters = new ArrayList<>();
-        Character characterA = new Character("characterA", 22, 100, null, 0);
-        Character characterB = new Character("characterB", 80, 100, null, 1);
-        Character characterC = new Character("characterC", 44, 100, null, 2);
-        Character characterD = new Character("characterD", 120, 100, null, 3);
-        Character characterE = new Character("characterE", 100, 100, null, 4);
-        Character characterF = new Character("characterF", 90, 100, null, 5);
+        Character characterA = new Character("characterA", 22, 100, 100, null, 0);
+        Character characterB = new Character("characterB", 80, 100, 100, null, 1);
+        Character characterC = new Character("characterC", 44, 100, 100, null, 2);
+        Character characterD = new Character("characterD", 120, 100, 100, null, 3);
+        Character characterE = new Character("characterE", 100, 100, 100, null, 4);
+        Character characterF = new Character("characterF", 90, 100, 100, null, 5);
         mCharacters.add(characterA);
         mCharacters.add(characterB);
         mCharacters.add(characterC);
@@ -546,8 +546,14 @@ public class MainActivity extends FragmentActivity
 
             mUserFirebaseRef.child("teamId").setValue(mCurrentMatchId);
             matchIdTextView.setText(mCurrentMatchId);
-            createCampaign(30);
+            createCampaign(15);
             saveSafehouse();
+            turnData = new byte[1];
+            //Take as many turns as there are players, to invite all players at once
+            for (int i = 0; i < mCurrentMatch.getParticipantIds().size(); i++) {
+                String nextPlayer = mCurrentMatch.getParticipantIds().get(i);
+                Games.TurnBasedMultiplayer.takeTurn(mGoogleApiClient, mCurrentMatchId, turnData, nextPlayer);
+            }
             assignRandomCharacters();
         }
         turnData = new byte[1];
@@ -569,7 +575,7 @@ public class MainActivity extends FragmentActivity
     }
 
     @Override
-    public void onActivityResult(final int request, int response, Intent data) {
+    public void onActivityResult (final int request, int response, Intent data){
         super.onActivityResult(request, response, data);
 
         if (response != Activity.RESULT_OK) {
@@ -624,6 +630,36 @@ public class MainActivity extends FragmentActivity
             takeTurn();
         }
 
+    }
+
+    private void firebaseListening() {
+        Firebase firebaseRef = new Firebase(Constants.FIREBASE_URL_TEAM + "/" + "");
+        Query queryRef = firebaseRef.orderByValue();
+
+        queryRef.addChildEventListener(new ChildEventListener() {
+            @Override
+            public void onChildAdded(DataSnapshot dataSnapshot, String s) {}
+
+            @Override
+            public void onChildChanged(DataSnapshot dataSnapshot, String s) {}
+
+            @Override
+            public void onChildRemoved(DataSnapshot dataSnapshot) {}
+
+            @Override
+            public void onChildMoved(DataSnapshot dataSnapshot, String s) {}
+
+            @Override
+            public void onCancelled(FirebaseError firebaseError) {}
+        });
+
+        queryRef.addValueEventListener(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {}
+
+            @Override
+            public void onCancelled(FirebaseError firebaseError) {}
+        });
     }
 
     //CAMPAIGN LOGIC BEGINS HERE
@@ -758,18 +794,18 @@ public class MainActivity extends FragmentActivity
     //TODO: Move most checkSafehouseDistance to BackgroundStepService EXCEPT Dialog triggers
     public void checkSafehouseDistance() {
         //pull next safehouse object from shared preferences
-        if(mNextSafehouse.reachedSafehouse(dailySteps))
-        {
-            mPriorSafehouse = mNextSafehouse;
-            mLastSafeHouseId = mNextSafehouse.getHouseId();
-            mNextSafeHouseId = mLastSafeHouseId + 1;
-            mEditor.putInt("lastSafehouseId", mLastSafeHouseId);
-            mEditor.putInt("nextSafehouseId", mNextSafeHouseId);
-            mEditor.commit();
-            safehouseTextView.setText(Integer.toString(mNextSafeHouseId));
-            saveSafehouse();
-            showEventDialog(2);
-        }
+//        if(mNextSafehouse.reachedSafehouse(dailySteps))
+//        {
+//            mPriorSafehouse = mNextSafehouse;
+//            mLastSafeHouseId = mNextSafehouse.getHouseId();
+//            mNextSafeHouseId = mLastSafeHouseId + 1;
+//            mEditor.putInt("lastSafehouseId", mLastSafeHouseId);
+//            mEditor.putInt("nextSafehouseId", mNextSafeHouseId);
+//            mEditor.commit();
+//            safehouseTextView.setText(Integer.toString(mNextSafeHouseId));
+//            saveSafehouse();
+//            showEventDialog(2);
+//        }
     }
 
     public void initiateDailyCountResetService() {
