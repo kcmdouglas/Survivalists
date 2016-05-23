@@ -9,6 +9,7 @@ import org.parceler.Parcel;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 @Parcel
 public class Character {
@@ -90,4 +91,29 @@ public class Character {
         }
     }
 
+    public void removeWeapon(com.eyecuelab.survivalists.models.Weapon weapon) {
+        for(int i=0; i < inventory.size(); i++) {
+            boolean result = inventory.get(i) instanceof com.eyecuelab.survivalists.models.Weapon;
+            com.eyecuelab.survivalists.models.Weapon inventoryWeapon = null;
+            if (result) {
+                inventoryWeapon = (com.eyecuelab.survivalists.models.Weapon) inventory.get(i);
+                if((inventoryWeapon.getName().equals(weapon.getName())) && (inventoryWeapon.getHitPoints() == weapon.getHitPoints())) {
+                    inventory.remove(i);
+                }
+            }
+        }
+    }
+
+    public void removeItem(Item item) {
+        for(int i=0; i < inventory.size(); i++) {
+            boolean result = inventory.get(i) instanceof Item;
+            Item inventoryItem = null;
+            if (result) {
+                inventoryItem = (Item) inventory.get(i);
+                if((inventoryItem.getName().equals(item.getName())) && (inventoryItem.getHealthPoints() == item.getHealthPoints())) {
+                    inventory.remove(i);
+                }
+            }
+        }
+    }
 }

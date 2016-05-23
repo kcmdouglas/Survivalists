@@ -1,11 +1,12 @@
 package com.eyecuelab.survivalists.entities.interfaces;
 
+import com.eyecuelab.survivalists.models.Character;
+
 /**
  * Created by eyecue on 5/16/16.
  */
 public interface Inventory {
-
-    public int useItem(int effectedCharacteristic);
+    public void useItem(Character character);
 
     public String getName();
 
