@@ -3,6 +3,8 @@ package com.eyecuelab.survivalists.ui;
 import android.app.Activity;
 import android.app.ActivityManager;
 import android.app.AlarmManager;
+import android.app.AlertDialog;
+import android.content.DialogInterface;
 import android.support.v4.app.DialogFragment;
 import android.app.PendingIntent;
 import android.content.Context;
@@ -23,6 +25,7 @@ import android.widget.Toast;
 
 import com.eyecuelab.survivalists.Constants;
 import com.eyecuelab.survivalists.R;
+import com.eyecuelab.survivalists.SurvivalistsApplication;
 import com.eyecuelab.survivalists.models.Character;
 import com.eyecuelab.survivalists.models.User;
 import com.eyecuelab.survivalists.models.SafeHouse;
@@ -46,6 +49,7 @@ import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.common.api.ResultCallback;
 import com.google.android.gms.games.Games;
 
+import com.google.android.gms.games.multiplayer.Invitation;
 import com.google.android.gms.games.multiplayer.Multiplayer;
 import com.google.android.gms.games.multiplayer.Participant;
 import com.google.android.gms.games.multiplayer.ParticipantResult;
@@ -162,12 +166,7 @@ public class MainActivity extends FragmentActivity
         mSharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
         mEditor = mSharedPreferences.edit();
 
-        //Google Play Games client and correlating buttons
-        mGoogleApiClient = new GoogleApiClient.Builder(this)
-                .addConnectionCallbacks(this)
-                .addOnConnectionFailedListener(this)
-                .addApi(Games.API)
-                .build();
+        initializeGoogleApi();
 
         signInButton.setOnClickListener(this);
         signOutButton.setOnClickListener(this);
@@ -294,45 +293,26 @@ public class MainActivity extends FragmentActivity
         mEditor.putString("userName", userName);
         mEditor.commit();
 
+        saveUserInfoToFirebase();
+
         userIdTextView.setText(mCurrentPlayerId);
         String greeting = "Hello " + userName;
         userNameTextView.setText(greeting);
 
         //Save user info to firebase
         mUserFirebaseRef = new Firebase(Constants.FIREBASE_URL_USERS + "/" + mCurrentPlayerId);
-        mUserFirebaseRef.child("displayName")
-                .setValue(userName);
-        mUserFirebaseRef.child("atSafeHouse")
-                .setValue(false);
+        mUserFirebaseRef.child("displayName").setValue(userName);
+        mUserFirebaseRef.child("atSafeHouse").setValue(false);
 
         if (mCurrentMatch == null) {
-            mUserFirebaseRef.child("joinedMatch")
-                    .setValue(false);
+            mUserFirebaseRef.child("joinedMatch").setValue(false);
         } else {
-            mUserFirebaseRef.child("joinedMatch")
-                    .setValue(true);
-
-//            Firebase teamFirebaseRef = new Firebase(Constants.FIREBASE_URL_TEAM + "/" + mCurrentMatchId +"");
-//            teamFirebaseRef.addListenerForSingleValueEvent(new ValueEventListener() {
-//                @Override
-//                public void onDataChange(DataSnapshot dataSnapshot) {
-//                    int lastSafehouseId = Integer.valueOf(dataSnapshot.child("lastSafehouseId").getValue().toString());
-//                    int nextSafehouseId = Integer.valueOf(dataSnapshot.child("nextSafehouseId").getValue().toString());
-//                    mEditor.putInt(Constants.PREFERENCES_LAST_SAFEHOUSE_ID, lastSafehouseId);
-//
-//                    safehouseTextView.setText(mNextSafeHouseId);
-//                }
-//
-//                @Override
-//                public void onCancelled(FirebaseError firebaseError) {}
-//            });
+            mUserFirebaseRef.child("joinedMatch").setValue(true);
         }
-        firebaseListening();
     }
 
     @Override
     public void onConnectionSuspended(int i) {
-        Toast.makeText(this, "Connection suspended, reconnecting", Toast.LENGTH_LONG).show();
         mGoogleApiClient.connect();
     }
 
@@ -391,6 +371,28 @@ public class MainActivity extends FragmentActivity
         }
     }
 
+    public void initializeGoogleApi() {
+        mGoogleApiClient = new GoogleApiClient.Builder(this)
+                .addConnectionCallbacks(this)
+                .addOnConnectionFailedListener(this)
+                .addApi(Games.API)
+                .build();
+    }
+
+    public void saveUserInfoToFirebase() {
+        String userName = Games.Players.getCurrentPlayer(mGoogleApiClient).getDisplayName();
+        mUserFirebaseRef = new Firebase(Constants.FIREBASE_URL_USERS + "/" + mCurrentPlayerId + "/");
+
+        if (mCurrentMatch != null) {
+            mUserFirebaseRef.child("displayName").setValue(userName);
+            mUserFirebaseRef.child("atSafeHouse").setValue(false);
+            //Update in match boolean
+            mUserFirebaseRef.child("joinedMatch").setValue(true);
+        } else {
+            mUserFirebaseRef.child("joinedMatch").setValue(false);
+        }
+    }
+
     public void saveSafehouse() {
         Firebase safehouseFirebaseRef = new Firebase(Constants.FIREBASE_URL_SAFEHOUSES + "/" + mNextSafeHouseId +"/");
         safehouseFirebaseRef.addListenerForSingleValueEvent(new ValueEventListener() {
@@ -412,9 +414,7 @@ public class MainActivity extends FragmentActivity
             }
 
             @Override
-            public void onCancelled(FirebaseError firebaseError) {
-
-            }
+            public void onCancelled(FirebaseError firebaseError) {}
         });
     }
 
@@ -481,10 +481,6 @@ public class MainActivity extends FragmentActivity
             @Override
             public void onResult(TurnBasedMultiplayer.CancelMatchResult result) {
                 Toast.makeText(MainActivity.this, "You Killed The Match!", Toast.LENGTH_SHORT).show();
-                mEditor.putString("matchId", "Please create match");
-                mEditor.commit();
-                mCurrentMatch = null;
-                mCurrentMatchId = null;
             }
         };
 
@@ -498,8 +494,18 @@ public class MainActivity extends FragmentActivity
             Toast.makeText(this, "Not connected to match", Toast.LENGTH_SHORT).show();
         }
 
+        mEditor.putString("matchId", null);
+        mEditor.commit();
+        mCurrentMatch = null;
+        mCurrentMatchId = null;
         matchIdTextView.setText("");
         playersTextView.setText("");
+    }
+
+    public void invitationReceived(Invitation invitation) {
+        if (mGoogleApiClient != null) {
+            Games.TurnBasedMultiplayer.acceptInvitation(mGoogleApiClient, invitation.getInvitationId());
+        }
     }
 
     public void takeTurn() {
@@ -525,16 +531,11 @@ public class MainActivity extends FragmentActivity
 
             Firebase teamFirebaseRef = new Firebase(Constants.FIREBASE_URL_TEAM + "/" + "")
                     .child(mCurrentMatchId);
-            teamFirebaseRef.child("matchStart")
-                    .setValue(mCurrentMatch.getCreationTimestamp());
-            teamFirebaseRef.child("matchDuration")
-                    .setValue(mMatchDuration);
-            teamFirebaseRef.child("lastSafehouseId")
-                    .setValue(0);
-            teamFirebaseRef.child("nextSafehouseId")
-                    .setValue(1);
-            Firebase playerFirebase = teamFirebaseRef
-                    .child("players");
+            teamFirebaseRef.child("matchStart").setValue(mCurrentMatch.getCreationTimestamp());
+            teamFirebaseRef.child("matchDuration").setValue(mMatchDuration);
+            teamFirebaseRef.child("lastSafehouseId").setValue(0);
+            teamFirebaseRef.child("nextSafehouseId").setValue(1);
+            Firebase playerFirebase = teamFirebaseRef.child("players");
             if (wholeParty != null) {
                 for (int i = 0; i < wholeParty.size(); i++) {
                     playerFirebase
@@ -542,8 +543,6 @@ public class MainActivity extends FragmentActivity
                             .setValue(wholeParty.get(i));
                 }
             }
-
-            firebaseListening();
 
             mUserFirebaseRef.child("teamId").setValue(mCurrentMatchId);
             matchIdTextView.setText(mCurrentMatchId);
@@ -559,9 +558,6 @@ public class MainActivity extends FragmentActivity
         }
         turnData = new byte[1];
 
-        Log.v(TAG, "Players in Party: " + mCurrentMatch.getParticipants().size());
-        Log.v(TAG, "Last Player: " + mCurrentMatch.getLastUpdaterId());
-
         ArrayList<Participant> allPlayers = mCurrentMatch.getParticipants();
         int nextPlayerNumber = Integer.parseInt(mCurrentMatch.getLastUpdaterId().substring(2));
         try {
@@ -572,14 +568,10 @@ public class MainActivity extends FragmentActivity
             //Grab the next player in case the previous above didn't work
             nextPlayerId = allPlayers.get(nextPlayerNumber + 1).getParticipantId();
             Games.TurnBasedMultiplayer.takeTurn(mGoogleApiClient, mCurrentMatchId, turnData, nextPlayerId);
-            Log.v(TAG, "NextPlayer: " + nextPlayerId);
         } catch (IndexOutOfBoundsException indexOutOfBonds) {
             Games.TurnBasedMultiplayer.takeTurn(mGoogleApiClient, mCurrentMatchId, turnData, mCurrentMatch.getPendingParticipantId());
-            Log.v(TAG, "Catch NextPlayer: " + mCurrentMatch.getPendingParticipantId());
         }
-
         Games.TurnBasedMultiplayer.registerMatchUpdateListener(mGoogleApiClient, new MatchUpdateListener());
-
     }
 
     @Override
@@ -640,8 +632,6 @@ public class MainActivity extends FragmentActivity
 
     }
 
-
-
     private void firebaseListening() {
         Firebase firebaseRef = new Firebase(Constants.FIREBASE_URL_TEAM + "/" + "");
         Query queryRef = firebaseRef.orderByValue();
@@ -679,7 +669,7 @@ public class MainActivity extends FragmentActivity
         turnData = mCurrentMatch.getData();
         Firebase characterFirebaseRef = new Firebase(Constants.FIREBASE_URL_TEAM + "/" + mCurrentMatchId + "/characters");
 
-        if (turnData == null) {
+        if (turnData == null && invitees != null) {
             for (int i = 0; i < invitees.size(); i++) {
                 int randomNumber = (int) (Math.random() * 4);
 
@@ -846,17 +836,18 @@ public class MainActivity extends FragmentActivity
 //        assignRandomCharacters();
     }
 
-    public void showToast(final String message) {
-        final Activity activity = MainActivity.this;
-        activity.runOnUiThread(new Runnable() {
-            @Override
-            public void run() {
-                try {
-                    Toast.makeText(activity, message, Toast.LENGTH_LONG).show();
-                } catch (NullPointerException nullPointer) {
-                    Toast.makeText(MainActivity.this, message, Toast.LENGTH_LONG).show();
-                }
-            }
-        });
+    public void showMessage(final String message) {
+        AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(MainActivity.this);
+        alertDialogBuilder.setTitle("Walker Tracker").setMessage(message);
+        alertDialogBuilder.setCancelable(false).setPositiveButton("OK",
+                new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+
+                    }
+                });
+
+        AlertDialog alertDialog = alertDialogBuilder.create();
+        alertDialog.show();
     }
 }
