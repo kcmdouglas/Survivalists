@@ -3,6 +3,8 @@ package com.eyecuelab.survivalists.ui;
 import android.app.Activity;
 import android.app.ActivityManager;
 import android.app.AlarmManager;
+import android.app.AlertDialog;
+import android.content.DialogInterface;
 import android.support.v4.app.DialogFragment;
 import android.app.PendingIntent;
 import android.content.Context;
@@ -23,6 +25,7 @@ import android.widget.Toast;
 
 import com.eyecuelab.survivalists.Constants;
 import com.eyecuelab.survivalists.R;
+import com.eyecuelab.survivalists.SurvivalistsApplication;
 import com.eyecuelab.survivalists.models.Character;
 import com.eyecuelab.survivalists.models.User;
 import com.eyecuelab.survivalists.models.SafeHouse;
@@ -46,6 +49,7 @@ import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.common.api.ResultCallback;
 import com.google.android.gms.games.Games;
 
+import com.google.android.gms.games.multiplayer.Invitation;
 import com.google.android.gms.games.multiplayer.Multiplayer;
 import com.google.android.gms.games.multiplayer.Participant;
 import com.google.android.gms.games.multiplayer.ParticipantResult;
@@ -410,9 +414,7 @@ public class MainActivity extends FragmentActivity
             }
 
             @Override
-            public void onCancelled(FirebaseError firebaseError) {
-
-            }
+            public void onCancelled(FirebaseError firebaseError) {}
         });
     }
 
@@ -498,6 +500,12 @@ public class MainActivity extends FragmentActivity
         mCurrentMatchId = null;
         matchIdTextView.setText("");
         playersTextView.setText("");
+    }
+
+    public void invitationReceived(Invitation invitation) {
+        if (mGoogleApiClient != null) {
+            Games.TurnBasedMultiplayer.acceptInvitation(mGoogleApiClient, invitation.getInvitationId());
+        }
     }
 
     public void takeTurn() {
@@ -792,17 +800,18 @@ public class MainActivity extends FragmentActivity
 //        assignRandomCharacters();
     }
 
-    public void showToast(final String message) {
-        final Activity activity = MainActivity.this;
-        activity.runOnUiThread(new Runnable() {
-            @Override
-            public void run() {
-                try {
-                    Toast.makeText(activity, message, Toast.LENGTH_LONG).show();
-                } catch (NullPointerException nullPointer) {
-                    Toast.makeText(MainActivity.this, message, Toast.LENGTH_LONG).show();
-                }
-            }
-        });
+    public void showMessage(final String message) {
+        AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(MainActivity.this);
+        alertDialogBuilder.setTitle("Walker Tracker").setMessage(message);
+        alertDialogBuilder.setCancelable(false).setPositiveButton("OK",
+                new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+
+                    }
+                });
+
+        AlertDialog alertDialog = alertDialogBuilder.create();
+        alertDialog.show();
     }
 }
