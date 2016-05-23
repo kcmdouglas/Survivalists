@@ -2,6 +2,7 @@ package com.eyecuelab.survivalists.util;
 
 import android.util.Log;
 
+import com.eyecuelab.survivalists.ui.MainActivity;
 import com.google.android.gms.games.multiplayer.Invitation;
 import com.google.android.gms.games.multiplayer.OnInvitationReceivedListener;
 import com.google.android.gms.games.request.GameRequest;
@@ -10,12 +11,14 @@ import com.google.android.gms.games.request.OnRequestReceivedListener;
 /**
  * Created by nathanromike on 5/19/16.
  */
-public class InvitationListener implements OnInvitationReceivedListener, OnRequestReceivedListener {
+public class InvitationListener extends MainActivity
+        implements OnInvitationReceivedListener, OnRequestReceivedListener {
     private static final String TAG = "InvitationListener";
 
     @Override
-    public void onInvitationReceived(Invitation invitation) {
+    public void onInvitationReceived(final Invitation invitation) {
         Log.v(TAG, "invitation: " + invitation.getInviter().getDisplayName());
+        showToast("Invitation received from: " + invitation.getInviter());
     }
 
     @Override

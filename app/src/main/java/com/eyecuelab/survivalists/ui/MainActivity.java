@@ -559,11 +559,11 @@ public class MainActivity extends FragmentActivity
         ArrayList<Participant> allPlayers = mCurrentMatch.getParticipants();
         int nextPlayerNumber = Integer.parseInt(mCurrentMatch.getLastUpdaterId().substring(2));
         try {
-            //
+            //Should pass invitation to the next player
             String nextPlayerId = allPlayers.get(nextPlayerNumber).getParticipantId();
             Games.TurnBasedMultiplayer.takeTurn(mGoogleApiClient, mCurrentMatchId, turnData, nextPlayerId);
 
-            //Grab the next player if the previous didn't work
+            //Grab the next player in case the previous above didn't work
             nextPlayerId = allPlayers.get(nextPlayerNumber + 1).getParticipantId();
             Games.TurnBasedMultiplayer.takeTurn(mGoogleApiClient, mCurrentMatchId, turnData, nextPlayerId);
             Log.v(TAG, "NextPlayer: " + nextPlayerId);
@@ -838,4 +838,17 @@ public class MainActivity extends FragmentActivity
 //        assignRandomCharacters();
     }
 
+    public void showToast(final String message) {
+        final Activity activity = MainActivity.this;
+        activity.runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    Toast.makeText(activity, message, Toast.LENGTH_LONG).show();
+                } catch (NullPointerException nullPointer) {
+                    Toast.makeText(MainActivity.this, message, Toast.LENGTH_LONG).show();
+                }
+            }
+        });
+    }
 }
