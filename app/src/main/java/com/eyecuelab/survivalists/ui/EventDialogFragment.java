@@ -13,7 +13,12 @@ import android.widget.Button;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 
+import com.eyecuelab.survivalists.Constants;
 import com.eyecuelab.survivalists.R;
+import com.firebase.client.DataSnapshot;
+import com.firebase.client.Firebase;
+import com.firebase.client.FirebaseError;
+import com.firebase.client.ValueEventListener;
 
 import org.w3c.dom.Text;
 
@@ -33,6 +38,15 @@ public class EventDialogFragment extends android.support.v4.app.DialogFragment i
     private int dialogChooser;
     private String[] dialogOptions;
     private Resources res;
+    private Firebase mFirebaseEventRef;
+    private String description;
+    private String title;
+    private String outcomeA;
+    private String outcomeB;
+    private int penaltyHP;
+    private int stepsRequired;
+    private boolean getItemOnFlee;
+    private boolean getItemOnInspect;
 
 
     //Empty constructor required for DialogFragments
@@ -58,13 +72,8 @@ public class EventDialogFragment extends android.support.v4.app.DialogFragment i
                              Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_event_dialog, container, false);
         super.onViewCreated(view, savedInstanceState);
-
-
-
-        dialogDescription = (TextView) view.findViewById(R.id.dialogDescription);
-        dialogConsequence = (TextView) view.findViewById(R.id.dialogConsequence);
-        dialogTitle = (TextView) view.findViewById(R.id.dialogTitle);
-        res = getResources();
+        int eventNumber = (int) Math.floor(Math.random() * 10 + 1);
+        int attackOrInspect = (int) (Math.random() +0.5);
 
         affirmativeButton = (Button) view.findViewById(R.id.affirmativeButton);
         affirmativeButton.setOnClickListener(this);
@@ -75,10 +84,63 @@ public class EventDialogFragment extends android.support.v4.app.DialogFragment i
         closeButton.setVisibility(View.GONE);
         dialogConsequence.setVisibility(View.GONE);
 
-        dialogOptions = res.getStringArray(R.array.dialogArray);
-        dialogChooser = (int) (Math.random() * (dialogOptions.length));
+        if(attackOrInspect == 0) {
+            mFirebaseEventRef = new Firebase(Constants.FIREBASE_URL_EVENTS + "/attack/");
+            mFirebaseEventRef.child(Integer.toString(eventNumber)).addListenerForSingleValueEvent(
+                    new ValueEventListener() {
+                        @Override
+                        public void onDataChange(DataSnapshot dataSnapshot) {
+                            description = dataSnapshot.child("description").getValue().toString();
+                            outcomeA = dataSnapshot.child("description").getValue().toString();                        String description = dataSnapshot.child("description").getValue().toString();
+                            outcomeB = dataSnapshot.child("description").getValue().toString();
+                            title = dataSnapshot.child("description").getValue().toString();
+                            penaltyHP = (int) dataSnapshot.child("penalty_hp").getValue();
+                            stepsRequired = (int) dataSnapshot.child("steps_required").getValue();
+                        }
 
-        dialogDescription.setText(dialogOptions[dialogChooser]);
+                        @Override
+                        public void onCancelled(FirebaseError firebaseError) {
+
+                        }
+                    }
+            );
+            affirmativeButton.setText("Attack");
+            negativeButton.setText("Run");
+        } else {
+            mFirebaseEventRef = new Firebase(Constants.FIREBASE_URL_EVENTS + "/inspect/");
+            mFirebaseEventRef.child(Integer.toString(eventNumber)).addListenerForSingleValueEvent(
+                    new ValueEventListener() {
+                        @Override
+                        public void onDataChange(DataSnapshot dataSnapshot) {
+                            description = dataSnapshot.child("description").getValue().toString();
+                            outcomeA = dataSnapshot.child("description").getValue().toString();                        String description = dataSnapshot.child("description").getValue().toString();
+                            outcomeB = dataSnapshot.child("description").getValue().toString();
+                            title = dataSnapshot.child("description").getValue().toString();
+                            penaltyHP = (int) dataSnapshot.child("penalty_hp").getValue();
+                            stepsRequired = (int) dataSnapshot.child("steps_required").getValue();
+                            getItemOnFlee = (boolean) dataSnapshot.child("get_item_on_flee").getValue();
+                            getItemOnInspect = (boolean) dataSnapshot.child("get_item_on_flee").getValue();
+                        }
+
+                        @Override
+                        public void onCancelled(FirebaseError firebaseError) {
+
+                        }
+                    }
+            );
+            affirmativeButton.setText("Inspect");
+            negativeButton.setText("Ignore");
+        }
+
+        dialogDescription = (TextView) view.findViewById(R.id.dialogDescription);
+        dialogConsequence = (TextView) view.findViewById(R.id.dialogConsequence);
+        dialogTitle = (TextView) view.findViewById(R.id.dialogTitle);
+        res = getResources();
+
+
+        dialogTitle.setText(title);
+        dialogDescription.setText(description);
+
 
         return view;
     }
