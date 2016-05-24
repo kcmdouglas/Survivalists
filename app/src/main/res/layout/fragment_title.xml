@@ -17,7 +17,8 @@
             android:layout_marginBottom="186dp"
             android:layout_alignParentBottom="true"
             android:layout_centerHorizontal="true"
-            android:background="@drawable/return_campaign_btn"/>
+            android:background="@drawable/return_campaign_btn"
+            android:scaleType="centerCrop" />
 
         <ImageButton
             android:layout_width="200dp"
@@ -27,15 +28,6 @@
             android:layout_alignTop="@+id/returnCurrentButton"
             android:layout_centerHorizontal="true"
             android:background="@drawable/start_campaign_btn"/>
-
-        <ImageButton
-            android:layout_width="200dp"
-            android:layout_height="50dp"
-            android:id="@+id/joinCampaignButton"
-            android:layout_marginTop="21dp"
-            android:layout_below="@+id/startCampaignButton"
-            android:layout_centerHorizontal="true"
-            android:background="@drawable/join_campaign_btn"/>
 
         <ImageButton
             android:layout_width="30dp"
@@ -48,5 +40,15 @@
             android:layout_marginEnd="22dp"
             android:layout_marginTop="22dp"
             android:background="@drawable/settings_icon_white"/>
+
+        <ImageButton
+            android:layout_width="200dp"
+            android:layout_height="50dp"
+            android:id="@+id/joinCampaignButton"
+            android:layout_marginTop="22dp"
+            android:layout_below="@+id/startCampaignButton"
+            android:layout_centerHorizontal="true"
+            android:background="@drawable/join_campaign_btn"/>
+
     </RelativeLayout>
 </RelativeLayout>
