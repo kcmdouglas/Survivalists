@@ -14,6 +14,7 @@ import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentActivity;
+import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentTransaction;
 
 import android.util.Log;
@@ -165,6 +166,12 @@ public class MainActivity extends FragmentActivity
         //Create Shared Preferences
         mSharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
         mEditor = mSharedPreferences.edit();
+
+        if (mGoogleApiClient == null) {
+            FragmentTransaction fragmentTransaction = getSupportFragmentManager().beginTransaction();
+            fragmentTransaction.add(TitleFragment.newInstance(), null);
+            fragmentTransaction.commit();
+        }
 
         initializeGoogleApi();
 
@@ -419,8 +426,8 @@ public class MainActivity extends FragmentActivity
     }
 
     public void testMethod() {
-        Intent intent = Games.TurnBasedMultiplayer.getInboxIntent(mGoogleApiClient);
-        startActivityForResult(intent, RC_WAITING_ROOM);
+        Intent joinMatchIntent = Games.TurnBasedMultiplayer.getInboxIntent(mGoogleApiClient);
+        startActivityForResult(joinMatchIntent, RC_WAITING_ROOM);
     }
 
     public void loadMatch() {
