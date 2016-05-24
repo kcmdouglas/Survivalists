@@ -32,4 +32,5 @@ public class Constants {
     public static final String PREFERENCES_INITIATE_EVENT_5 = "initiateEvent5";
     public static final String PREFERENCES_LAST_SAFEHOUSE_ID = "lastSafehouseId";
     public static final String PREFERENCES_NEXT_SAFEHOUSE_ID = "nextSafehouseId";
+    public static final String PREFERENCES_USER = "user";
 }

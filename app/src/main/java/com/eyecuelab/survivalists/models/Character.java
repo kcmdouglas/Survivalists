@@ -1,23 +1,35 @@
 package com.eyecuelab.survivalists.models;
 
+import android.util.Log;
+
+import com.eyecuelab.survivalists.entities.interfaces.Inventory;
+import com.eyecuelab.survivalists.entities.interfaces.Weapon;
+
 import org.parceler.Parcel;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Objects;
 
 @Parcel
 public class Character {
     String name;
     Integer age;
     Integer health;
+    Integer fullnessLevel;
     String characterPictureUrl;
-    int characterId;
+    Integer characterId;
+    ArrayList<Object> inventory = new ArrayList<Object>();
 
     public Character() {
         //Required blank constructor
     }
 
-    public Character(String name, Integer age, Integer health, String characterPictureUrl, int characterId) {
+    public Character(String name, Integer age, Integer health, Integer fullnessLevel, String characterPictureUrl, Integer characterId) {
         this.name = name;
         this.age = age;
         this.health = health;
+        this.fullnessLevel = fullnessLevel;
         this.characterPictureUrl = characterPictureUrl;
         this.characterId = characterId;
     }
@@ -58,4 +70,50 @@ public class Character {
         return characterId;
     }
 
+    public int getFullnessLevel() {
+        return fullnessLevel;
+    }
+
+    public void setFullnessLevel(Integer fullnessLevel) {
+        this.fullnessLevel = fullnessLevel;
+    }
+
+    public List<Object> getInventory () {
+        return inventory;
+    }
+
+    public void addToInventory(Object item) {
+        if (inventory.size() < 16) {
+            inventory.add(item);
+            Log.d("Inventory: ", "Item Added");
+        } else {
+            Log.d("Inventory: ", "Cannot add, inventory full");
+        }
+    }
+
+    public void removeWeapon(com.eyecuelab.survivalists.models.Weapon weapon) {
+        for(int i=0; i < inventory.size(); i++) {
+            boolean result = inventory.get(i) instanceof com.eyecuelab.survivalists.models.Weapon;
+            com.eyecuelab.survivalists.models.Weapon inventoryWeapon = null;
+            if (result) {
+                inventoryWeapon = (com.eyecuelab.survivalists.models.Weapon) inventory.get(i);
+                if((inventoryWeapon.getName().equals(weapon.getName())) && (inventoryWeapon.getHitPoints() == weapon.getHitPoints())) {
+                    inventory.remove(i);
+                }
+            }
+        }
+    }
+
+    public void removeItem(Item item) {
+        for(int i=0; i < inventory.size(); i++) {
+            boolean result = inventory.get(i) instanceof Item;
+            Item inventoryItem = null;
+            if (result) {
+                inventoryItem = (Item) inventory.get(i);
+                if((inventoryItem.getName().equals(item.getName())) && (inventoryItem.getHealthPoints() == item.getHealthPoints())) {
+                    inventory.remove(i);
+                }
+            }
+        }
+    }
 }
