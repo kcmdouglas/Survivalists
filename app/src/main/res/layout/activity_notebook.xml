@@ -1,7 +1,240 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:orientation="vertical" android:layout_width="match_parent"
+<android.support.percent.PercentRelativeLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:orientation="vertical"
+    android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@drawable/campaign_main_background">
 
-</LinearLayout>
+    <android.support.percent.PercentRelativeLayout
+        app:layout_widthPercent="15%"
+        android:layout_height="match_parent"
+        android:id="@+id/sideTabs">
+
+        <Button
+            app:layout_widthPercent="100%"
+            app:layout_heightPercent="7.5%"
+            app:layout_marginTopPercent="18%"
+            android:id="@+id/mapTabButton"
+            android:layout_alignParentLeft="true"
+            android:layout_alignParentStart="true"
+            android:background="@android:color/transparent"
+            android:alpha="0" />
+
+        <Button
+            app:layout_widthPercent="100%"
+            app:layout_heightPercent="16%"
+            android:id="@+id/tabCampaignButton"
+            app:layout_marginTopPercent="5%"
+            android:background="@android:color/transparent"
+            android:alpha="0"
+            android:layout_below="@+id/mapTabButton"
+            android:layout_alignParentLeft="true"
+            android:layout_alignParentStart="true" />
+
+    </android.support.percent.PercentRelativeLayout>
+
+    <android.support.percent.PercentRelativeLayout
+        app:layout_widthPercent="28.5%"
+        app:layout_heightPercent="20%"
+        app:layout_marginTopPercent="16%"
+        app:layout_marginLeftPercent="11.7%"
+        android:id="@+id/playerStatus"
+        android:layout_alignParentTop="true"
+        android:layout_toRightOf="@+id/sideTabs">
+
+        <TextView
+            android:id="@+id/goalTitle"
+            android:layout_height="wrap_content"
+            android:layout_width="wrap_content"
+            app:layout_marginTopPercent="15%"
+            android:textSize="7sp"
+            android:text="Daily Goal"
+            android:textColor="@android:color/black"
+            android:textAllCaps="true"
+            android:textStyle="bold" />
+
+        <TextView
+            android:id="@+id/dailyGoalTextView"
+            android:layout_height="wrap_content"
+            android:layout_width="wrap_content"
+            app:layout_marginTopPercent="15%"
+            android:layout_alignParentEnd="true"
+            android:layout_alignParentRight="true"
+            android:textAlignment="textEnd"
+            android:gravity="end"
+            android:maxLines="1"
+            android:layout_toRightOf="@+id/goalTitle"
+            android:textSize="7sp"
+            android:text="10,000 out of 10,000"
+            android:textColor="@android:color/black"
+            android:textAllCaps="true"
+            android:textStyle="bold" />
+
+        <TextView
+            android:id="@+id/healthTitle"
+            android:layout_height="wrap_content"
+            android:layout_width="wrap_content"
+            android:layout_below="@+id/goalTitle"
+            app:layout_marginTopPercent="27%"
+            android:textSize="7sp"
+            android:text="Health"
+            android:textColor="@android:color/black"
+            android:textAllCaps="true"
+            android:textStyle="bold" />
+
+        <TextView
+            android:id="@+id/healthTextView"
+            android:layout_height="wrap_content"
+            android:layout_width="wrap_content"
+            android:layout_toRightOf="@+id/healthTitle"
+            android:layout_below="@+id/goalTitle"
+            app:layout_marginTopPercent="27%"
+            app:layout_marginLeftPercent="45%"
+            android:layout_alignParentEnd="true"
+            android:layout_alignParentRight="true"
+            android:textAlignment="textEnd"
+            android:gravity="end"
+            android:maxLines="1"
+            android:textSize="7sp"
+            android:text="100HP"
+            android:textColor="@android:color/black"
+            android:textAllCaps="true"
+            android:textStyle="bold" />
+
+        <TextView
+            android:id="@+id/energyTitle"
+            android:layout_height="wrap_content"
+            android:layout_width="wrap_content"
+            android:layout_below="@+id/healthTitle"
+            app:layout_marginTopPercent="31%"
+            android:textSize="7sp"
+            android:text="Energy Level"
+            android:textColor="@android:color/black"
+            android:textAllCaps="true"
+            android:textStyle="bold" />
+
+        <TextView
+            android:id="@+id/energyTextView"
+            android:layout_height="wrap_content"
+            android:layout_width="wrap_content"
+            android:layout_toRightOf="@+id/healthTitle"
+            android:layout_below="@+id/healthTitle"
+            app:layout_marginTopPercent="31%"
+            app:layout_marginLeftPercent="45%"
+            android:layout_alignParentEnd="true"
+            android:layout_alignParentRight="true"
+            android:textAlignment="textEnd"
+            android:gravity="end"
+            android:maxLines="1"
+            android:textSize="7sp"
+            android:text="100%"
+            android:textColor="@android:color/black"
+            android:textAllCaps="true"
+            android:textStyle="bold" />
+
+    </android.support.percent.PercentRelativeLayout>
+
+    <android.support.percent.PercentRelativeLayout
+        android:id="@+id/backpackContent"
+        app:layout_widthPercent="85%"
+        app:layout_heightPercent="38%"
+        app:layout_marginTopPercent="4.5%"
+        android:layout_below="@+id/playerStatus"
+        android:layout_toRightOf="@+id/sideTabs"
+        android:layout_toEndOf="@+id/sideTabs">
+
+            <ImageView
+            app:layout_widthPercent="15%"
+            app:layout_heightPercent="15%"
+            app:layout_marginTopPercent="2%"
+            app:layout_marginLeftPercent="8%"
+            android:id="@+id/inventoryAt0x0"
+            android:src="@drawable/steak_inventory" />
+
+            <ImageView
+            app:layout_widthPercent="15%"
+            app:layout_heightPercent="15%"
+            app:layout_marginTopPercent="2%"
+            app:layout_marginLeftPercent="8%"
+            android:layout_toRightOf="@+id/inventoryAt0x0"
+            android:layout_toEndOf="@+id/inventoryAt0x0"
+            android:id="@+id/inventoryAt1x0"
+            android:src="@drawable/steak_inventory" />
+
+            <ImageView
+            app:layout_widthPercent="15%"
+            app:layout_heightPercent="15%"
+            app:layout_marginTopPercent="2%"
+            app:layout_marginLeftPercent="8%"
+            android:layout_toRightOf="@+id/inventoryAt1x0"
+            android:layout_toEndOf="@+id/inventoryAt1x0"
+            android:id="@+id/inventoryAt2x0"
+            android:src="@drawable/steak_inventory" />
+
+            <ImageView
+            app:layout_widthPercent="15%"
+            app:layout_heightPercent="15%"
+            app:layout_marginTopPercent="2%"
+            app:layout_marginLeftPercent="10%"
+            android:layout_toRightOf="@+id/inventoryAt1x0"
+            android:layout_toEndOf="@+id/inventoryAt2x0"
+            android:id="@+id/inventoryAt3x0"
+            android:src="@drawable/steak_inventory" />
+
+
+
+        <!--<GridLayout-->
+            <!--android:layout_width="match_parent"-->
+            <!--android:layout_height="match_parent"-->
+            <!--android:columnCount="4"-->
+            <!--android:rowCount="4"-->
+            <!--android:useDefaultMargins="false"-->
+            <!--android:alignmentMode="alignBounds">-->
+
+            <!--<ImageView-->
+                <!--android:layout_marginLeft="25dp"-->
+                <!--android:layout_marginStart="25dp"-->
+                <!--android:id="@+id/inventoryAt0x0"-->
+                <!--android:layout_column="0"-->
+                <!--android:layout_row="0"-->
+                <!--android:src="@drawable/steak_inventory" />-->
+
+            <!--<ImageView-->
+                <!--android:layout_marginLeft="25dp"-->
+                <!--android:layout_marginStart="25dp"-->
+                <!--android:id="@+id/inventoryAt1x0"-->
+                <!--android:layout_column="1"-->
+                <!--android:layout_row="0"-->
+                <!--android:src="@drawable/steak_inventory"/>-->
+
+            <!--<ImageView-->
+                <!--android:layout_marginLeft="25dp"-->
+                <!--android:layout_marginStart="25dp"-->
+                <!--android:id="@+id/inventoryAt2x0"-->
+                <!--android:layout_column="2"-->
+                <!--android:layout_row="0"-->
+                <!--android:src="@drawable/steak_inventory"/>-->
+
+            <!--<ImageView-->
+                <!--android:layout_marginLeft="25dp"-->
+                <!--android:layout_marginStart="25dp"-->
+                <!--android:id="@+id/inventoryAt3x0"-->
+                <!--android:layout_column="3"-->
+                <!--android:layout_row="0"-->
+                <!--android:src="@drawable/steak_inventory"/>-->
+
+            <!--<ImageView-->
+                <!--android:layout_marginLeft="25dp"-->
+                <!--android:layout_marginStart="25dp"-->
+                <!--android:id="@+id/inventoryAt0x1"-->
+                <!--android:layout_row="1"-->
+                <!--android:layout_column="0"-->
+                <!--android:src="@drawable/steak_inventory"/>-->
+
+        <!--</GridLayout>-->
+
+    </android.support.percent.PercentRelativeLayout>
+
+</android.support.percent.PercentRelativeLayout>

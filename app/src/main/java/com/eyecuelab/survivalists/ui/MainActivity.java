@@ -426,8 +426,8 @@ public class MainActivity extends FragmentActivity
     }
 
     public void testMethod() {
-        Intent joinMatchIntent = Games.TurnBasedMultiplayer.getInboxIntent(mGoogleApiClient);
-        startActivityForResult(joinMatchIntent, RC_WAITING_ROOM);
+        Intent notebook = new Intent(MainActivity.this, NotebookActivity.class);
+        startActivity(notebook);
     }
 
     public void loadMatch() {

@@ -28,12 +28,17 @@
             android:name=".services.BackgroundStepService"
             android:enabled="true" />
         <service
-            android:name=".services.CampaignEndAlarmService" android:enabled="true" android:exported="false">
-            <intent-filter><action android:name="NOTIFICATION_SERVICE" /></intent-filter>
+            android:name=".services.CampaignEndAlarmService"
+            android:enabled="true"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="NOTIFICATION_SERVICE" />
+            </intent-filter>
         </service>
 
-        <receiver android:name=".util.CampaignEndAlarmReceiver" android:process=":remote" />
-
+        <receiver
+            android:name=".util.CampaignEndAlarmReceiver"
+            android:process=":remote" />
         <receiver
             android:name=".util.BackgroundStepReceiver"
             android:enabled="true"
@@ -80,7 +85,8 @@
             android:theme="@android:style/Theme.Translucent.NoTitleBar" />
         <activity android:name=".ui.Login" />
         <activity android:name=".ui.CharacterDetailPage" />
-        <activity android:name=".ui.CharacterDetailActivity"></activity>
+        <activity android:name=".ui.CharacterDetailActivity" />
+        <activity android:name=".ui.NotebookActivity"></activity>
     </application>
 
 </manifest>

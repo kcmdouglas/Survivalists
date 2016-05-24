@@ -3,11 +3,6 @@ package com.eyecuelab.survivalists.models;
 
 import org.parceler.Parcel;
 
-import java.util.ArrayList;
-import java.util.List;
-
-import static java.lang.Math.abs;
-
 /**
  * Created by eyecuelab on 5/23/16.
  */
