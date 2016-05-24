@@ -45,4 +45,12 @@ public class Weapon{
     public void setHitPoints(int hitPoints) {
         this.hitPoints = hitPoints;
     }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public void setDescription(String description) {
+        this.description = description;
+    }
 }

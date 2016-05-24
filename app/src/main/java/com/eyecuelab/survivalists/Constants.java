@@ -10,6 +10,7 @@ public class Constants {
     public static final String FIREBASE_USERS = "users";
     public static final String FIREBASE_SAFEHOUSES = "safehouses";
     public static final String FIREBASE_EVENTS = "events";
+    public static final String FIREBASE_ITEMS = "items";
     public static final String KEY_UID = "UID";
     public static final String FIREBASE_LOCATION_USERS = "users";
     public static final String FIREBASE_PROPERTY_EMAIL = "email";
@@ -18,6 +19,7 @@ public class Constants {
     public static final String FIREBASE_URL_USERS = FIREBASE_URL + "/" + FIREBASE_USERS;
     public static final String FIREBASE_URL_SAFEHOUSES = FIREBASE_URL + "/" + FIREBASE_SAFEHOUSES;
     public static final String FIREBASE_URL_EVENTS = FIREBASE_URL + "/" + FIREBASE_EVENTS;
+    public static final String FIREBASE_URL_ITEMS = FIREBASE_URL + "/" + FIREBASE_ITEMS;
     public static final String PREFERENCES_PREVIOUS_STEPS_KEY = "previousSteps";
     public static final String PREFERENCES_GOOGLE_PLAYER_ID = "playerId";
     public static final String PREFERENCES_STEPS_IN_SENSOR_KEY = "stepsInSensor";

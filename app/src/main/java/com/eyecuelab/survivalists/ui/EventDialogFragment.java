@@ -15,6 +15,8 @@ import android.widget.TextView;
 
 import com.eyecuelab.survivalists.Constants;
 import com.eyecuelab.survivalists.R;
+import com.eyecuelab.survivalists.models.Item;
+import com.eyecuelab.survivalists.models.Weapon;
 import com.firebase.client.DataSnapshot;
 import com.firebase.client.Firebase;
 import com.firebase.client.FirebaseError;
@@ -39,14 +41,18 @@ public class EventDialogFragment extends android.support.v4.app.DialogFragment i
     private String[] dialogOptions;
     private Resources res;
     private Firebase mFirebaseEventRef;
+    private Firebase mFirebaseItemRef;
     private String description;
     private String title;
     private String outcomeA;
     private String outcomeB;
     private int penaltyHP;
     private int stepsRequired;
-    private boolean getItemOnFlee;
-    private boolean getItemOnInspect;
+    private boolean getItemOnFlee = false;
+    private boolean getItemOnInspect = false;
+    private Weapon weapon = null;
+    private Item item;
+    private boolean effectsHealth;
 
 
     //Empty constructor required for DialogFragments
@@ -132,6 +138,53 @@ public class EventDialogFragment extends android.support.v4.app.DialogFragment i
             negativeButton.setText("Ignore");
         }
 
+        if (getItemOnInspect || getItemOnFlee) {
+            int categoryRandomizer = (int) Math.floor(Math.random() * 3 + 1);
+            int itemRandomizer = (int) Math.floor(Math.random() * 10 + 1);
+
+            switch (categoryRandomizer) {
+                case 1:
+                    mFirebaseItemRef = new Firebase(Constants.FIREBASE_URL_ITEMS + "/food/");
+                    effectsHealth = false;
+                    break;
+                case 2:
+                    mFirebaseItemRef = new Firebase(Constants.FIREBASE_URL_ITEMS + "/medicine/");
+                    effectsHealth = true;
+                    break;
+                case 3:
+                    mFirebaseItemRef = new Firebase(Constants.FIREBASE_URL_ITEMS + "/weapons/");
+                    weapon = new Weapon("name", "description", 0);
+                    break;
+            }
+
+            mFirebaseItemRef.child(Integer.toString(itemRandomizer)).addListenerForSingleValueEvent(
+                    new ValueEventListener() {
+                        @Override
+                        public void onDataChange(DataSnapshot dataSnapshot) {
+                            if (weapon != null) {
+                                String weaponName = dataSnapshot.child("name").getValue().toString();
+                                String weaponDescription = dataSnapshot.child("description").getValue().toString();
+                                int hitPoints = (int) dataSnapshot.child("hit_points").getValue();
+                                weapon.setHitPoints(hitPoints);
+                                weapon.setName(weaponName);
+                                weapon.setDescription(weaponDescription);
+                            } else {
+                                String itemName = dataSnapshot.child("name").getValue().toString();
+                                String itemDescription = dataSnapshot.child("description").getValue().toString();
+                                int healthPoints = (int) dataSnapshot.child("health_points").getValue();
+                                item = new Item(itemName, itemDescription, healthPoints, effectsHealth);
+                            }
+
+                        }
+
+                        @Override
+                        public void onCancelled(FirebaseError firebaseError) {
+
+                        }
+                    }
+            );
+        }
+
         dialogDescription = (TextView) view.findViewById(R.id.dialogDescription);
         dialogConsequence = (TextView) view.findViewById(R.id.dialogConsequence);
         dialogTitle = (TextView) view.findViewById(R.id.dialogTitle);
@@ -163,19 +216,18 @@ public class EventDialogFragment extends android.support.v4.app.DialogFragment i
 
     private void affirmativeClick(int dialogNumber) {
         configureResultLayout();
-        String[] resultA = res.getStringArray(R.array.resultA);
-        String[] consequenceA = res.getStringArray(R.array.resultAConsequence);
 
-        dialogDescription.setText(resultA[dialogNumber]);
-        dialogConsequence.setText(consequenceA[dialogNumber]);
+        dialogDescription.setText(outcomeA);
+        if(getItemOnInspect) {
+            dialogConsequence.setText("FOUND " + item.getName());
+        }
+
     }
 
     private void negativeClick(int dialogNumber) {
         configureResultLayout();
-        String[] resultB = res.getStringArray(R.array.resultB);
-        String[] consequenceB = res.getStringArray(R.array.resultBConsequence);
 
-        dialogDescription.setText(resultB[dialogNumber]);
+        dialogDescription.setText(outcomeB);
         dialogConsequence.setText(consequenceB[dialogNumber]);
     }
 
