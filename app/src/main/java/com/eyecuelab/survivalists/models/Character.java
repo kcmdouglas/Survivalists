@@ -2,18 +2,16 @@ package com.eyecuelab.survivalists.models;
 
 import android.util.Log;
 
-import com.eyecuelab.survivalists.entities.interfaces.Inventory;
-import com.eyecuelab.survivalists.entities.interfaces.Weapon;
 
 import org.parceler.Parcel;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
 
 @Parcel
 public class Character {
     String name;
+    String description;
     Integer age;
     Integer health;
     Integer fullnessLevel;
@@ -25,8 +23,9 @@ public class Character {
         //Required blank constructor
     }
 
-    public Character(String name, Integer age, Integer health, Integer fullnessLevel, String characterPictureUrl, Integer characterId) {
+    public Character(String name, String description, Integer age, Integer health, Integer fullnessLevel, String characterPictureUrl, Integer characterId) {
         this.name = name;
+        this.description = description;
         this.age = age;
         this.health = health;
         this.fullnessLevel = fullnessLevel;

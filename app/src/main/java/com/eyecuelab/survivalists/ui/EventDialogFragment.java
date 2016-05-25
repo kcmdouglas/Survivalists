@@ -2,6 +2,7 @@ package com.eyecuelab.survivalists.ui;
 
 import android.app.Dialog;
 import android.app.DialogFragment;
+import android.content.SharedPreferences;
 import android.content.res.Resources;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
@@ -51,8 +52,13 @@ public class EventDialogFragment extends android.support.v4.app.DialogFragment i
     private boolean getItemOnFlee = false;
     private boolean getItemOnInspect = false;
     private Weapon weapon = null;
-    private Item item;
+    private Item item = null;
     private boolean effectsHealth;
+    private int attackOrInspect;
+    private Firebase mFirebaseStepsRef;
+    private String mPlayerId;
+    private SharedPreferences mSharedPreferences;
+    private SharedPreferences.Editor mEditor;
 
 
     //Empty constructor required for DialogFragments
@@ -78,8 +84,14 @@ public class EventDialogFragment extends android.support.v4.app.DialogFragment i
                              Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_event_dialog, container, false);
         super.onViewCreated(view, savedInstanceState);
+        mPlayerId = mSharedPreferences.getString(Constants.PREFERENCES_GOOGLE_PLAYER_ID, null);
+
+
+        //TODO: change this to account for the size of the hashmap array in firebase--maybe move into an indv. listener
         int eventNumber = (int) Math.floor(Math.random() * 10 + 1);
-        int attackOrInspect = (int) (Math.random() +0.5);
+
+        //0 is an attack event, 1 is an inspect event
+        attackOrInspect = (int) (Math.random() +0.5);
 
         affirmativeButton = (Button) view.findViewById(R.id.affirmativeButton);
         affirmativeButton.setOnClickListener(this);
@@ -88,7 +100,6 @@ public class EventDialogFragment extends android.support.v4.app.DialogFragment i
         closeButton = (Button) view.findViewById(R.id.closeButton);
         closeButton.setOnClickListener(this);
         closeButton.setVisibility(View.GONE);
-        dialogConsequence.setVisibility(View.GONE);
 
         if(attackOrInspect == 0) {
             mFirebaseEventRef = new Firebase(Constants.FIREBASE_URL_EVENTS + "/attack/");
@@ -97,7 +108,7 @@ public class EventDialogFragment extends android.support.v4.app.DialogFragment i
                         @Override
                         public void onDataChange(DataSnapshot dataSnapshot) {
                             description = dataSnapshot.child("description").getValue().toString();
-                            outcomeA = dataSnapshot.child("description").getValue().toString();                        String description = dataSnapshot.child("description").getValue().toString();
+                            outcomeA = dataSnapshot.child("description").getValue().toString();
                             outcomeB = dataSnapshot.child("description").getValue().toString();
                             title = dataSnapshot.child("description").getValue().toString();
                             penaltyHP = (int) dataSnapshot.child("penalty_hp").getValue();
@@ -110,8 +121,10 @@ public class EventDialogFragment extends android.support.v4.app.DialogFragment i
                         }
                     }
             );
+            dialogConsequence.setVisibility(View.GONE);
             affirmativeButton.setText("Attack");
             negativeButton.setText("Run");
+
         } else {
             mFirebaseEventRef = new Firebase(Constants.FIREBASE_URL_EVENTS + "/inspect/");
             mFirebaseEventRef.child(Integer.toString(eventNumber)).addListenerForSingleValueEvent(
@@ -119,7 +132,7 @@ public class EventDialogFragment extends android.support.v4.app.DialogFragment i
                         @Override
                         public void onDataChange(DataSnapshot dataSnapshot) {
                             description = dataSnapshot.child("description").getValue().toString();
-                            outcomeA = dataSnapshot.child("description").getValue().toString();                        String description = dataSnapshot.child("description").getValue().toString();
+                            outcomeA = dataSnapshot.child("description").getValue().toString();
                             outcomeB = dataSnapshot.child("description").getValue().toString();
                             title = dataSnapshot.child("description").getValue().toString();
                             penaltyHP = (int) dataSnapshot.child("penalty_hp").getValue();
@@ -136,7 +149,14 @@ public class EventDialogFragment extends android.support.v4.app.DialogFragment i
             );
             affirmativeButton.setText("Inspect");
             negativeButton.setText("Ignore");
+            if (stepsRequired > 0) {
+                dialogConsequence.setText("Inspecting will add " + Integer.toString(stepsRequired) + " to your daily goal.");
+            } else {
+                dialogConsequence.setVisibility(View.GONE);
+            }
         }
+
+
 
         if (getItemOnInspect || getItemOnFlee) {
             int categoryRandomizer = (int) Math.floor(Math.random() * 3 + 1);
@@ -165,9 +185,7 @@ public class EventDialogFragment extends android.support.v4.app.DialogFragment i
                                 String weaponName = dataSnapshot.child("name").getValue().toString();
                                 String weaponDescription = dataSnapshot.child("description").getValue().toString();
                                 int hitPoints = (int) dataSnapshot.child("hit_points").getValue();
-                                weapon.setHitPoints(hitPoints);
-                                weapon.setName(weaponName);
-                                weapon.setDescription(weaponDescription);
+                                weapon = new Weapon(weaponName, weaponDescription, hitPoints);
                             } else {
                                 String itemName = dataSnapshot.child("name").getValue().toString();
                                 String itemDescription = dataSnapshot.child("description").getValue().toString();
@@ -218,8 +236,23 @@ public class EventDialogFragment extends android.support.v4.app.DialogFragment i
         configureResultLayout();
 
         dialogDescription.setText(outcomeA);
-        if(getItemOnInspect) {
-            dialogConsequence.setText("FOUND " + item.getName());
+
+        if(attackOrInspect == 0) {
+
+        }
+
+
+        //Consequence for Inspect events
+        if(attackOrInspect == 1) {
+            if(getItemOnInspect) {
+                if (weapon != null) {
+                    dialogConsequence.setText("FOUND " + weapon.getName());
+                } else {
+                    dialogConsequence.setText("FOUND " + item.getName());
+                }
+            } else {
+                dialogConsequence.setText("NO ITEMS FOUND");
+            }
         }
 
     }
@@ -228,7 +261,19 @@ public class EventDialogFragment extends android.support.v4.app.DialogFragment i
         configureResultLayout();
 
         dialogDescription.setText(outcomeB);
-        dialogConsequence.setText(consequenceB[dialogNumber]);
+
+        if(attackOrInspect == 0) {
+            dialogConsequence.setText(Integer.toString(stepsRequired) + " STEPS ADDED TO DAILY GOAL");
+        } else {
+            if(getItemOnFlee) {
+                if (weapon != null) {
+                    dialogConsequence.setText("FOUND " + weapon.getName());
+                } else {
+                    dialogConsequence.setText("FOUND " + item.getName());
+                }
+            }
+        }
+
     }
 
     private void configureResultLayout() {

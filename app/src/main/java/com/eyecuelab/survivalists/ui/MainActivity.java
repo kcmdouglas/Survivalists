@@ -61,6 +61,7 @@ import com.google.android.gms.games.multiplayer.turnbased.TurnBasedMultiplayer;
 import com.google.example.games.basegameutils.BaseGameUtils;
 import com.google.gson.Gson;
 
+
 import org.parceler.Parcels;
 
 import java.util.ArrayList;
@@ -135,7 +136,7 @@ public class MainActivity extends FragmentActivity
     private boolean eventFiveInitiated;
 
     private boolean isRecurringAlarmSet;
-    ArrayList<Character> mCharacters;
+    private ArrayList<Character> mCharacters;
 
     @Override
     protected void onStart() {
@@ -189,6 +190,7 @@ public class MainActivity extends FragmentActivity
         eventThreeInitiated = mSharedPreferences.getBoolean(Constants.PREFERENCES_INITIATE_EVENT_3, false);
         eventFourInitiated = mSharedPreferences.getBoolean(Constants.PREFERENCES_INITIATE_EVENT_4, false);
         eventFiveInitiated = mSharedPreferences.getBoolean(Constants.PREFERENCES_INITIATE_EVENT_5, false);
+        mCharacters = new ArrayList<>();
 
         //TODO: Move daily alarm setting to the startGame function
         //Set recurring alarm
@@ -206,19 +208,6 @@ public class MainActivity extends FragmentActivity
         }
 
         //TODO: Move to the startGame function
-        mCharacters = new ArrayList<>();
-        Character characterA = new Character("characterA", 22, 100, 100, null, 0);
-        Character characterB = new Character("characterB", 80, 100, 100, null, 1);
-        Character characterC = new Character("characterC", 44, 100, 100, null, 2);
-        Character characterD = new Character("characterD", 120, 100, 100, null, 3);
-        Character characterE = new Character("characterE", 100, 100, 100, null, 4);
-        Character characterF = new Character("characterF", 90, 100, 100, null, 5);
-        mCharacters.add(characterA);
-        mCharacters.add(characterB);
-        mCharacters.add(characterC);
-        mCharacters.add(characterD);
-        mCharacters.add(characterE);
-        mCharacters.add(characterF);
 
         mNextSafeHouseId = mSharedPreferences.getInt(Constants.PREFERENCES_NEXT_SAFEHOUSE_ID, 1);
         mLastSafeHouseId = mSharedPreferences.getInt(Constants.PREFERENCES_LAST_SAFEHOUSE_ID, 0);
@@ -665,30 +654,84 @@ public class MainActivity extends FragmentActivity
     //CAMPAIGN LOGIC BEGINS HERE
 
     private void assignRandomCharacters() {
-        ArrayList<Character> remainingCharacters = new ArrayList<>(mCharacters);
-        turnData = mCurrentMatch.getData();
-        Firebase characterFirebaseRef = new Firebase(Constants.FIREBASE_URL_TEAM + "/" + mCurrentMatchId + "/characters");
+        Firebase characterSkeletonRef = new Firebase(Constants.FIREBASE_URL+ "/");
 
-        if (turnData == null && invitees != null) {
-            for (int i = 0; i < invitees.size(); i++) {
-                int randomNumber = (int) (Math.random() * 4);
+        characterSkeletonRef.child("characters").addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                for(DataSnapshot child : dataSnapshot.getChildren()) {
+                    String name = child.child("name").getValue().toString();
+                    long ageLong = (long) child.child("age").getValue();
+                    int age = (int) ageLong;
+                    String description = child.child("description").getValue().toString();
+                    long characterIdLong = (long) child.child("character_id").getValue();
+                    int characterId = (int) characterIdLong;
+                    long healthLong = (long) child.child("health").getValue();
+                    int health = (int) healthLong;
+                    long fullnessLevelLong = (long) child.child("fullness_level").getValue();
+                    int fullnessLevel = (int) fullnessLevelLong;
+                    String characterUrl = child.child("character_url").getValue().toString();
+                    Character character = new Character(name, description, age, health, fullnessLevel, characterUrl, characterId);
+                    mCharacters.add(character);
 
-                try {
-                    Character assignedCharacter = remainingCharacters.get(randomNumber);
-                    String playerBeingAssignId = invitees.get(i);
+                    ArrayList<Character> remainingCharacters = new ArrayList<>(mCharacters);
+                    Firebase characterFirebaseRef = new Firebase(Constants.FIREBASE_URL_TEAM + "/" + mCurrentMatchId + "/characters");
+                    turnData = mCurrentMatch.getData();
+                    if (turnData == null && invitees != null) {
+                        for (int i = 0; i < invitees.size(); i++) {
+                            int randomNumber = (int) (Math.random() * mCharacters.size() -1);
 
-                    //save assigned character Ids to firebase
-                    characterFirebaseRef.child(playerBeingAssignId)
-                            .setValue(assignedCharacter.getCharacterId());
+                            try {
+                                Character assignedCharacter = remainingCharacters.get(randomNumber);
+                                String playerBeingAssignId = invitees.get(i);
 
-                    //remove assigned character and update counter
-                    remainingCharacters.remove(assignedCharacter);
+                                //save assigned character Ids to firebase
+                                characterFirebaseRef.child(playerBeingAssignId)
+                                        .setValue(remainingCharacters.get(randomNumber));
 
-                } catch (IndexOutOfBoundsException indexOutOfBounds) {
-                    indexOutOfBounds.getStackTrace();
+                                //remove assigned character and update counter
+                                remainingCharacters.remove(assignedCharacter);
+
+                            } catch (IndexOutOfBoundsException indexOutOfBounds) {
+                                indexOutOfBounds.getStackTrace();
+                            }
+                        }
+                    }
                 }
             }
-        }
+
+            @Override
+            public void onCancelled(FirebaseError firebaseError) {
+
+            }
+        });
+
+//        ArrayList<Character> remainingCharacters = new ArrayList<>(mCharacters);
+//        turnData = mCurrentMatch.getData();
+        Firebase userRef = new Firebase(Constants.FIREBASE_URL_USERS + "/" + mCurrentPlayerId);
+        Firebase characterFirebaseRef = new Firebase(Constants.FIREBASE_URL_TEAM + "/" + mCurrentMatchId + "/characters");
+
+//
+//        if (turnData == null && invitees != null) {
+//            for (int i = 0; i < invitees.size(); i++) {
+//                int randomNumber = (int) (Math.random() * mCharacters.size() -1);
+//
+//                try {
+//                    Character assignedCharacter = remainingCharacters.get(randomNumber);
+//                    String playerBeingAssignId = invitees.get(i);
+//
+//                    //save assigned character Ids to firebase
+//                    characterFirebaseRef.child(playerBeingAssignId)
+//                            .setValue(remainingCharacters.get(randomNumber));
+//
+//                    //remove assigned character and update counter
+//                    remainingCharacters.remove(assignedCharacter);
+//
+//                } catch (IndexOutOfBoundsException indexOutOfBounds) {
+//                    indexOutOfBounds.getStackTrace();
+//                }
+//            }
+//        }
 
         //Pull the character assigned to the current user
         characterFirebaseRef.child(mCurrentPlayerId).addListenerForSingleValueEvent(new ValueEventListener() {
@@ -696,6 +739,11 @@ public class MainActivity extends FragmentActivity
             public void onDataChange(DataSnapshot dataSnapshot) {
                 try {
                     mCurrentCharacter = mCharacters.get(dataSnapshot.getValue().hashCode());
+                    Gson gson = new Gson();
+                    String character = gson.toJson(mCurrentCharacter);
+                    mEditor.putString(Constants.PREFERENCES_CHARACTER, character);
+                    mEditor.commit();
+
                 } catch (NullPointerException nullPointer) {
                     mCurrentCharacter = null;
                 }
@@ -703,6 +751,8 @@ public class MainActivity extends FragmentActivity
             @Override
             public void onCancelled(FirebaseError firebaseError) {}
         });
+
+        userRef.child("character").setValue(mCurrentCharacter);
     }
 
     private void initializeEventDialogFragments() {
