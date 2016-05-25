@@ -66,6 +66,7 @@ import org.parceler.Parcels;
 
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.Collections;
 
 import butterknife.Bind;
 import butterknife.ButterKnife;
@@ -654,12 +655,13 @@ public class MainActivity extends FragmentActivity
     //CAMPAIGN LOGIC BEGINS HERE
 
     private void assignRandomCharacters() {
-        Firebase characterSkeletonRef = new Firebase(Constants.FIREBASE_URL+ "/");
+        final Firebase characterSkeletonRef = new Firebase(Constants.FIREBASE_URL+ "/");
+        final ArrayList<Character> selectionList = new ArrayList<>();
 
         characterSkeletonRef.child("characters").addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
-                for(DataSnapshot child : dataSnapshot.getChildren()) {
+                for (DataSnapshot child : dataSnapshot.getChildren()) {
                     String name = child.child("name").getValue().toString();
                     long ageLong = (long) child.child("age").getValue();
                     int age = (int) ageLong;
@@ -673,29 +675,32 @@ public class MainActivity extends FragmentActivity
                     String characterUrl = child.child("character_url").getValue().toString();
                     Character character = new Character(name, description, age, health, fullnessLevel, characterUrl, characterId);
                     mCharacters.add(character);
+                    selectionList.add(character);
 
-                    ArrayList<Character> remainingCharacters = new ArrayList<>(mCharacters);
                     Firebase characterFirebaseRef = new Firebase(Constants.FIREBASE_URL_TEAM + "/" + mCurrentMatchId + "/characters");
                     turnData = mCurrentMatch.getData();
+                    Collections.shuffle(selectionList);
                     if (turnData == null && invitees != null) {
                         for (int i = 0; i < invitees.size(); i++) {
-                            int randomNumber = (int) (Math.random() * mCharacters.size() -1);
-
                             try {
-                                Character assignedCharacter = remainingCharacters.get(randomNumber);
+                                Character assignedCharacter = selectionList.get(i);
                                 String playerBeingAssignId = invitees.get(i);
 
                                 //save assigned character Ids to firebase
                                 characterFirebaseRef.child(playerBeingAssignId)
-                                        .setValue(remainingCharacters.get(randomNumber));
+                                        .setValue((selectionList.get(i).getCharacterId()));
 
-                                //remove assigned character and update counter
-                                remainingCharacters.remove(assignedCharacter);
+                                if (invitees.get(i).equals(mCurrentPlayerId)) {
+                                    Firebase userRef = new Firebase(Constants.FIREBASE_URL_USERS + "/" + mCurrentPlayerId + "/");
+                                    userRef.child("character").setValue(assignedCharacter);
+                                }
+
 
                             } catch (IndexOutOfBoundsException indexOutOfBounds) {
                                 indexOutOfBounds.getStackTrace();
                             }
                         }
+
                     }
                 }
             }
@@ -708,51 +713,37 @@ public class MainActivity extends FragmentActivity
 
 //        ArrayList<Character> remainingCharacters = new ArrayList<>(mCharacters);
 //        turnData = mCurrentMatch.getData();
-        Firebase userRef = new Firebase(Constants.FIREBASE_URL_USERS + "/" + mCurrentPlayerId);
-        Firebase characterFirebaseRef = new Firebase(Constants.FIREBASE_URL_TEAM + "/" + mCurrentMatchId + "/characters");
 
-//
-//        if (turnData == null && invitees != null) {
-//            for (int i = 0; i < invitees.size(); i++) {
-//                int randomNumber = (int) (Math.random() * mCharacters.size() -1);
-//
+
+//        //Pull the character assigned to the current user
+//        characterFirebaseRef.child(mCurrentPlayerId).addListenerForSingleValueEvent(new ValueEventListener() {
+//            @Override
+//            public void onDataChange(DataSnapshot dataSnapshot) {
 //                try {
-//                    Character assignedCharacter = remainingCharacters.get(randomNumber);
-//                    String playerBeingAssignId = invitees.get(i);
+//                    long characterNumberLong = (long)dataSnapshot.getValue();
+//                    int characterNumber = (int) characterNumberLong;
 //
-//                    //save assigned character Ids to firebase
-//                    characterFirebaseRef.child(playerBeingAssignId)
-//                            .setValue(remainingCharacters.get(randomNumber));
+//                    characterSkeletonRef.child("characters").child(Integer.toString(characterNumber)).addListenerForSingleValueEvent(new ValueEventListener() {
+//                        @Override
+//                        public void onDataChange(DataSnapshot dataSnapshot) {
 //
-//                    //remove assigned character and update counter
-//                    remainingCharacters.remove(assignedCharacter);
 //
-//                } catch (IndexOutOfBoundsException indexOutOfBounds) {
-//                    indexOutOfBounds.getStackTrace();
+//                        }
+//
+//                        @Override
+//                        public void onCancelled(FirebaseError firebaseError) {
+//
+//                        }
+//                    });
+//                } catch (NullPointerException nullPointer) {
+//                    mCurrentCharacter = null;
 //                }
 //            }
-//        }
+//            @Override
+//            public void onCancelled(FirebaseError firebaseError) {}
+//        });
 
-        //Pull the character assigned to the current user
-        characterFirebaseRef.child(mCurrentPlayerId).addListenerForSingleValueEvent(new ValueEventListener() {
-            @Override
-            public void onDataChange(DataSnapshot dataSnapshot) {
-                try {
-                    mCurrentCharacter = mCharacters.get(dataSnapshot.getValue().hashCode());
-                    Gson gson = new Gson();
-                    String character = gson.toJson(mCurrentCharacter);
-                    mEditor.putString(Constants.PREFERENCES_CHARACTER, character);
-                    mEditor.commit();
 
-                } catch (NullPointerException nullPointer) {
-                    mCurrentCharacter = null;
-                }
-            }
-            @Override
-            public void onCancelled(FirebaseError firebaseError) {}
-        });
-
-        userRef.child("character").setValue(mCurrentCharacter);
     }
 
     private void initializeEventDialogFragments() {
