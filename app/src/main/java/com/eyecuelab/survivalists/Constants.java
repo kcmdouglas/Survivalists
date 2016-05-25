@@ -12,9 +12,6 @@ public class Constants {
     public static final String FIREBASE_EVENTS = "events";
     public static final String FIREBASE_ITEMS = "items";
     public static final String FIREBASE_CHARACTERS = "characters";
-    public static final String KEY_UID = "UID";
-    public static final String FIREBASE_LOCATION_USERS = "users";
-    public static final String FIREBASE_PROPERTY_EMAIL = "email";
     public static final String FIREBASE_URL_TEAM = FIREBASE_URL + "/" + FIREBASE_TEAM;
     public static final String FIREBASE_URL_STEPS = FIREBASE_URL + "/" + FIREBASE_STEPS;
     public static final String FIREBASE_URL_USERS = FIREBASE_URL + "/" + FIREBASE_USERS;
@@ -40,4 +37,5 @@ public class Constants {
     public static final String PREFERENCES_NEXT_SAFEHOUSE_ID = "nextSafehouseId";
     public static final String PREFERENCES_USER = "user";
     public static final String PREFERENCES_CHARACTER = "character";
+    public static final String PREFERENCES_TEAM_CHARACTERS = "teamCharacters";
 }

@@ -60,13 +60,17 @@ import com.google.android.gms.games.multiplayer.turnbased.TurnBasedMatchConfig;
 import com.google.android.gms.games.multiplayer.turnbased.TurnBasedMultiplayer;
 import com.google.example.games.basegameutils.BaseGameUtils;
 import com.google.gson.Gson;
+import com.google.gson.reflect.TypeToken;
 
 
 import org.parceler.Parcels;
 
+import java.lang.reflect.Array;
+import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Collections;
+import java.util.List;
 
 import butterknife.Bind;
 import butterknife.ButterKnife;
@@ -154,7 +158,7 @@ public class MainActivity extends FragmentActivity
 
         //Remove notification bar
         this.getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN, WindowManager.LayoutParams.FLAG_FULLSCREEN);
-//
+        mCharacters = new ArrayList<>();
 //        //Initialize Facebook SDK
 //        FacebookSdk.sdkInitialize(getApplicationContext());
 //        AppEventsLogger.activateApp(this);
@@ -191,7 +195,6 @@ public class MainActivity extends FragmentActivity
         eventThreeInitiated = mSharedPreferences.getBoolean(Constants.PREFERENCES_INITIATE_EVENT_3, false);
         eventFourInitiated = mSharedPreferences.getBoolean(Constants.PREFERENCES_INITIATE_EVENT_4, false);
         eventFiveInitiated = mSharedPreferences.getBoolean(Constants.PREFERENCES_INITIATE_EVENT_5, false);
-        mCharacters = new ArrayList<>();
 
         //TODO: Move daily alarm setting to the startGame function
         //Set recurring alarm
@@ -217,6 +220,13 @@ public class MainActivity extends FragmentActivity
         Gson gson = new Gson();
         mNextSafehouse = gson.fromJson(safehouseJson, SafeHouse.class);
         safehouseTextView.setText(Integer.toString(mNextSafeHouseId));
+
+
+
+        if(mCharacters.size() == 0) {
+            characterButton.setEnabled(false);
+        }
+
     }
 
     @Override
@@ -227,6 +237,14 @@ public class MainActivity extends FragmentActivity
             matchIdTextView.setText(mCurrentMatch.getMatchId());
         }
         mSharedPreferences.registerOnSharedPreferenceChangeListener(this);
+        if(mCharacters.size()==0) {
+            characterButton.setEnabled(false);
+        } else {
+            characterButton.setEnabled(true);
+        }
+        if(mCurrentMatch != null && mCharacters == null) {
+            instantiatePlayerCharacters();
+        }
     }
 
     @Override
@@ -299,7 +317,7 @@ public class MainActivity extends FragmentActivity
         } else {
             mUserFirebaseRef.child("joinedMatch").setValue(true);
         }
-        if(mCurrentMatch != null) {
+        if(mCurrentMatchId != null) {
             mUserFirebaseRef.child("character").addListenerForSingleValueEvent(new ValueEventListener() {
                 @Override
                 public void onDataChange(DataSnapshot dataSnapshot) {
@@ -328,7 +346,11 @@ public class MainActivity extends FragmentActivity
 
                 }
             });
+
+            instantiatePlayerCharacters();
         }
+
+
     }
 
     @Override
@@ -696,15 +718,14 @@ public class MainActivity extends FragmentActivity
                     long ageLong = (long) child.child("age").getValue();
                     int age = (int) ageLong;
                     String description = child.child("description").getValue().toString();
-                    long characterIdLong = (long) child.child("character_id").getValue();
+                    long characterIdLong = (long) child.child("characterId").getValue();
                     int characterId = (int) characterIdLong;
                     long healthLong = (long) child.child("health").getValue();
                     int health = (int) healthLong;
-                    long fullnessLevelLong = (long) child.child("fullness_level").getValue();
+                    long fullnessLevelLong = (long) child.child("fullnessLevel").getValue();
                     int fullnessLevel = (int) fullnessLevelLong;
-                    String characterUrl = child.child("character_url").getValue().toString();
+                    String characterUrl = child.child("characterPictureUrl").getValue().toString();
                     Character character = new Character(name, description, age, health, fullnessLevel, characterUrl, characterId);
-                    mCharacters.add(character);
                     selectionList.add(character);
 
                     Firebase characterFirebaseRef = new Firebase(Constants.FIREBASE_URL_TEAM + "/" + mCurrentMatchId + "/characters");
@@ -722,6 +743,8 @@ public class MainActivity extends FragmentActivity
 
                                 Firebase userRef = new Firebase(Constants.FIREBASE_URL_USERS + "/" + playerBeingAssignId + "/");
                                 userRef.child("character").setValue(assignedCharacter);
+
+                                //add assigned characters to persistent array for character pages
                             } catch (IndexOutOfBoundsException indexOutOfBounds) {
                                 indexOutOfBounds.getStackTrace();
                             }
@@ -883,5 +906,53 @@ public class MainActivity extends FragmentActivity
 
         AlertDialog alertDialog = alertDialogBuilder.create();
         alertDialog.show();
+    }
+
+    public void instantiatePlayerCharacters() {
+        final ArrayList<String> playerIDs = new ArrayList<>();
+        Firebase playerIDRef = new Firebase(Constants.FIREBASE_URL_TEAM + "/" + mCurrentMatchId +"/players/");
+        playerIDRef.addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                for (DataSnapshot child : dataSnapshot.getChildren()) {
+                    String playerId = child.getValue().toString();
+                    Log.d("Player string", playerId);
+                    Firebase teamCharactersRef = new Firebase(Constants.FIREBASE_URL_USERS + "/" + playerId + "/character/");
+                    teamCharactersRef.addListenerForSingleValueEvent(new ValueEventListener() {
+                        @Override
+                        public void onDataChange(DataSnapshot dataSnapshot) {
+                            String name = dataSnapshot.child("name").getValue().toString();
+                            Log.d("Adding character...", name);
+                            long ageLong = (long) dataSnapshot.child("age").getValue();
+                            int age = (int) ageLong;
+                            String description = dataSnapshot.child("description").getValue().toString();
+                            long characterIdLong = (long) dataSnapshot.child("characterId").getValue();
+                            int characterId = (int) characterIdLong;
+                            long healthLong = (long) dataSnapshot.child("health").getValue();
+                            int health = (int) healthLong;
+                            long fullnessLevelLong = (long) dataSnapshot.child("fullnessLevel").getValue();
+                            int fullnessLevel = (int) fullnessLevelLong;
+                            String characterUrl = dataSnapshot.child("characterPictureUrl").getValue().toString();
+                            Log.d("Instantiated char ID", characterId + "");
+                            Character character = new Character(name, description, age, health, fullnessLevel, characterUrl, characterId);
+                            mCharacters.add(character);
+                        }
+
+                        @Override
+                        public void onCancelled(FirebaseError firebaseError) {
+
+                        }
+                    });
+                }
+            }
+            @Override
+            public void onCancelled(FirebaseError firebaseError) {
+
+            }
+        });
+
+
+
+        characterButton.setEnabled(true);
     }
 }

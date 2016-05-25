@@ -8,9 +8,10 @@ import com.eyecuelab.survivalists.models.Character;
 import com.eyecuelab.survivalists.ui.CharacterDetailFragment;
 
 import java.util.ArrayList;
+import java.util.List;
 
 public class CharacterPagerAdapter extends FragmentPagerAdapter {
-    private ArrayList<Character> mCharacters;
+    private List<Character> mCharacters;
 
     public CharacterPagerAdapter(FragmentManager fm, ArrayList<Character> characters) {
         super(fm);
