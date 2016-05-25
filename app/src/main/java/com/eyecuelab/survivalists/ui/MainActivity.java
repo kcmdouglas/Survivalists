@@ -299,6 +299,36 @@ public class MainActivity extends FragmentActivity
         } else {
             mUserFirebaseRef.child("joinedMatch").setValue(true);
         }
+        if(mCurrentMatch != null) {
+            mUserFirebaseRef.child("character").addListenerForSingleValueEvent(new ValueEventListener() {
+                @Override
+                public void onDataChange(DataSnapshot dataSnapshot) {
+                    String name = dataSnapshot.child("name").getValue().toString();
+                    long ageLong = (long) dataSnapshot.child("age").getValue();
+                    int age = (int) ageLong;
+                    String description = dataSnapshot.child("description").getValue().toString();
+                    long characterIdLong = (long) dataSnapshot.child("characterId").getValue();
+                    int characterId = (int) characterIdLong;
+                    long healthLong = (long) dataSnapshot.child("health").getValue();
+                    int health = (int) healthLong;
+                    long fullnessLevelLong = (long) dataSnapshot.child("fullnessLevel").getValue();
+                    int fullnessLevel = (int) fullnessLevelLong;
+                    String characterUrl = dataSnapshot.child("characterPictureUrl").getValue().toString();
+                    mCurrentCharacter = new Character(name, description, age, health, fullnessLevel, characterUrl, characterId);
+                    Log.d("Current Character ID: ", mCurrentCharacter.getCharacterId() + "");
+
+                    Gson gson = new Gson();
+                    String currentCharacter = gson.toJson(mCurrentCharacter);
+                    mEditor.putString(Constants.PREFERENCES_CHARACTER, currentCharacter);
+                    mEditor.commit();
+                }
+
+                @Override
+                public void onCancelled(FirebaseError firebaseError) {
+
+                }
+            });
+        }
     }
 
     @Override
@@ -690,12 +720,8 @@ public class MainActivity extends FragmentActivity
                                 characterFirebaseRef.child(playerBeingAssignId)
                                         .setValue((selectionList.get(i).getCharacterId()));
 
-                                if (invitees.get(i).equals(mCurrentPlayerId)) {
-                                    Firebase userRef = new Firebase(Constants.FIREBASE_URL_USERS + "/" + mCurrentPlayerId + "/");
-                                    userRef.child("character").setValue(assignedCharacter);
-                                }
-
-
+                                Firebase userRef = new Firebase(Constants.FIREBASE_URL_USERS + "/" + playerBeingAssignId + "/");
+                                userRef.child("character").setValue(assignedCharacter);
                             } catch (IndexOutOfBoundsException indexOutOfBounds) {
                                 indexOutOfBounds.getStackTrace();
                             }
@@ -710,39 +736,6 @@ public class MainActivity extends FragmentActivity
 
             }
         });
-
-//        ArrayList<Character> remainingCharacters = new ArrayList<>(mCharacters);
-//        turnData = mCurrentMatch.getData();
-
-
-//        //Pull the character assigned to the current user
-//        characterFirebaseRef.child(mCurrentPlayerId).addListenerForSingleValueEvent(new ValueEventListener() {
-//            @Override
-//            public void onDataChange(DataSnapshot dataSnapshot) {
-//                try {
-//                    long characterNumberLong = (long)dataSnapshot.getValue();
-//                    int characterNumber = (int) characterNumberLong;
-//
-//                    characterSkeletonRef.child("characters").child(Integer.toString(characterNumber)).addListenerForSingleValueEvent(new ValueEventListener() {
-//                        @Override
-//                        public void onDataChange(DataSnapshot dataSnapshot) {
-//
-//
-//                        }
-//
-//                        @Override
-//                        public void onCancelled(FirebaseError firebaseError) {
-//
-//                        }
-//                    });
-//                } catch (NullPointerException nullPointer) {
-//                    mCurrentCharacter = null;
-//                }
-//            }
-//            @Override
-//            public void onCancelled(FirebaseError firebaseError) {}
-//        });
-
 
     }
 
