@@ -25,7 +25,6 @@ import android.widget.Toast;
 
 import com.eyecuelab.survivalists.Constants;
 import com.eyecuelab.survivalists.R;
-import com.eyecuelab.survivalists.SurvivalistsApplication;
 import com.eyecuelab.survivalists.models.Character;
 import com.eyecuelab.survivalists.models.User;
 import com.eyecuelab.survivalists.models.SafeHouse;
@@ -33,15 +32,11 @@ import com.eyecuelab.survivalists.services.BackgroundStepService;
 import com.eyecuelab.survivalists.util.CampaignEndAlarmReceiver;
 import com.eyecuelab.survivalists.util.InvitationListener;
 import com.eyecuelab.survivalists.util.MatchInitiatedListener;
-import com.eyecuelab.survivalists.util.MatchStartedListener;
 import com.eyecuelab.survivalists.util.MatchUpdateListener;
 import com.eyecuelab.survivalists.util.StepResetAlarmReceiver;
-import com.firebase.client.ChildEventListener;
 import com.firebase.client.DataSnapshot;
 import com.firebase.client.Firebase;
 import com.firebase.client.FirebaseError;
-import com.firebase.client.FirebaseException;
-import com.firebase.client.Query;
 import com.firebase.client.ValueEventListener;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.SignInButton;
@@ -52,25 +47,19 @@ import com.google.android.gms.games.Games;
 import com.google.android.gms.games.multiplayer.Invitation;
 import com.google.android.gms.games.multiplayer.Multiplayer;
 import com.google.android.gms.games.multiplayer.Participant;
-import com.google.android.gms.games.multiplayer.ParticipantResult;
 import com.google.android.gms.games.multiplayer.realtime.RoomConfig;
-import com.google.android.gms.games.multiplayer.turnbased.OnTurnBasedMatchUpdateReceivedListener;
 import com.google.android.gms.games.multiplayer.turnbased.TurnBasedMatch;
 import com.google.android.gms.games.multiplayer.turnbased.TurnBasedMatchConfig;
 import com.google.android.gms.games.multiplayer.turnbased.TurnBasedMultiplayer;
 import com.google.example.games.basegameutils.BaseGameUtils;
 import com.google.gson.Gson;
-import com.google.gson.reflect.TypeToken;
 
 
 import org.parceler.Parcels;
 
-import java.lang.reflect.Array;
-import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Collections;
-import java.util.List;
 
 import butterknife.Bind;
 import butterknife.ButterKnife;
@@ -142,6 +131,7 @@ public class MainActivity extends FragmentActivity
 
     private boolean isRecurringAlarmSet;
     private ArrayList<Character> mCharacters;
+    ArrayList<String> mPlayerIDs;
 
     @Override
     protected void onStart() {
@@ -223,7 +213,7 @@ public class MainActivity extends FragmentActivity
 
 
 
-        if(mCharacters.size() == 0) {
+        if(mPlayerIDs == null) {
             characterButton.setEnabled(false);
         }
 
@@ -237,13 +227,13 @@ public class MainActivity extends FragmentActivity
             matchIdTextView.setText(mCurrentMatch.getMatchId());
         }
         mSharedPreferences.registerOnSharedPreferenceChangeListener(this);
-        if(mCharacters.size()==0) {
+        if(mPlayerIDs == null) {
             characterButton.setEnabled(false);
         } else {
             characterButton.setEnabled(true);
         }
-        if(mCurrentMatch != null && mCharacters == null) {
-            instantiatePlayerCharacters();
+        if(mCurrentMatch != null && mPlayerIDs == null) {
+            instantiatePlayerIDs();
         }
     }
 
@@ -346,11 +336,8 @@ public class MainActivity extends FragmentActivity
 
                 }
             });
-
-            instantiatePlayerCharacters();
+            instantiatePlayerIDs();
         }
-
-
     }
 
     @Override
@@ -405,7 +392,7 @@ public class MainActivity extends FragmentActivity
             case R.id.characterButton:
                 Intent intent  = new Intent(mContext, CharacterDetailActivity.class);
                 intent.putExtra("position", 0);
-                intent.putExtra("characters", Parcels.wrap(mCharacters));
+                intent.putExtra("playerIDs", Parcels.wrap(mPlayerIDs));
                 mContext.startActivity(intent);
                 break;
             case R.id.testButton2:
@@ -674,36 +661,6 @@ public class MainActivity extends FragmentActivity
 
     }
 
-    private void firebaseListening() {
-        Firebase firebaseRef = new Firebase(Constants.FIREBASE_URL_TEAM + "/" + "");
-        Query queryRef = firebaseRef.orderByValue();
-
-        queryRef.addChildEventListener(new ChildEventListener() {
-            @Override
-            public void onChildAdded(DataSnapshot dataSnapshot, String s) {}
-
-            @Override
-            public void onChildChanged(DataSnapshot dataSnapshot, String s) {}
-
-            @Override
-            public void onChildRemoved(DataSnapshot dataSnapshot) {}
-
-            @Override
-            public void onChildMoved(DataSnapshot dataSnapshot, String s) {}
-
-            @Override
-            public void onCancelled(FirebaseError firebaseError) {}
-        });
-
-        queryRef.addValueEventListener(new ValueEventListener() {
-            @Override
-            public void onDataChange(DataSnapshot dataSnapshot) {}
-
-            @Override
-            public void onCancelled(FirebaseError firebaseError) {}
-        });
-    }
-
     //CAMPAIGN LOGIC BEGINS HERE
 
     private void assignRandomCharacters() {
@@ -743,8 +700,6 @@ public class MainActivity extends FragmentActivity
 
                                 Firebase userRef = new Firebase(Constants.FIREBASE_URL_USERS + "/" + playerBeingAssignId + "/");
                                 userRef.child("character").setValue(assignedCharacter);
-
-                                //add assigned characters to persistent array for character pages
                             } catch (IndexOutOfBoundsException indexOutOfBounds) {
                                 indexOutOfBounds.getStackTrace();
                             }
@@ -817,7 +772,6 @@ public class MainActivity extends FragmentActivity
             }
 
             ft.addToBackStack(null);
-
             DialogFragment frag = EventDialogFragment.newInstance(mStackLevel);
             frag.show(ft, "fragment_event_dialog");
         } else if (type==2) {
@@ -908,41 +862,17 @@ public class MainActivity extends FragmentActivity
         alertDialog.show();
     }
 
-    public void instantiatePlayerCharacters() {
-        final ArrayList<String> playerIDs = new ArrayList<>();
+    public void instantiatePlayerIDs() {
+        mPlayerIDs = new ArrayList<>();
         Firebase playerIDRef = new Firebase(Constants.FIREBASE_URL_TEAM + "/" + mCurrentMatchId +"/players/");
         playerIDRef.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
                 for (DataSnapshot child : dataSnapshot.getChildren()) {
                     String playerId = child.getValue().toString();
-                    Log.d("Player string", playerId);
-                    Firebase teamCharactersRef = new Firebase(Constants.FIREBASE_URL_USERS + "/" + playerId + "/character/");
-                    teamCharactersRef.addListenerForSingleValueEvent(new ValueEventListener() {
-                        @Override
-                        public void onDataChange(DataSnapshot dataSnapshot) {
-                            String name = dataSnapshot.child("name").getValue().toString();
-                            Log.d("Adding character...", name);
-                            long ageLong = (long) dataSnapshot.child("age").getValue();
-                            int age = (int) ageLong;
-                            String description = dataSnapshot.child("description").getValue().toString();
-                            long characterIdLong = (long) dataSnapshot.child("characterId").getValue();
-                            int characterId = (int) characterIdLong;
-                            long healthLong = (long) dataSnapshot.child("health").getValue();
-                            int health = (int) healthLong;
-                            long fullnessLevelLong = (long) dataSnapshot.child("fullnessLevel").getValue();
-                            int fullnessLevel = (int) fullnessLevelLong;
-                            String characterUrl = dataSnapshot.child("characterPictureUrl").getValue().toString();
-                            Log.d("Instantiated char ID", characterId + "");
-                            Character character = new Character(name, description, age, health, fullnessLevel, characterUrl, characterId);
-                            mCharacters.add(character);
-                        }
-
-                        @Override
-                        public void onCancelled(FirebaseError firebaseError) {
-
-                        }
-                    });
+                    if(!(playerId.equals(mCurrentPlayerId))) {
+                        mPlayerIDs.add(playerId);
+                    }
                 }
             }
             @Override
@@ -950,8 +880,6 @@ public class MainActivity extends FragmentActivity
 
             }
         });
-
-
 
         characterButton.setEnabled(true);
     }

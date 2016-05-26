@@ -16,14 +16,18 @@ import android.widget.TextView;
 
 import com.eyecuelab.survivalists.Constants;
 import com.eyecuelab.survivalists.R;
+import com.eyecuelab.survivalists.models.Character;
 import com.eyecuelab.survivalists.models.Item;
 import com.eyecuelab.survivalists.models.Weapon;
 import com.firebase.client.DataSnapshot;
 import com.firebase.client.Firebase;
 import com.firebase.client.FirebaseError;
 import com.firebase.client.ValueEventListener;
+import com.google.gson.Gson;
 
 import org.w3c.dom.Text;
+
+import java.util.ArrayList;
 
 import butterknife.Bind;
 import butterknife.ButterKnife;
@@ -59,6 +63,7 @@ public class EventDialogFragment extends android.support.v4.app.DialogFragment i
     private String mPlayerId;
     private SharedPreferences mSharedPreferences;
     private SharedPreferences.Editor mEditor;
+    private Character mCurrentCharacter;
 
 
     //Empty constructor required for DialogFragments
@@ -85,6 +90,9 @@ public class EventDialogFragment extends android.support.v4.app.DialogFragment i
         View view = inflater.inflate(R.layout.fragment_event_dialog, container, false);
         super.onViewCreated(view, savedInstanceState);
         mPlayerId = mSharedPreferences.getString(Constants.PREFERENCES_GOOGLE_PLAYER_ID, null);
+        String characterJson = mSharedPreferences.getString(Constants.PREFERENCES_CHARACTER, null);
+        Gson gson = new Gson();
+        mCurrentCharacter = gson.fromJson(characterJson, Character.class);
 
 
         //TODO: change this to account for the size of the hashmap array in firebase--maybe move into an indv. listener
@@ -238,6 +246,25 @@ public class EventDialogFragment extends android.support.v4.app.DialogFragment i
         dialogDescription.setText(outcomeA);
 
         if(attackOrInspect == 0) {
+            int characterHealth = mCurrentCharacter.getHealth();
+            int remainderHealth = 0;
+            Weapon weapon = null;
+
+            for (int i = 0; i < mCurrentCharacter.getInventory().size(); i++) {
+                    Object currentItem = mCurrentCharacter.getInventory().get(i);
+                    if(currentItem instanceof Weapon) {
+                        weapon = (Weapon) currentItem;
+                    }
+                }
+
+            if (weapon == null) {
+                remainderHealth = characterHealth- penaltyHP;
+            } else {
+                weapon.useWeapon(penaltyHP, mCurrentCharacter);
+            }
+
+            Firebase firebaseUserRef = new Firebase(Constants.FIREBASE_URL_USERS + "/" + mPlayerId + "/character");
+            firebaseUserRef.setValue(mCurrentCharacter);
 
         }
 
@@ -247,12 +274,15 @@ public class EventDialogFragment extends android.support.v4.app.DialogFragment i
             if(getItemOnInspect) {
                 if (weapon != null) {
                     dialogConsequence.setText("FOUND " + weapon.getName());
+                    addItemToInventory(weapon);
                 } else {
                     dialogConsequence.setText("FOUND " + item.getName());
+                    addItemToInventory(item);
                 }
             } else {
                 dialogConsequence.setText("NO ITEMS FOUND");
             }
+            updateSteps(stepsRequired);
         }
 
     }
@@ -264,16 +294,39 @@ public class EventDialogFragment extends android.support.v4.app.DialogFragment i
 
         if(attackOrInspect == 0) {
             dialogConsequence.setText(Integer.toString(stepsRequired) + " STEPS ADDED TO DAILY GOAL");
+            updateSteps(stepsRequired);
         } else {
             if(getItemOnFlee) {
                 if (weapon != null) {
                     dialogConsequence.setText("FOUND " + weapon.getName());
+                    addItemToInventory(weapon);
+
                 } else {
                     dialogConsequence.setText("FOUND " + item.getName());
+                    addItemToInventory(item);
+
                 }
             }
         }
 
+    }
+
+    private void updateSteps(final int stepsRequired) {
+        final Firebase mFirebaseStepUpdate = new Firebase(Constants.FIREBASE_URL_USERS + "/" + mPlayerId + "/dailyGoal");
+        mFirebaseStepUpdate.addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                long dailyGoalLong = (long)  dataSnapshot.getValue();
+                int priorDailyGoal = (int) dailyGoalLong;
+                int newDailyGoal = priorDailyGoal + stepsRequired;
+                mFirebaseStepUpdate.setValue(newDailyGoal);
+            }
+
+            @Override
+            public void onCancelled(FirebaseError firebaseError) {
+
+            }
+        });
     }
 
     private void configureResultLayout() {
@@ -285,5 +338,45 @@ public class EventDialogFragment extends android.support.v4.app.DialogFragment i
         RelativeLayout.LayoutParams params = (RelativeLayout.LayoutParams)dialogDescription.getLayoutParams();
         params.addRule(RelativeLayout.ALIGN_PARENT_TOP);
         dialogDescription.setLayoutParams(params);
+    }
+
+    private void addItemToInventory(final Weapon weapon) {
+        final Firebase mFirebaseInventoryUpdate = new Firebase(Constants.FIREBASE_URL_USERS + "/" + mPlayerId + "/character/inventory/");
+
+        mFirebaseInventoryUpdate.addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                int itemAmount = (int) dataSnapshot.getChildrenCount();
+                if (itemAmount < 16) {
+                    mFirebaseInventoryUpdate.child(weapon.getName()).setValue(weapon);
+                    mCurrentCharacter.addToInventory(weapon);
+                }
+            }
+
+            @Override
+            public void onCancelled(FirebaseError firebaseError) {
+
+            }
+        });
+    }
+
+    private void addItemToInventory(final Item item) {
+        final Firebase mFirebaseInventoryUpdate = new Firebase(Constants.FIREBASE_URL_USERS + "/" + mPlayerId + "/character/inventory/");
+
+        mFirebaseInventoryUpdate.addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                int itemAmount = (int) dataSnapshot.getChildrenCount();
+                if (itemAmount < 16) {
+                    mFirebaseInventoryUpdate.child(item.getName()).setValue(item);
+                    mCurrentCharacter.addToInventory(item);
+                }
+            }
+
+            @Override
+            public void onCancelled(FirebaseError firebaseError) {
+
+            }
+        });
     }
 }
