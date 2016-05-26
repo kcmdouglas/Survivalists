@@ -11,6 +11,7 @@ import com.eyecuelab.survivalists.models.Character;
 import org.parceler.Parcels;
 
 import java.util.ArrayList;
+import java.util.List;
 
 import butterknife.Bind;
 import butterknife.ButterKnife;
@@ -18,17 +19,16 @@ import butterknife.ButterKnife;
 public class CharacterDetailActivity extends AppCompatActivity {
     @Bind(R.id.viewPager) ViewPager mViewPager;
     private CharacterPagerAdapter adapterViewPager;
-    ArrayList<Character> mCharacters = new ArrayList<>();
+    ArrayList<String> mPlayerIDs = new ArrayList<>();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_character_detail);
         ButterKnife.bind(this);
-        mCharacters = Parcels.unwrap(getIntent().getParcelableExtra("characters"));
-        int startingPosition = 3;
-        adapterViewPager = new CharacterPagerAdapter(getSupportFragmentManager(), mCharacters);
+        mPlayerIDs = Parcels.unwrap(getIntent().getParcelableExtra("playerIDs"));
+        adapterViewPager = new CharacterPagerAdapter(getSupportFragmentManager(), mPlayerIDs);
         mViewPager.setAdapter(adapterViewPager);
-        mViewPager.setCurrentItem(startingPosition);
+        mViewPager.setCurrentItem(0);
     }
 }

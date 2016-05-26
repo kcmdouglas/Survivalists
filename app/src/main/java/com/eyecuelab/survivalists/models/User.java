@@ -1,5 +1,6 @@
 package com.eyecuelab.survivalists.models;
 
+
 import java.util.ArrayList;
 
 public class User {

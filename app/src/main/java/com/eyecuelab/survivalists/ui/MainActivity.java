@@ -29,6 +29,7 @@ import android.widget.Toast;
 
 import com.eyecuelab.survivalists.Constants;
 import com.eyecuelab.survivalists.R;
+
 import com.eyecuelab.survivalists.SurvivalistsApplication;
 import com.eyecuelab.survivalists.adapters.InventoryAdapter;
 import com.eyecuelab.survivalists.models.Character;
@@ -40,15 +41,11 @@ import com.eyecuelab.survivalists.services.BackgroundStepService;
 import com.eyecuelab.survivalists.util.CampaignEndAlarmReceiver;
 import com.eyecuelab.survivalists.util.InvitationListener;
 import com.eyecuelab.survivalists.util.MatchInitiatedListener;
-import com.eyecuelab.survivalists.util.MatchStartedListener;
 import com.eyecuelab.survivalists.util.MatchUpdateListener;
 import com.eyecuelab.survivalists.util.StepResetAlarmReceiver;
-import com.firebase.client.ChildEventListener;
 import com.firebase.client.DataSnapshot;
 import com.firebase.client.Firebase;
 import com.firebase.client.FirebaseError;
-import com.firebase.client.FirebaseException;
-import com.firebase.client.Query;
 import com.firebase.client.ValueEventListener;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.SignInButton;
@@ -59,19 +56,19 @@ import com.google.android.gms.games.Games;
 import com.google.android.gms.games.multiplayer.Invitation;
 import com.google.android.gms.games.multiplayer.Multiplayer;
 import com.google.android.gms.games.multiplayer.Participant;
-import com.google.android.gms.games.multiplayer.ParticipantResult;
 import com.google.android.gms.games.multiplayer.realtime.RoomConfig;
-import com.google.android.gms.games.multiplayer.turnbased.OnTurnBasedMatchUpdateReceivedListener;
 import com.google.android.gms.games.multiplayer.turnbased.TurnBasedMatch;
 import com.google.android.gms.games.multiplayer.turnbased.TurnBasedMatchConfig;
 import com.google.android.gms.games.multiplayer.turnbased.TurnBasedMultiplayer;
 import com.google.example.games.basegameutils.BaseGameUtils;
 import com.google.gson.Gson;
 
+
 import org.parceler.Parcels;
 
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.Collections;
 
 import butterknife.Bind;
 import butterknife.ButterKnife;
@@ -125,7 +122,8 @@ public class MainActivity extends FragmentActivity
     private boolean eventFiveInitiated;
 
     private boolean isRecurringAlarmSet;
-    ArrayList<Character> mCharacters;
+    private ArrayList<Character> mCharacters;
+    ArrayList<String> mPlayerIDs;
 
     @Override
     protected void onStart() {
@@ -144,6 +142,7 @@ public class MainActivity extends FragmentActivity
         View decorView = getWindow().getDecorView();
         int uiOptions = View.SYSTEM_UI_FLAG_HIDE_NAVIGATION | View.SYSTEM_UI_FLAG_FULLSCREEN;
         decorView.setSystemUiVisibility(uiOptions);
+
         //set content view AFTER ABOVE sequence (to avoid crash)
         setContentView(R.layout.activity_notebook);
 
@@ -195,19 +194,6 @@ public class MainActivity extends FragmentActivity
         }
 
         //TODO: Move to the startGame function
-        mCharacters = new ArrayList<>();
-        Character characterA = new Character("characterA", 22, 100, 100, null, 0);
-        Character characterB = new Character("characterB", 80, 100, 100, null, 1);
-        Character characterC = new Character("characterC", 44, 100, 100, null, 2);
-        Character characterD = new Character("characterD", 120, 100, 100, null, 3);
-        Character characterE = new Character("characterE", 100, 100, 100, null, 4);
-        Character characterF = new Character("characterF", 90, 100, 100, null, 5);
-        mCharacters.add(characterA);
-        mCharacters.add(characterB);
-        mCharacters.add(characterC);
-        mCharacters.add(characterD);
-        mCharacters.add(characterE);
-        mCharacters.add(characterF);
 
         mNextSafeHouseId = mSharedPreferences.getInt(Constants.PREFERENCES_NEXT_SAFEHOUSE_ID, 1);
         mLastSafeHouseId = mSharedPreferences.getInt(Constants.PREFERENCES_LAST_SAFEHOUSE_ID, 0);
@@ -215,6 +201,13 @@ public class MainActivity extends FragmentActivity
         String safehouseJson = mSharedPreferences.getString("nextSafehouse", null);
         Gson gson = new Gson();
         mNextSafehouse = gson.fromJson(safehouseJson, SafeHouse.class);
+        //safehouseTextView.setText(Integer.toString(mNextSafeHouseId));
+
+
+
+//        if(mPlayerIDs == null) {
+//            characterButton.setEnabled(false);
+//        }
 
         setupBackpackContent();
     }
@@ -224,6 +217,14 @@ public class MainActivity extends FragmentActivity
         super.onResume();
         mGoogleApiClient.reconnect();
         mSharedPreferences.registerOnSharedPreferenceChangeListener(this);
+        if(mPlayerIDs == null) {
+           // characterButton.setEnabled(false);
+        } else {
+            //characterButton.setEnabled(true);
+        }
+        if(mCurrentMatch != null && mPlayerIDs == null) {
+            instantiatePlayerIDs();
+        }
     }
 
     @Override
@@ -286,6 +287,37 @@ public class MainActivity extends FragmentActivity
         } else {
             mUserFirebaseRef.child("joinedMatch").setValue(true);
         }
+        if(mCurrentMatchId != null) {
+            mUserFirebaseRef.child("character").addListenerForSingleValueEvent(new ValueEventListener() {
+                @Override
+                public void onDataChange(DataSnapshot dataSnapshot) {
+                    String name = dataSnapshot.child("name").getValue().toString();
+                    long ageLong = (long) dataSnapshot.child("age").getValue();
+                    int age = (int) ageLong;
+                    String description = dataSnapshot.child("description").getValue().toString();
+                    long characterIdLong = (long) dataSnapshot.child("characterId").getValue();
+                    int characterId = (int) characterIdLong;
+                    long healthLong = (long) dataSnapshot.child("health").getValue();
+                    int health = (int) healthLong;
+                    long fullnessLevelLong = (long) dataSnapshot.child("fullnessLevel").getValue();
+                    int fullnessLevel = (int) fullnessLevelLong;
+                    String characterUrl = dataSnapshot.child("characterPictureUrl").getValue().toString();
+                    mCurrentCharacter = new Character(name, description, age, health, fullnessLevel, characterUrl, characterId);
+                    Log.d("Current Character ID: ", mCurrentCharacter.getCharacterId() + "");
+
+                    Gson gson = new Gson();
+                    String currentCharacter = gson.toJson(mCurrentCharacter);
+                    mEditor.putString(Constants.PREFERENCES_CHARACTER, currentCharacter);
+                    mEditor.commit();
+                }
+
+                @Override
+                public void onCancelled(FirebaseError firebaseError) {
+
+                }
+            });
+            instantiatePlayerIDs();
+        }
     }
 
     @Override
@@ -306,7 +338,7 @@ public class MainActivity extends FragmentActivity
             case R.id.tabCampaignButton:
                 Intent intent  = new Intent(mContext, CharacterDetailActivity.class);
                 intent.putExtra("position", 0);
-                intent.putExtra("characters", Parcels.wrap(mCharacters));
+                intent.putExtra("playerIDs", Parcels.wrap(mPlayerIDs));
                 mContext.startActivity(intent);
                 break;
             case R.id.mapTabButton:
@@ -573,44 +605,57 @@ public class MainActivity extends FragmentActivity
     //CAMPAIGN LOGIC BEGINS HERE
 
     private void assignRandomCharacters() {
-        ArrayList<Character> remainingCharacters = new ArrayList<>(mCharacters);
-        turnData = mCurrentMatch.getData();
-        Firebase characterFirebaseRef = new Firebase(Constants.FIREBASE_URL_TEAM + "/" + mCurrentMatchId + "/characters");
+        final Firebase characterSkeletonRef = new Firebase(Constants.FIREBASE_URL+ "/");
+        final ArrayList<Character> selectionList = new ArrayList<>();
 
-        if (turnData == null && invitees != null) {
-            for (int i = 0; i < invitees.size(); i++) {
-                int randomNumber = (int) (Math.random() * 4);
-
-                try {
-                    Character assignedCharacter = remainingCharacters.get(randomNumber);
-                    String playerBeingAssignId = invitees.get(i);
-
-                    //save assigned character Ids to firebase
-                    characterFirebaseRef.child(playerBeingAssignId)
-                            .setValue(assignedCharacter.getCharacterId());
-
-                    //remove assigned character and update counter
-                    remainingCharacters.remove(assignedCharacter);
-
-                } catch (IndexOutOfBoundsException indexOutOfBounds) {
-                    indexOutOfBounds.getStackTrace();
-                }
-            }
-        }
-
-        //Pull the character assigned to the current user
-        characterFirebaseRef.child(mCurrentPlayerId).addListenerForSingleValueEvent(new ValueEventListener() {
+        characterSkeletonRef.child("characters").addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
-                try {
-                    mCurrentCharacter = mCharacters.get(dataSnapshot.getValue().hashCode());
-                } catch (NullPointerException nullPointer) {
-                    mCurrentCharacter = null;
+                for (DataSnapshot child : dataSnapshot.getChildren()) {
+                    String name = child.child("name").getValue().toString();
+                    long ageLong = (long) child.child("age").getValue();
+                    int age = (int) ageLong;
+                    String description = child.child("description").getValue().toString();
+                    long characterIdLong = (long) child.child("characterId").getValue();
+                    int characterId = (int) characterIdLong;
+                    long healthLong = (long) child.child("health").getValue();
+                    int health = (int) healthLong;
+                    long fullnessLevelLong = (long) child.child("fullnessLevel").getValue();
+                    int fullnessLevel = (int) fullnessLevelLong;
+                    String characterUrl = child.child("characterPictureUrl").getValue().toString();
+                    Character character = new Character(name, description, age, health, fullnessLevel, characterUrl, characterId);
+                    selectionList.add(character);
+
+                    Firebase characterFirebaseRef = new Firebase(Constants.FIREBASE_URL_TEAM + "/" + mCurrentMatchId + "/characters");
+                    turnData = mCurrentMatch.getData();
+                    Collections.shuffle(selectionList);
+                    if (turnData == null && invitees != null) {
+                        for (int i = 0; i < invitees.size(); i++) {
+                            try {
+                                Character assignedCharacter = selectionList.get(i);
+                                String playerBeingAssignId = invitees.get(i);
+
+                                //save assigned character Ids to firebase
+                                characterFirebaseRef.child(playerBeingAssignId)
+                                        .setValue((selectionList.get(i).getCharacterId()));
+
+                                Firebase userRef = new Firebase(Constants.FIREBASE_URL_USERS + "/" + playerBeingAssignId + "/");
+                                userRef.child("character").setValue(assignedCharacter);
+                            } catch (IndexOutOfBoundsException indexOutOfBounds) {
+                                indexOutOfBounds.getStackTrace();
+                            }
+                        }
+
+                    }
                 }
             }
+
             @Override
-            public void onCancelled(FirebaseError firebaseError) {}
+            public void onCancelled(FirebaseError firebaseError) {
+
+            }
         });
+
     }
 
     private void initializeEventDialogFragments() {
@@ -668,7 +713,6 @@ public class MainActivity extends FragmentActivity
             }
 
             ft.addToBackStack(null);
-
             DialogFragment frag = EventDialogFragment.newInstance(mStackLevel);
             frag.show(ft, "fragment_event_dialog");
         } else if (type==2) {
@@ -757,52 +801,72 @@ public class MainActivity extends FragmentActivity
         alertDialog.show();
     }
 
-    public void setupBackpackContent() {
-        //TODO: Remove these fake objects for testing:
-        ArrayList<Weapon> weapons = new ArrayList<>();
-        weapons.add(new Weapon("Axe!", "This is an axe!", 5));
-        ArrayList<Item> items = new ArrayList<>();
-        items.add(new Item("Axe!", "This is an axe!", 5, true, R.drawable.axe_inventory));
-        items.add(new Item("Health Pack", "This is a health pack!", 5, true, R.drawable.firstaid_inventory));
-        items.add(new Item("Flare", "This is a flare!", 5, true, R.drawable.flare_inventory));
-        items.add(new Item("Steak", "This is a steak!", 5, true, R.drawable.steak_inventory));
-        items.add(new Item("Axe!", "This is an axe!", 5, true, R.drawable.axe_inventory));
-        items.add(new Item("Health Pack", "This is a health pack!", 5, true, R.drawable.firstaid_inventory));
-        items.add(new Item("Flare", "This is a flare!", 5, true, R.drawable.flare_inventory));
-        items.add(new Item("Steak", "This is a steak!", 5, true, R.drawable.steak_inventory));
-        items.add(new Item("Axe!", "This is an axe!", 5, true, R.drawable.axe_inventory));
-        items.add(new Item("Health Pack", "This is a health pack!", 5, true, R.drawable.firstaid_inventory));
-        items.add(new Item("Flare", "This is a flare!", 5, true, R.drawable.flare_inventory));
-        items.add(new Item("Steak", "This is a steak!", 5, true, R.drawable.steak_inventory));
-        items.add(new Item("Axe!", "This is an axe!", 5, true, R.drawable.axe_inventory));
-        items.add(new Item("Health Pack", "This is a health pack!", 5, true, R.drawable.firstaid_inventory));
-        items.add(new Item("Flare", "This is a flare!", 5, true, R.drawable.flare_inventory));
-        items.add(new Item("Steak", "This is a steak!", 5, true, R.drawable.steak_inventory));
-
-        try {
-            GridView inventoryGridView = (GridView) findViewById(R.id.backpackGridView);
-            //TODO: Figure out why android studio thinks this catch is required (and isn't happy)
-            inventoryGridView.setAdapter(new InventoryAdapter(this, items, weapons, R.layout.row_grid));
-            inventoryGridView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-                @Override
-                public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                    Toast.makeText(MainActivity.this, "" + position, Toast.LENGTH_SHORT).show();
-                }
-            });
-            //This stops the grid from being scrolled.
-            inventoryGridView.setOnTouchListener(new View.OnTouchListener() {
-                @Override
-                public boolean onTouch(View v, MotionEvent event) {
-                    if(event.getAction() == MotionEvent.ACTION_MOVE) {
-                        return true;
+    public void instantiatePlayerIDs() {
+        mPlayerIDs = new ArrayList<>();
+        Firebase playerIDRef = new Firebase(Constants.FIREBASE_URL_TEAM + "/" + mCurrentMatchId + "/players/");
+        playerIDRef.addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                for (DataSnapshot child : dataSnapshot.getChildren()) {
+                    String playerId = child.getValue().toString();
+                    if (!(playerId.equals(mCurrentPlayerId))) {
+                        mPlayerIDs.add(playerId);
                     }
-                    return false;
                 }
-            });
+            }
 
-        } catch (NullPointerException nullPointer) {
-            Log.e(TAG, nullPointer.getMessage());
-        }
+            @Override
+            public void onCancelled(FirebaseError firebaseError) {
 
+            }
+        });
     }
-}
+        public void setupBackpackContent () {
+            //TODO: Remove these fake objects for testing:
+            ArrayList<Weapon> weapons = new ArrayList<>();
+            weapons.add(new Weapon("Axe!", "This is an axe!", 5));
+            ArrayList<Item> items = new ArrayList<>();
+            items.add(new Item("Axe!", "This is an axe!", 5, true, R.drawable.axe_inventory));
+            items.add(new Item("Health Pack", "This is a health pack!", 5, true, R.drawable.firstaid_inventory));
+            items.add(new Item("Flare", "This is a flare!", 5, true, R.drawable.flare_inventory));
+            items.add(new Item("Steak", "This is a steak!", 5, true, R.drawable.steak_inventory));
+            items.add(new Item("Axe!", "This is an axe!", 5, true, R.drawable.axe_inventory));
+            items.add(new Item("Health Pack", "This is a health pack!", 5, true, R.drawable.firstaid_inventory));
+            items.add(new Item("Flare", "This is a flare!", 5, true, R.drawable.flare_inventory));
+            items.add(new Item("Steak", "This is a steak!", 5, true, R.drawable.steak_inventory));
+            items.add(new Item("Axe!", "This is an axe!", 5, true, R.drawable.axe_inventory));
+            items.add(new Item("Health Pack", "This is a health pack!", 5, true, R.drawable.firstaid_inventory));
+            items.add(new Item("Flare", "This is a flare!", 5, true, R.drawable.flare_inventory));
+            items.add(new Item("Steak", "This is a steak!", 5, true, R.drawable.steak_inventory));
+            items.add(new Item("Axe!", "This is an axe!", 5, true, R.drawable.axe_inventory));
+            items.add(new Item("Health Pack", "This is a health pack!", 5, true, R.drawable.firstaid_inventory));
+            items.add(new Item("Flare", "This is a flare!", 5, true, R.drawable.flare_inventory));
+            items.add(new Item("Steak", "This is a steak!", 5, true, R.drawable.steak_inventory));
+
+            try {
+                GridView inventoryGridView = (GridView) findViewById(R.id.backpackGridView);
+                //TODO: Figure out why android studio thinks this catch is required (and isn't happy)
+                inventoryGridView.setAdapter(new InventoryAdapter(this, items, weapons, R.layout.row_grid));
+                inventoryGridView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+                    @Override
+                    public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                        Toast.makeText(MainActivity.this, "" + position, Toast.LENGTH_SHORT).show();
+                    }
+                });
+                //This stops the grid from being scrolled.
+                inventoryGridView.setOnTouchListener(new View.OnTouchListener() {
+                    @Override
+                    public boolean onTouch(View v, MotionEvent event) {
+                        if (event.getAction() == MotionEvent.ACTION_MOVE) {
+                            return true;
+                        }
+                        return false;
+                    }
+                });
+
+            } catch (NullPointerException nullPointer) {
+                Log.e(TAG, nullPointer.getMessage());
+            }
+
+        }
+    }
