@@ -2,14 +2,10 @@ package com.eyecuelab.survivalists.models;
 
 import android.util.Log;
 
-import com.eyecuelab.survivalists.entities.interfaces.Inventory;
-import com.eyecuelab.survivalists.entities.interfaces.Weapon;
-
 import org.parceler.Parcel;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
 
 @Parcel
 public class Character {

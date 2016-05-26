@@ -14,7 +14,11 @@ public class MatchUpdateListener implements OnTurnBasedMatchUpdateReceivedListen
 
     @Override
     public void onTurnBasedMatchReceived(TurnBasedMatch turnBasedMatch) {
-        Log.v(TAG, turnBasedMatch.getData().toString());
+        try {
+            Log.v(TAG, turnBasedMatch.getData().toString());
+        } catch (NullPointerException nullPointer) {
+            Log.v(TAG, nullPointer.getMessage());
+        }
     }
 
     @Override

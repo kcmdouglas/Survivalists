@@ -1,7 +1,5 @@
 package com.eyecuelab.survivalists.models;
 
-import com.eyecuelab.survivalists.entities.interfaces.Inventory;
-
 import java.util.ArrayList;
 
 public class User {

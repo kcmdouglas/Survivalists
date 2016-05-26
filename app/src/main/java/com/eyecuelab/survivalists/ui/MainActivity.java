@@ -14,6 +14,7 @@ import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentActivity;
+import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentTransaction;
 
 import android.util.Log;
@@ -165,6 +166,12 @@ public class MainActivity extends FragmentActivity
         //Create Shared Preferences
         mSharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
         mEditor = mSharedPreferences.edit();
+
+        if (mGoogleApiClient == null) {
+            FragmentTransaction fragmentTransaction = getSupportFragmentManager().beginTransaction();
+            fragmentTransaction.add(TitleFragment.newInstance(), null);
+            fragmentTransaction.commit();
+        }
 
         initializeGoogleApi();
 
@@ -376,6 +383,7 @@ public class MainActivity extends FragmentActivity
                 .addConnectionCallbacks(this)
                 .addOnConnectionFailedListener(this)
                 .addApi(Games.API)
+                .addScope(Games.SCOPE_GAMES)
                 .build();
     }
 
@@ -394,7 +402,7 @@ public class MainActivity extends FragmentActivity
     }
 
     public void saveSafehouse() {
-        Firebase safehouseFirebaseRef = new Firebase(Constants.FIREBASE_URL_SAFEHOUSES + "/" + mNextSafeHouseId +"/");
+        Firebase safehouseFirebaseRef = new Firebase(Constants.FIREBASE_URL_SAFEHOUSES + "/" + mNextSafeHouseId + "/");
         safehouseFirebaseRef.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
@@ -419,8 +427,8 @@ public class MainActivity extends FragmentActivity
     }
 
     public void testMethod() {
-        Intent intent = Games.TurnBasedMultiplayer.getInboxIntent(mGoogleApiClient);
-        startActivityForResult(intent, RC_WAITING_ROOM);
+        Intent notebook = new Intent(MainActivity.this, NotebookActivity.class);
+        startActivity(notebook);
     }
 
     public void loadMatch() {
