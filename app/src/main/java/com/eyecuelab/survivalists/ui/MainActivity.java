@@ -138,11 +138,14 @@ public class MainActivity extends FragmentActivity
         super.onCreate(savedInstanceState);
         Firebase.setAndroidContext(this);
 
-        //Remove notification bar
-        this.getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN, WindowManager.LayoutParams.FLAG_FULLSCREEN);
+        //Remove notification and navigation bars
+        View decorView = getWindow().getDecorView();
+        int uiOptions = View.SYSTEM_UI_FLAG_HIDE_NAVIGATION | View.SYSTEM_UI_FLAG_FULLSCREEN;
+        decorView.setSystemUiVisibility(uiOptions);
 
         //set content view AFTER ABOVE sequence (to avoid crash)
         setContentView(R.layout.activity_notebook);
+
         mContext = this;
         ButterKnife.bind(this);
 
