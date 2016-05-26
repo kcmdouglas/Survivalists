@@ -12,14 +12,16 @@ public class Item {
     String description;
     int healthPoints;
     boolean effectsHealth;
+    int imageId;
 
     public Item () {}
 
-    public Item(String name, String description, int healthPoints, boolean effectsHealth) {
+    public Item(String name, String description, int healthPoints, boolean effectsHealth, int imageId) {
         this.name=name;
         this.description = description;
         this.healthPoints = healthPoints;
         this.effectsHealth = effectsHealth;
+        this.imageId = imageId;
     }
 
     public void useItem(Character character) {
@@ -69,6 +71,10 @@ public class Item {
 
     public int getHealthPoints() {
         return healthPoints;
+    }
+
+    public int getImageId() {
+        return imageId;
     }
 
     public void setHealthPoints(int healthPoints) {

@@ -383,6 +383,7 @@ public class MainActivity extends FragmentActivity
                 .addConnectionCallbacks(this)
                 .addOnConnectionFailedListener(this)
                 .addApi(Games.API)
+                .addScope(Games.SCOPE_GAMES)
                 .build();
     }
 
@@ -401,7 +402,7 @@ public class MainActivity extends FragmentActivity
     }
 
     public void saveSafehouse() {
-        Firebase safehouseFirebaseRef = new Firebase(Constants.FIREBASE_URL_SAFEHOUSES + "/" + mNextSafeHouseId +"/");
+        Firebase safehouseFirebaseRef = new Firebase(Constants.FIREBASE_URL_SAFEHOUSES + "/" + mNextSafeHouseId + "/");
         safehouseFirebaseRef.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {

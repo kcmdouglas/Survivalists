@@ -36,10 +36,10 @@
     </android.support.percent.PercentRelativeLayout>
 
     <android.support.percent.PercentRelativeLayout
-        app:layout_widthPercent="28.5%"
+        app:layout_widthPercent="30%"
         app:layout_heightPercent="20%"
         app:layout_marginTopPercent="16%"
-        app:layout_marginLeftPercent="11.7%"
+        app:layout_marginLeftPercent="11%"
         android:id="@+id/playerStatus"
         android:layout_alignParentTop="true"
         android:layout_toRightOf="@+id/sideTabs">
@@ -67,7 +67,7 @@
             android:maxLines="1"
             android:layout_toRightOf="@+id/goalTitle"
             android:textSize="10sp"
-            android:text="10,000 out of 10,000"
+            android:text="10,000/10,000"
             android:textColor="@android:color/black"
             android:textAllCaps="true"
             android:textStyle="bold" />
@@ -77,7 +77,7 @@
             android:layout_height="wrap_content"
             android:layout_width="wrap_content"
             android:layout_below="@+id/goalTitle"
-            app:layout_marginTopPercent="27%"
+            app:layout_marginTopPercent="25%"
             android:textSize="10sp"
             android:text="Health"
             android:textColor="@android:color/black"
@@ -90,7 +90,7 @@
             android:layout_width="wrap_content"
             android:layout_toRightOf="@+id/healthTitle"
             android:layout_below="@+id/goalTitle"
-            app:layout_marginTopPercent="27%"
+            app:layout_marginTopPercent="25%"
             app:layout_marginLeftPercent="45%"
             android:layout_alignParentEnd="true"
             android:layout_alignParentRight="true"
@@ -108,7 +108,7 @@
             android:layout_height="wrap_content"
             android:layout_width="wrap_content"
             android:layout_below="@+id/healthTitle"
-            app:layout_marginTopPercent="31%"
+            app:layout_marginTopPercent="28%"
             android:textSize="10sp"
             android:text="Energy Level"
             android:textColor="@android:color/black"
@@ -121,7 +121,7 @@
             android:layout_width="wrap_content"
             android:layout_toRightOf="@+id/healthTitle"
             android:layout_below="@+id/healthTitle"
-            app:layout_marginTopPercent="31%"
+            app:layout_marginTopPercent="28%"
             app:layout_marginLeftPercent="45%"
             android:layout_alignParentEnd="true"
             android:layout_alignParentRight="true"
@@ -139,395 +139,20 @@
     <android.support.percent.PercentRelativeLayout
         android:id="@+id/backpackContent"
         app:layout_widthPercent="85%"
-        app:layout_heightPercent="38%"
-        app:layout_marginTopPercent="4.5%"
+        app:layout_heightPercent="39%"
+        app:layout_marginTopPercent="5%"
         android:layout_below="@+id/playerStatus"
         android:layout_toRightOf="@+id/sideTabs"
         android:layout_toEndOf="@+id/sideTabs">
 
-        <ImageView
-            app:layout_widthPercent="15%"
-            app:layout_heightPercent="15%"
-            app:layout_marginTopPercent="2%"
-            app:layout_marginLeftPercent="8%"
-            android:id="@+id/inventoryAt0x0"
-            android:src="@drawable/steak_inventory" />
-
-        <TextView
-            android:id="@+id/inventoryTitleAt0x0"
-            android:layout_height="wrap_content"
-            android:layout_width="wrap_content"
-            android:layout_below="@+id/inventoryAt0x0"
-            app:layout_marginLeftPercent="12%"
-            android:textSize="10sp"
-            android:text="Steak"
-            android:textColor="@android:color/black"
-            android:textAllCaps="true"
-            android:textStyle="bold"
-            android:textAlignment="center" />
-
-        <ImageView
-            app:layout_widthPercent="15%"
-            app:layout_heightPercent="15%"
-            app:layout_marginTopPercent="2%"
-            app:layout_marginLeftPercent="8%"
-            android:layout_toRightOf="@+id/inventoryAt0x0"
-            android:layout_toEndOf="@+id/inventoryAt0x0"
-            android:id="@+id/inventoryAt1x0"
-            android:src="@drawable/axe_inventory" />
-
-        <TextView
-            android:id="@+id/inventoryTitleAt1x0"
-            android:layout_height="wrap_content"
-            android:layout_width="wrap_content"
-            android:layout_toRightOf="@+id/inventoryTitleAt0x0"
-            android:layout_below="@+id/inventoryAt0x0"
-            app:layout_marginLeftPercent="16%"
-            android:textSize="10sp"
-            android:text="Axe"
-            android:textColor="@android:color/black"
-            android:textAllCaps="true"
-            android:textStyle="bold"
-            android:textAlignment="center" />
-
-        <ImageView
-            app:layout_widthPercent="15%"
-            app:layout_heightPercent="15%"
-            app:layout_marginTopPercent="2%"
-            app:layout_marginLeftPercent="8%"
-            android:layout_toRightOf="@+id/inventoryAt1x0"
-            android:layout_toEndOf="@+id/inventoryAt1x0"
-            android:id="@+id/inventoryAt2x0"
-            android:src="@drawable/firstaid_inventory" />
-
-        <TextView
-            android:id="@+id/inventoryTitleAt2x0"
-            android:layout_height="wrap_content"
-            android:layout_width="wrap_content"
-            android:layout_toRightOf="@+id/inventoryTitleAt1x0"
-            android:layout_below="@+id/inventoryAt0x0"
-            app:layout_marginLeftPercent="10%"
-            android:textSize="10sp"
-            android:text="First Aid Kit"
-            android:textColor="@android:color/black"
-            android:textAllCaps="true"
-            android:textStyle="bold"
-            android:textAlignment="center" />
-
-        <ImageView
-            app:layout_widthPercent="15%"
-            app:layout_heightPercent="15%"
-            app:layout_marginTopPercent="2%"
-            app:layout_marginLeftPercent="10%"
-            android:layout_toRightOf="@+id/inventoryAt1x0"
-            android:layout_toEndOf="@+id/inventoryAt2x0"
-            android:id="@+id/inventoryAt3x0"
-            android:src="@drawable/flare_inventory" />
-
-        <TextView
-            android:id="@+id/inventoryTitleAt3x0"
-            android:layout_height="wrap_content"
-            android:layout_width="wrap_content"
-            android:layout_toRightOf="@+id/inventoryTitleAt2x0"
-            android:layout_below="@+id/inventoryAt0x0"
-            app:layout_marginLeftPercent="12%"
-            android:textSize="10sp"
-            android:text="Flare"
-            android:textColor="@android:color/black"
-            android:textAllCaps="true"
-            android:textStyle="bold"
-            android:textAlignment="center" />
-
-        <ImageView
-            app:layout_widthPercent="15%"
-            app:layout_heightPercent="15%"
-            app:layout_marginTopPercent="12%"
-            app:layout_marginLeftPercent="8%"
-            android:layout_below="@+id/inventoryAt0x0"
-            android:id="@+id/inventoryAt0x1"
-            android:src="@drawable/steak_inventory" />
-
-        <TextView
-            android:id="@+id/inventoryTitleAt0x1"
-            android:layout_height="wrap_content"
-            android:layout_width="wrap_content"
-            android:layout_below="@+id/inventoryAt0x1"
-            app:layout_marginLeftPercent="12%"
-            android:textSize="10sp"
-            android:text="Steak"
-            android:textColor="@android:color/black"
-            android:textAllCaps="true"
-            android:textStyle="bold"
-            android:textAlignment="center" />
-
-        <ImageView
-            app:layout_widthPercent="15%"
-            app:layout_heightPercent="15%"
-            app:layout_marginTopPercent="12%"
-            app:layout_marginLeftPercent="8%"
-            android:layout_toRightOf="@+id/inventoryAt0x1"
-            android:layout_toEndOf="@+id/inventoryAt0x1"
-            android:layout_below="@+id/inventoryAt1x0"
-            android:id="@+id/inventoryAt1x1"
-            android:src="@drawable/axe_inventory" />
-
-        <TextView
-            android:id="@+id/inventoryTitleAt1x1"
-            android:layout_height="wrap_content"
-            android:layout_width="wrap_content"
-            android:layout_toRightOf="@+id/inventoryTitleAt0x1"
-            android:layout_below="@+id/inventoryAt1x1"
-            app:layout_marginLeftPercent="16%"
-            android:textSize="10sp"
-            android:text="Axe"
-            android:textColor="@android:color/black"
-            android:textAllCaps="true"
-            android:textStyle="bold"
-            android:textAlignment="center" />
-
-        <ImageView
-            app:layout_widthPercent="15%"
-            app:layout_heightPercent="15%"
-            app:layout_marginTopPercent="12%"
-            app:layout_marginLeftPercent="8%"
-            android:layout_toRightOf="@+id/inventoryAt1x0"
-            android:layout_toEndOf="@+id/inventoryAt1x0"
-            android:layout_below="@+id/inventoryAt2x0"
-            android:id="@+id/inventoryAt2x1"
-            android:src="@drawable/firstaid_inventory" />
-
-        <TextView
-            android:id="@+id/inventoryTitleAt2x1"
-            android:layout_height="wrap_content"
-            android:layout_width="wrap_content"
-            android:layout_toRightOf="@+id/inventoryTitleAt1x0"
-            android:layout_below="@+id/inventoryAt2x1"
-            app:layout_marginLeftPercent="17%"
-            android:textSize="10sp"
-            android:text="First Aid Kit"
-            android:textColor="@android:color/black"
-            android:textAllCaps="true"
-            android:textStyle="bold"
-            android:textAlignment="center" />
-
-        <ImageView
-            app:layout_widthPercent="15%"
-            app:layout_heightPercent="15%"
-            app:layout_marginTopPercent="12%"
-            app:layout_marginLeftPercent="10%"
-            android:layout_toRightOf="@+id/inventoryAt1x0"
-            android:layout_toEndOf="@+id/inventoryAt2x0"
-            android:layout_below="@+id/inventoryAt3x0"
-            android:id="@+id/inventoryAt3x1"
-            android:src="@drawable/flare_inventory" />
-
-        <TextView
-            android:id="@+id/inventoryTitleAt3x1"
-            android:layout_height="wrap_content"
-            android:layout_width="wrap_content"
-            android:layout_toRightOf="@+id/inventoryTitleAt2x1"
-            android:layout_below="@+id/inventoryAt3x1"
-            app:layout_marginLeftPercent="16%"
-            android:textSize="10sp"
-            android:text="Flare"
-            android:textColor="@android:color/black"
-            android:textAllCaps="true"
-            android:textStyle="bold"
-            android:textAlignment="center" />
-
-        <ImageView
-            app:layout_widthPercent="15%"
-            app:layout_heightPercent="15%"
-            app:layout_marginTopPercent="12%"
-            app:layout_marginLeftPercent="8%"
-            android:layout_below="@+id/inventoryAt0x1"
-            android:id="@+id/inventoryAt0x2"
-            android:src="@drawable/steak_inventory" />
-
-        <TextView
-            android:id="@+id/inventoryTitleAt0x2"
-            android:layout_height="wrap_content"
-            android:layout_width="wrap_content"
-            android:layout_below="@+id/inventoryAt0x2"
-            app:layout_marginLeftPercent="12%"
-            android:textSize="10sp"
-            android:text="Steak"
-            android:textColor="@android:color/black"
-            android:textAllCaps="true"
-            android:textStyle="bold"
-            android:textAlignment="center" />
-
-        <ImageView
-            app:layout_widthPercent="15%"
-            app:layout_heightPercent="15%"
-            app:layout_marginTopPercent="12%"
-            app:layout_marginLeftPercent="8%"
-            android:layout_toRightOf="@+id/inventoryAt0x1"
-            android:layout_toEndOf="@+id/inventoryAt0x1"
-            android:layout_below="@+id/inventoryAt1x1"
-            android:id="@+id/inventoryAt1x2"
-            android:src="@drawable/axe_inventory" />
-
-        <TextView
-            android:id="@+id/inventoryTitleAt1x2"
-            android:layout_height="wrap_content"
-            android:layout_width="wrap_content"
-            android:layout_toRightOf="@+id/inventoryTitleAt0x2"
-            android:layout_below="@+id/inventoryAt1x2"
-            app:layout_marginLeftPercent="18%"
-            android:textSize="10sp"
-            android:text="Axe"
-            android:textColor="@android:color/black"
-            android:textAllCaps="true"
-            android:textStyle="bold"
-            android:textAlignment="center" />
-
-        <ImageView
-            app:layout_widthPercent="15%"
-            app:layout_heightPercent="15%"
-            app:layout_marginTopPercent="12%"
-            app:layout_marginLeftPercent="8%"
-            android:layout_toRightOf="@+id/inventoryAt1x0"
-            android:layout_toEndOf="@+id/inventoryAt1x0"
-            android:layout_below="@+id/inventoryAt2x1"
-            android:id="@+id/inventoryAt2x2"
-            android:src="@drawable/firstaid_inventory" />
-
-        <TextView
-            android:id="@+id/inventoryTitleAt2x2"
-            android:layout_height="wrap_content"
-            android:layout_width="wrap_content"
-            android:layout_toRightOf="@+id/inventoryTitleAt1x2"
-            android:layout_below="@+id/inventoryAt2x2"
-            app:layout_marginLeftPercent="17%"
-            android:textSize="10sp"
-            android:text="First Aid Kit"
-            android:textColor="@android:color/black"
-            android:textAllCaps="true"
-            android:textStyle="bold"
-            android:textAlignment="center" />
-
-        <ImageView
-            app:layout_widthPercent="15%"
-            app:layout_heightPercent="15%"
-            app:layout_marginTopPercent="12%"
-            app:layout_marginLeftPercent="10%"
-            android:layout_toRightOf="@+id/inventoryAt1x0"
-            android:layout_toEndOf="@+id/inventoryAt2x0"
-            android:layout_below="@+id/inventoryAt3x1"
-            android:id="@+id/inventoryAt3x2"
-            android:src="@drawable/flare_inventory" />
-
-        <TextView
-            android:id="@+id/inventoryTitleAt3x2"
-            android:layout_height="wrap_content"
-            android:layout_width="wrap_content"
-            android:layout_toRightOf="@+id/inventoryTitleAt2x2"
-            android:layout_below="@+id/inventoryAt3x2"
-            app:layout_marginLeftPercent="16%"
-            android:textSize="10sp"
-            android:text="Flare"
-            android:textColor="@android:color/black"
-            android:textAllCaps="true"
-            android:textStyle="bold"
-            android:textAlignment="center" />
-
-        <ImageView
-            app:layout_widthPercent="15%"
-            app:layout_heightPercent="15%"
-            app:layout_marginTopPercent="10%"
-            app:layout_marginLeftPercent="8%"
-            android:layout_below="@+id/inventoryAt0x2"
-            android:id="@+id/inventoryAt0x3"
-            android:src="@drawable/steak_inventory" />
-
-        <TextView
-            android:id="@+id/inventoryTitleAt0x3"
-            android:layout_height="wrap_content"
-            android:layout_width="wrap_content"
-            android:layout_below="@+id/inventoryAt0x3"
-            app:layout_marginLeftPercent="12%"
-            android:textSize="10sp"
-            android:text="Steak"
-            android:textColor="@android:color/black"
-            android:textAllCaps="true"
-            android:textStyle="bold"
-            android:textAlignment="center" />
-
-        <ImageView
-            app:layout_widthPercent="15%"
-            app:layout_heightPercent="15%"
-            app:layout_marginTopPercent="10%"
-            app:layout_marginLeftPercent="8%"
-            android:layout_toRightOf="@+id/inventoryAt0x1"
-            android:layout_toEndOf="@+id/inventoryAt0x1"
-            android:layout_below="@+id/inventoryAt1x2"
-            android:id="@+id/inventoryAt1x3"
-            android:src="@drawable/axe_inventory" />
-
-        <TextView
-            android:id="@+id/inventoryTitleAt1x3"
-            android:layout_height="wrap_content"
-            android:layout_width="wrap_content"
-            android:layout_toRightOf="@+id/inventoryTitleAt0x3"
-            android:layout_below="@+id/inventoryAt1x3"
-            app:layout_marginLeftPercent="18%"
-            android:textSize="10sp"
-            android:text="Axe"
-            android:textColor="@android:color/black"
-            android:textAllCaps="true"
-            android:textStyle="bold"
-            android:textAlignment="center" />
-
-        <ImageView
-            app:layout_widthPercent="15%"
-            app:layout_heightPercent="15%"
-            app:layout_marginTopPercent="10%"
-            app:layout_marginLeftPercent="8%"
-            android:layout_toRightOf="@+id/inventoryAt1x0"
-            android:layout_toEndOf="@+id/inventoryAt1x0"
-            android:layout_below="@+id/inventoryAt2x2"
-            android:id="@+id/inventoryAt2x3"
-            android:src="@drawable/firstaid_inventory" />
-
-        <TextView
-            android:id="@+id/inventoryTitleAt2x3"
-            android:layout_height="wrap_content"
-            android:layout_width="wrap_content"
-            android:layout_toRightOf="@+id/inventoryTitleAt1x3"
-            android:layout_below="@+id/inventoryAt2x3"
-            app:layout_marginLeftPercent="17%"
-            android:textSize="10sp"
-            android:text="First Aid Kit"
-            android:textColor="@android:color/black"
-            android:textAllCaps="true"
-            android:textStyle="bold"
-            android:textAlignment="center" />
-
-        <ImageView
-            app:layout_widthPercent="15%"
-            app:layout_heightPercent="15%"
-            app:layout_marginTopPercent="10%"
-            app:layout_marginLeftPercent="10%"
-            android:layout_toRightOf="@+id/inventoryAt1x0"
-            android:layout_toEndOf="@+id/inventoryAt2x0"
-            android:layout_below="@+id/inventoryAt3x2"
-            android:id="@+id/inventoryAt3x3"
-            android:src="@drawable/flare_inventory"/>
-
-        <TextView
-            android:id="@+id/inventoryTitleAt3x3"
-            android:layout_height="wrap_content"
-            android:layout_width="wrap_content"
-            android:layout_toRightOf="@+id/inventoryTitleAt2x3"
-            android:layout_below="@+id/inventoryAt3x3"
-            app:layout_marginLeftPercent="16%"
-            android:textSize="10sp"
-            android:text="Flare"
-            android:textColor="@android:color/black"
-            android:textAllCaps="true"
-            android:textStyle="bold"
-            android:textAlignment="center" />
+        <GridView
+            android:id="@+id/backpackGridView"
+            app:layout_widthPercent="100%"
+            app:layout_heightPercent="100%"
+            app:layout_marginLeftPercent="7%"
+            android:horizontalSpacing="20dp"
+            android:numColumns="4">
+        </GridView>
 
     </android.support.percent.PercentRelativeLayout>
 
