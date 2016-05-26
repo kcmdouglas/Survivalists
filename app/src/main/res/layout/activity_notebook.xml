@@ -1,0 +1,195 @@
+<?xml version="1.0" encoding="utf-8"?>
+<android.support.percent.PercentRelativeLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:orientation="vertical"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@drawable/campaign_main_background">
+
+    <android.support.percent.PercentRelativeLayout
+        app:layout_widthPercent="15%"
+        android:layout_height="match_parent"
+        android:id="@+id/sideTabs">
+
+        <Button
+            app:layout_widthPercent="100%"
+            app:layout_heightPercent="7.5%"
+            app:layout_marginTopPercent="18%"
+            android:id="@+id/mapTabButton"
+            android:layout_alignParentLeft="true"
+            android:layout_alignParentStart="true"
+            android:background="@android:color/transparent"
+            android:alpha="0" />
+
+        <Button
+            app:layout_widthPercent="100%"
+            app:layout_heightPercent="16%"
+            android:id="@+id/tabCampaignButton"
+            app:layout_marginTopPercent="5%"
+            android:background="@android:color/transparent"
+            android:alpha="0"
+            android:layout_below="@+id/mapTabButton"
+            android:layout_alignParentLeft="true"
+            android:layout_alignParentStart="true" />
+
+    </android.support.percent.PercentRelativeLayout>
+
+    <android.support.percent.PercentRelativeLayout
+        app:layout_widthPercent="30%"
+        app:layout_heightPercent="20%"
+        app:layout_marginTopPercent="16%"
+        app:layout_marginLeftPercent="11%"
+        android:id="@+id/playerStatus"
+        android:layout_alignParentTop="true"
+        android:layout_toRightOf="@+id/sideTabs">
+
+        <TextView
+            android:id="@+id/goalTitle"
+            android:layout_height="wrap_content"
+            android:layout_width="wrap_content"
+            app:layout_marginTopPercent="15%"
+            android:textSize="10sp"
+            android:text="Daily Goal"
+            android:textColor="@android:color/black"
+            android:textAllCaps="true"
+            android:textStyle="bold" />
+
+        <TextView
+            android:id="@+id/dailyGoalTextView"
+            android:layout_height="wrap_content"
+            android:layout_width="wrap_content"
+            app:layout_marginTopPercent="15%"
+            android:layout_alignParentEnd="true"
+            android:layout_alignParentRight="true"
+            android:textAlignment="textEnd"
+            android:gravity="end"
+            android:maxLines="1"
+            android:layout_toRightOf="@+id/goalTitle"
+            android:textSize="10sp"
+            android:text="10,000/10,000"
+            android:textColor="@android:color/black"
+            android:textAllCaps="true"
+            android:textStyle="bold" />
+
+        <TextView
+            android:id="@+id/healthTitle"
+            android:layout_height="wrap_content"
+            android:layout_width="wrap_content"
+            android:layout_below="@+id/goalTitle"
+            app:layout_marginTopPercent="25%"
+            android:textSize="10sp"
+            android:text="Health"
+            android:textColor="@android:color/black"
+            android:textAllCaps="true"
+            android:textStyle="bold" />
+
+        <TextView
+            android:id="@+id/healthTextView"
+            android:layout_height="wrap_content"
+            android:layout_width="wrap_content"
+            android:layout_toRightOf="@+id/healthTitle"
+            android:layout_below="@+id/goalTitle"
+            app:layout_marginTopPercent="25%"
+            app:layout_marginLeftPercent="45%"
+            android:layout_alignParentEnd="true"
+            android:layout_alignParentRight="true"
+            android:textAlignment="textEnd"
+            android:gravity="end"
+            android:maxLines="1"
+            android:textSize="10sp"
+            android:text="100HP"
+            android:textColor="@android:color/black"
+            android:textAllCaps="true"
+            android:textStyle="bold" />
+
+        <TextView
+            android:id="@+id/energyTitle"
+            android:layout_height="wrap_content"
+            android:layout_width="wrap_content"
+            android:layout_below="@+id/healthTitle"
+            app:layout_marginTopPercent="28%"
+            android:textSize="10sp"
+            android:text="Energy Level"
+            android:textColor="@android:color/black"
+            android:textAllCaps="true"
+            android:textStyle="bold" />
+
+        <TextView
+            android:id="@+id/energyTextView"
+            android:layout_height="wrap_content"
+            android:layout_width="wrap_content"
+            android:layout_toRightOf="@+id/healthTitle"
+            android:layout_below="@+id/healthTitle"
+            app:layout_marginTopPercent="28%"
+            app:layout_marginLeftPercent="45%"
+            android:layout_alignParentEnd="true"
+            android:layout_alignParentRight="true"
+            android:textAlignment="textEnd"
+            android:gravity="end"
+            android:maxLines="1"
+            android:textSize="10sp"
+            android:text="100%"
+            android:textColor="@android:color/black"
+            android:textAllCaps="true"
+            android:textStyle="bold" />
+
+    </android.support.percent.PercentRelativeLayout>
+
+    <android.support.percent.PercentRelativeLayout
+        android:id="@+id/backpackContent"
+        app:layout_widthPercent="85%"
+        app:layout_heightPercent="39%"
+        app:layout_marginTopPercent="5%"
+        android:layout_below="@+id/playerStatus"
+        android:layout_toRightOf="@+id/sideTabs"
+        android:layout_toEndOf="@+id/sideTabs">
+
+        <GridView
+            android:id="@+id/backpackGridView"
+            app:layout_widthPercent="100%"
+            app:layout_heightPercent="100%"
+            app:layout_marginLeftPercent="7%"
+            android:horizontalSpacing="20dp"
+            android:numColumns="4">
+        </GridView>
+
+    </android.support.percent.PercentRelativeLayout>
+
+    <android.support.percent.PercentRelativeLayout
+        android:id="@+id/interactionButtons"
+        app:layout_heightPercent="13%"
+        android:layout_alignParentRight="true"
+        android:layout_alignParentEnd="true"
+        android:layout_below="@+id/backpackContent"
+        android:layout_toRightOf="@+id/sideTabs"
+        android:layout_toEndOf="@+id/sideTabs">
+
+        <Button
+            android:id="@+id/leftInteractionButton"
+            app:layout_widthPercent="40%"
+            app:layout_heightPercent="50%"
+            app:layout_marginLeftPercent="5%"
+            app:layout_marginTopPercent="15%"
+            android:background="@drawable/blank_notebook_interaction_btn"
+            android:text="Give Item"
+            android:textColor="@android:color/white"
+            android:textAllCaps="true"
+            android:textStyle="bold"/>
+
+        <Button
+            android:id="@+id/rightInteractionBUtton"
+            app:layout_widthPercent="40%"
+            app:layout_heightPercent="50%"
+            app:layout_marginLeftPercent="5%"
+            app:layout_marginTopPercent="15%"
+            android:layout_toRightOf="@+id/leftInteractionButton"
+            android:background="@drawable/blank_notebook_interaction_btn"
+            android:text="Encourage"
+            android:textColor="@android:color/white"
+            android:textAllCaps="true"
+            android:textStyle="bold"/>
+
+    </android.support.percent.PercentRelativeLayout>
+
+</android.support.percent.PercentRelativeLayout>

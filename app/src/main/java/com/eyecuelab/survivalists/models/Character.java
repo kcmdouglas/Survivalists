@@ -3,7 +3,6 @@ package com.eyecuelab.survivalists.models;
 import android.os.Parcelable;
 import android.util.Log;
 
-
 import org.parceler.Parcel;
 
 import java.util.ArrayList;

@@ -14,20 +14,29 @@ import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentActivity;
+import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentTransaction;
 
 import android.util.Log;
+import android.view.MotionEvent;
 import android.view.View;
 import android.view.WindowManager;
+import android.widget.AdapterView;
 import android.widget.Button;
+import android.widget.GridView;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import com.eyecuelab.survivalists.Constants;
 import com.eyecuelab.survivalists.R;
+
+import com.eyecuelab.survivalists.SurvivalistsApplication;
+import com.eyecuelab.survivalists.adapters.InventoryAdapter;
 import com.eyecuelab.survivalists.models.Character;
+import com.eyecuelab.survivalists.models.Item;
 import com.eyecuelab.survivalists.models.User;
 import com.eyecuelab.survivalists.models.SafeHouse;
+import com.eyecuelab.survivalists.models.Weapon;
 import com.eyecuelab.survivalists.services.BackgroundStepService;
 import com.eyecuelab.survivalists.util.CampaignEndAlarmReceiver;
 import com.eyecuelab.survivalists.util.InvitationListener;
@@ -70,20 +79,10 @@ public class MainActivity extends FragmentActivity
 
     private static final String TAG = "MainActivity";
 
-    @Bind(R.id.stepTextView) TextView counter;
-    @Bind(R.id.dailyStepsTextView) TextView dailyCounter;
-    @Bind(R.id.sign_in_button) SignInButton signInButton;
-    @Bind(R.id.sign_out_button) Button signOutButton;
-    @Bind(R.id.findPlayersButton) Button findPlayersButton;
-    @Bind(R.id.endMatchButton) Button endMatchButton;
-    @Bind(R.id.playerTextView) TextView playersTextView;
-    @Bind(R.id.testButton) Button testButton;
-    @Bind(R.id.matchIdTextView) TextView matchIdTextView;
-    @Bind(R.id.userIdTextView) TextView userIdTextView;
-    @Bind(R.id.userNameTextView) TextView userNameTextView;
-    @Bind(R.id.safehouseTextView) TextView safehouseTextView;
-    @Bind(R.id.characterButton) Button characterButton;
-    @Bind(R.id.testButton2) Button testButtonTwo;
+    @Bind(R.id.tabCampaignButton) Button campaignButton;
+    @Bind(R.id.mapTabButton) Button mapButton;
+    @Bind(R.id.rightInteractionBUtton) Button rightInteractionButton;
+    @Bind(R.id.leftInteractionButton) Button leftInteractionButton;
 
     private int stepsInSensor;
     private int dailySteps;
@@ -101,20 +100,13 @@ public class MainActivity extends FragmentActivity
     private SafeHouse mPriorSafehouse;
     private SafeHouse mNextSafehouse;
     private Character mCurrentCharacter;
-
+    private Firebase mUserFirebaseRef;
     private User mCurrentUser;
 
     //Flags to indicate return activity
     private static final int RC_SIGN_IN =  100;
     private static final int RC_SELECT_PLAYERS = 200;
     private static final int RC_WAITING_ROOM = 300;
-
-    private boolean mResolvingConnectionFailure = false;
-    private boolean mAutoStartSignInFlow = true;
-    private boolean mSignInCLicked = false;
-    private boolean mExplicitSignOut = false;
-    private boolean mInSignInFlow = false;
-    private Firebase mUserFirebaseRef;
 
     private Context mContext;
 
@@ -136,7 +128,7 @@ public class MainActivity extends FragmentActivity
     @Override
     protected void onStart() {
         super.onStart();
-        if (!mInSignInFlow && !mExplicitSignOut) {
+        if (mGoogleApiClient != null) {
             mGoogleApiClient.connect();
         }
     }
@@ -148,13 +140,9 @@ public class MainActivity extends FragmentActivity
 
         //Remove notification bar
         this.getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN, WindowManager.LayoutParams.FLAG_FULLSCREEN);
-        mCharacters = new ArrayList<>();
-//        //Initialize Facebook SDK
-//        FacebookSdk.sdkInitialize(getApplicationContext());
-//        AppEventsLogger.activateApp(this);
 
         //set content view AFTER ABOVE sequence (to avoid crash)
-        setContentView(R.layout.activity_main);
+        setContentView(R.layout.activity_notebook);
         mContext = this;
         ButterKnife.bind(this);
 
@@ -162,23 +150,24 @@ public class MainActivity extends FragmentActivity
         mSharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
         mEditor = mSharedPreferences.edit();
 
+        if (mGoogleApiClient == null) {
+            FragmentTransaction fragmentTransaction = getSupportFragmentManager().beginTransaction();
+            fragmentTransaction.add(TitleFragment.newInstance(), null);
+            fragmentTransaction.commit();
+        }
+
         initializeGoogleApi();
 
-        signInButton.setOnClickListener(this);
-        signOutButton.setOnClickListener(this);
-        findPlayersButton.setOnClickListener(this);
-        endMatchButton.setOnClickListener(this);
-        testButton.setOnClickListener(this);
-        characterButton.setOnClickListener(this);
-        testButtonTwo.setOnClickListener(this);
+        campaignButton.setOnClickListener(this);
+        mapButton.setOnClickListener(this);
+        leftInteractionButton.setOnClickListener(this);
+        rightInteractionButton.setOnClickListener(this);
 
         mCurrentMatchId = mSharedPreferences.getString("matchId", null);
 
         //Set counter text based on current shared preferences--these are updated in the shared preferences onChange listener
         dailySteps = mSharedPreferences.getInt(Constants.PREFERENCES_DAILY_STEPS, 0);
-        dailyCounter.setText(Integer.toString(dailySteps));
         stepsInSensor = mSharedPreferences.getInt(Constants.PREFERENCES_STEPS_IN_SENSOR_KEY, 0);
-        counter.setText(Integer.toString(stepsInSensor));
 
         eventOneInitiated = mSharedPreferences.getBoolean(Constants.PREFERENCES_INITIATE_EVENT_1, false);
         eventTwoInitiated = mSharedPreferences.getBoolean(Constants.PREFERENCES_INITIATE_EVENT_2, false);
@@ -209,28 +198,26 @@ public class MainActivity extends FragmentActivity
         String safehouseJson = mSharedPreferences.getString("nextSafehouse", null);
         Gson gson = new Gson();
         mNextSafehouse = gson.fromJson(safehouseJson, SafeHouse.class);
-        safehouseTextView.setText(Integer.toString(mNextSafeHouseId));
+        //safehouseTextView.setText(Integer.toString(mNextSafeHouseId));
 
 
 
-        if(mPlayerIDs == null) {
-            characterButton.setEnabled(false);
-        }
+//        if(mPlayerIDs == null) {
+//            characterButton.setEnabled(false);
+//        }
 
+        setupBackpackContent();
     }
 
     @Override
     protected void onResume() {
         super.onResume();
         mGoogleApiClient.reconnect();
-        if (mCurrentMatch != null) {
-            matchIdTextView.setText(mCurrentMatch.getMatchId());
-        }
         mSharedPreferences.registerOnSharedPreferenceChangeListener(this);
         if(mPlayerIDs == null) {
-            characterButton.setEnabled(false);
+           // characterButton.setEnabled(false);
         } else {
-            characterButton.setEnabled(true);
+            //characterButton.setEnabled(true);
         }
         if(mCurrentMatch != null && mPlayerIDs == null) {
             instantiatePlayerIDs();
@@ -265,18 +252,12 @@ public class MainActivity extends FragmentActivity
     //TODO: Move this logic to a separate service class
     @Override
     public void onConnected(Bundle connectionHint) {
-        signInButton.setVisibility(View.GONE);
-        signOutButton.setVisibility(View.VISIBLE);
         mCurrentPlayerId = Games.Players.getCurrentPlayerId(mGoogleApiClient);
         mEditor.putString(Constants.PREFERENCES_GOOGLE_PLAYER_ID, mCurrentPlayerId);
         if (mCurrentMatch != null) {
             Games.TurnBasedMultiplayer
                     .loadMatch(mGoogleApiClient, mCurrentMatch.getMatchId());
-
-            matchIdTextView.setText(mCurrentMatchId);
         }
-
-        Games.setViewForPopups(mGoogleApiClient, getCurrentFocus());
 
         //Load current match
         loadMatch();
@@ -292,10 +273,6 @@ public class MainActivity extends FragmentActivity
         mEditor.commit();
 
         saveUserInfoToFirebase();
-
-        userIdTextView.setText(mCurrentPlayerId);
-        String greeting = "Hello " + userName;
-        userNameTextView.setText(greeting);
 
         //Save user info to firebase
         mUserFirebaseRef = new Firebase(Constants.FIREBASE_URL_USERS + "/" + mCurrentPlayerId);
@@ -347,56 +324,29 @@ public class MainActivity extends FragmentActivity
 
     @Override
     public void onConnectionFailed(ConnectionResult connectionResult) {
-        if (mResolvingConnectionFailure) {
-            return;
-        }
-        if (mSignInCLicked || mAutoStartSignInFlow) {
-            mAutoStartSignInFlow = false;
-            mSignInCLicked = false;
-            mResolvingConnectionFailure = true;
-        }
         if (!BaseGameUtils.resolveConnectionFailure(this,
                 mGoogleApiClient, connectionResult, RC_SIGN_IN, "Sign in error!")) {
-            mResolvingConnectionFailure = false;
         }
     }
 
     @Override
     public void onClick(View view) {
         switch (view.getId()) {
-            case R.id.sign_in_button:
-                mSignInCLicked = true;
-                mGoogleApiClient.reconnect();
-                signInButton.setVisibility(View.GONE);
-                signOutButton.setVisibility(View.VISIBLE);
-                break;
-            case R.id.sign_out_button:
-                mExplicitSignOut = true;
-                if (mGoogleApiClient != null && mGoogleApiClient.isConnected()) {
-                    Games.signOut(mGoogleApiClient);
-                    mGoogleApiClient.disconnect();
-                }
-                mSignInCLicked = false;
-                signInButton.setVisibility(View.VISIBLE);
-                signOutButton.setVisibility(View.GONE);
-                break;
-            case R.id.findPlayersButton:
-                findPlayers();
-                break;
-            case R.id.endMatchButton:
-                endMatch();
-                break;
-            case R.id.testButton:
-                testMethod();
-                break;
-            case R.id.characterButton:
+            case R.id.tabCampaignButton:
                 Intent intent  = new Intent(mContext, CharacterDetailActivity.class);
                 intent.putExtra("position", 0);
                 intent.putExtra("playerIDs", Parcels.wrap(mPlayerIDs));
                 mContext.startActivity(intent);
                 break;
-            case R.id.testButton2:
-                takeTurn();
+            case R.id.mapTabButton:
+                Toast.makeText(this, "Map Button!", Toast.LENGTH_SHORT).show();
+                break;
+            case R.id.rightInteractionBUtton:
+                Toast.makeText(this, "Are you encouraged?", Toast.LENGTH_SHORT).show();
+                break;
+            case R.id.leftInteractionButton:
+                Toast.makeText(this, "Item given!", Toast.LENGTH_SHORT).show();
+                break;
         }
     }
 
@@ -405,6 +355,7 @@ public class MainActivity extends FragmentActivity
                 .addConnectionCallbacks(this)
                 .addOnConnectionFailedListener(this)
                 .addApi(Games.API)
+                .addScope(Games.SCOPE_GAMES)
                 .build();
     }
 
@@ -423,7 +374,7 @@ public class MainActivity extends FragmentActivity
     }
 
     public void saveSafehouse() {
-        Firebase safehouseFirebaseRef = new Firebase(Constants.FIREBASE_URL_SAFEHOUSES + "/" + mNextSafeHouseId +"/");
+        Firebase safehouseFirebaseRef = new Firebase(Constants.FIREBASE_URL_SAFEHOUSES + "/" + mNextSafeHouseId + "/");
         safehouseFirebaseRef.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
@@ -448,8 +399,8 @@ public class MainActivity extends FragmentActivity
     }
 
     public void testMethod() {
-        Intent intent = Games.TurnBasedMultiplayer.getInboxIntent(mGoogleApiClient);
-        startActivityForResult(intent, RC_WAITING_ROOM);
+        Intent notebook = new Intent(MainActivity.this, NotebookActivity.class);
+        startActivity(notebook);
     }
 
     public void loadMatch() {
@@ -466,7 +417,6 @@ public class MainActivity extends FragmentActivity
                         for (int i = 0; i < participantIds.size(); i++) {
                             participantNames.add(mCurrentMatch.getParticipant(participantIds.get(i)).getDisplayName());
                         }
-                        playersTextView.setText(participantNames.toString());
                     }
                 }
             }
@@ -476,8 +426,6 @@ public class MainActivity extends FragmentActivity
             Games.TurnBasedMultiplayer
                     .loadMatch(mGoogleApiClient, mCurrentMatchId)
                     .setResultCallback(loadMatchResultResultCallback);
-
-            matchIdTextView.setText(mCurrentMatchId);
         }
     }
 
@@ -527,8 +475,6 @@ public class MainActivity extends FragmentActivity
         mEditor.commit();
         mCurrentMatch = null;
         mCurrentMatchId = null;
-        matchIdTextView.setText("");
-        playersTextView.setText("");
     }
 
     public void invitationReceived(Invitation invitation) {
@@ -574,7 +520,6 @@ public class MainActivity extends FragmentActivity
             }
 
             mUserFirebaseRef.child("teamId").setValue(mCurrentMatchId);
-            matchIdTextView.setText(mCurrentMatchId);
             createCampaign(15);
             saveSafehouse();
             turnData = new byte[1];
@@ -619,7 +564,6 @@ public class MainActivity extends FragmentActivity
 
             //TODO: implement automatically selecting the match which was just created.
             invitees = data.getStringArrayListExtra(Games.EXTRA_PLAYER_IDS);
-            playersTextView.setText(invitees.toString());
 
             Bundle automatchCriteria = null;
             //checking if user chose auto match opponents
@@ -648,14 +592,8 @@ public class MainActivity extends FragmentActivity
             //user returning from join match
             mCurrentMatch = data.getParcelableExtra(Multiplayer.EXTRA_TURN_BASED_MATCH);
             mCurrentMatchId = mCurrentMatch.getMatchId();
-
-            ArrayList<String> playersId = mCurrentMatch.getParticipantIds();
             mEditor.putString("matchId", mCurrentMatchId);
             mEditor.commit();
-
-            playersTextView.setText(playersId.toString());
-            matchIdTextView.setText(mCurrentMatchId);
-
             takeTurn();
         }
 
@@ -793,8 +731,6 @@ public class MainActivity extends FragmentActivity
         if(key.equals(Constants.PREFERENCES_STEPS_IN_SENSOR_KEY) && (mCurrentMatch != null)) {
             stepsInSensor = mSharedPreferences.getInt(Constants.PREFERENCES_STEPS_IN_SENSOR_KEY, 0);
             dailySteps = mSharedPreferences.getInt(Constants.PREFERENCES_DAILY_STEPS, 0);
-            dailyCounter.setText(Integer.toString(dailySteps));
-            counter.setText(Integer.toString(stepsInSensor));
             initializeEventDialogFragments();
             checkSafehouseDistance();
         }
@@ -864,23 +800,70 @@ public class MainActivity extends FragmentActivity
 
     public void instantiatePlayerIDs() {
         mPlayerIDs = new ArrayList<>();
-        Firebase playerIDRef = new Firebase(Constants.FIREBASE_URL_TEAM + "/" + mCurrentMatchId +"/players/");
+        Firebase playerIDRef = new Firebase(Constants.FIREBASE_URL_TEAM + "/" + mCurrentMatchId + "/players/");
         playerIDRef.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
                 for (DataSnapshot child : dataSnapshot.getChildren()) {
                     String playerId = child.getValue().toString();
-                    if(!(playerId.equals(mCurrentPlayerId))) {
+                    if (!(playerId.equals(mCurrentPlayerId))) {
                         mPlayerIDs.add(playerId);
                     }
                 }
             }
+
             @Override
             public void onCancelled(FirebaseError firebaseError) {
 
             }
         });
-
-        characterButton.setEnabled(true);
     }
-}
+        public void setupBackpackContent () {
+            //TODO: Remove these fake objects for testing:
+            ArrayList<Weapon> weapons = new ArrayList<>();
+            weapons.add(new Weapon("Axe!", "This is an axe!", 5));
+            ArrayList<Item> items = new ArrayList<>();
+            items.add(new Item("Axe!", "This is an axe!", 5, true, R.drawable.axe_inventory));
+            items.add(new Item("Health Pack", "This is a health pack!", 5, true, R.drawable.firstaid_inventory));
+            items.add(new Item("Flare", "This is a flare!", 5, true, R.drawable.flare_inventory));
+            items.add(new Item("Steak", "This is a steak!", 5, true, R.drawable.steak_inventory));
+            items.add(new Item("Axe!", "This is an axe!", 5, true, R.drawable.axe_inventory));
+            items.add(new Item("Health Pack", "This is a health pack!", 5, true, R.drawable.firstaid_inventory));
+            items.add(new Item("Flare", "This is a flare!", 5, true, R.drawable.flare_inventory));
+            items.add(new Item("Steak", "This is a steak!", 5, true, R.drawable.steak_inventory));
+            items.add(new Item("Axe!", "This is an axe!", 5, true, R.drawable.axe_inventory));
+            items.add(new Item("Health Pack", "This is a health pack!", 5, true, R.drawable.firstaid_inventory));
+            items.add(new Item("Flare", "This is a flare!", 5, true, R.drawable.flare_inventory));
+            items.add(new Item("Steak", "This is a steak!", 5, true, R.drawable.steak_inventory));
+            items.add(new Item("Axe!", "This is an axe!", 5, true, R.drawable.axe_inventory));
+            items.add(new Item("Health Pack", "This is a health pack!", 5, true, R.drawable.firstaid_inventory));
+            items.add(new Item("Flare", "This is a flare!", 5, true, R.drawable.flare_inventory));
+            items.add(new Item("Steak", "This is a steak!", 5, true, R.drawable.steak_inventory));
+
+            try {
+                GridView inventoryGridView = (GridView) findViewById(R.id.backpackGridView);
+                //TODO: Figure out why android studio thinks this catch is required (and isn't happy)
+                inventoryGridView.setAdapter(new InventoryAdapter(this, items, weapons, R.layout.row_grid));
+                inventoryGridView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+                    @Override
+                    public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                        Toast.makeText(MainActivity.this, "" + position, Toast.LENGTH_SHORT).show();
+                    }
+                });
+                //This stops the grid from being scrolled.
+                inventoryGridView.setOnTouchListener(new View.OnTouchListener() {
+                    @Override
+                    public boolean onTouch(View v, MotionEvent event) {
+                        if (event.getAction() == MotionEvent.ACTION_MOVE) {
+                            return true;
+                        }
+                        return false;
+                    }
+                });
+
+            } catch (NullPointerException nullPointer) {
+                Log.e(TAG, nullPointer.getMessage());
+            }
+
+        }
+    }
