@@ -10,6 +10,12 @@ public class Weapon{
 
     public Weapon () {}
 
+    public Weapon (Weapon otherWeapon) {
+        this.name=otherWeapon.name;
+        this.description=otherWeapon.description;
+        this.hitPoints=otherWeapon.hitPoints;
+    }
+
     public Weapon (String name, String description, int hitPoints) {
         this.name=name;
         this.description=description;
@@ -44,5 +50,13 @@ public class Weapon{
 
     public void setHitPoints(int hitPoints) {
         this.hitPoints = hitPoints;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public void setDescription(String description) {
+        this.description = description;
     }
 }

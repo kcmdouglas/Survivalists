@@ -8,29 +8,30 @@ import com.eyecuelab.survivalists.models.Character;
 import com.eyecuelab.survivalists.ui.CharacterDetailFragment;
 
 import java.util.ArrayList;
+import java.util.List;
 
 public class CharacterPagerAdapter extends FragmentPagerAdapter {
-    private ArrayList<Character> mCharacters;
+    private List<String> mPlayerIDs;
 
-    public CharacterPagerAdapter(FragmentManager fm, ArrayList<Character> characters) {
+    public CharacterPagerAdapter(FragmentManager fm, ArrayList<String> playerIDs) {
         super(fm);
-        mCharacters = characters;
+        mPlayerIDs = playerIDs;
     }
 
 
 
     @Override
     public Fragment getItem(int position) {
-        return CharacterDetailFragment.newInstance(mCharacters.get(position));
+        return CharacterDetailFragment.newInstance(mPlayerIDs.get(position));
     }
 
     @Override
     public int getCount() {
-        return mCharacters.size();
+        return mPlayerIDs.size();
     }
 
     @Override
     public CharSequence getPageTitle(int position) {
-        return mCharacters.get(position).getName();
+        return " ";
     }
 }

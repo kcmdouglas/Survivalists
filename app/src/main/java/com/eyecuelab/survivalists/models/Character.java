@@ -1,5 +1,6 @@
 package com.eyecuelab.survivalists.models;
 
+import android.os.Parcelable;
 import android.util.Log;
 
 import org.parceler.Parcel;
@@ -10,6 +11,7 @@ import java.util.List;
 @Parcel
 public class Character {
     String name;
+    String description;
     Integer age;
     Integer health;
     Integer fullnessLevel;
@@ -21,8 +23,19 @@ public class Character {
         //Required blank constructor
     }
 
-    public Character(String name, Integer age, Integer health, Integer fullnessLevel, String characterPictureUrl, Integer characterId) {
+    public Character(Character anotherCharacter) {
+        this.name = anotherCharacter.name;
+        this.description = anotherCharacter.description;
+        this.age = anotherCharacter.age;
+        this.health = anotherCharacter.health;
+        this.fullnessLevel = anotherCharacter.fullnessLevel;
+        this.characterPictureUrl = anotherCharacter.characterPictureUrl;
+        this.characterId = anotherCharacter.characterId;
+    }
+
+    public Character(String name, String description, Integer age, Integer health, Integer fullnessLevel, String characterPictureUrl, Integer characterId) {
         this.name = name;
+        this.description = description;
         this.age = age;
         this.health = health;
         this.fullnessLevel = fullnessLevel;
@@ -111,5 +124,21 @@ public class Character {
                 }
             }
         }
+    }
+
+    public String getDescription() {
+        return description;
+    }
+
+    public void setDescription(String description) {
+        this.description = description;
+    }
+
+    public void setCharacterId(Integer characterId) {
+        this.characterId = characterId;
+    }
+
+    public void setInventory(ArrayList<Object> inventory) {
+        this.inventory = inventory;
     }
 }
