@@ -50,8 +50,7 @@ public class BackgroundStepService extends Service implements SensorEventListene
     int previousDayStepCount;
     String mCurrentPlayerId;
     int dailySteps;
-    int fullnessLevel;
-    Character playerCharacter;
+    int mFullnessLevel;
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
@@ -67,11 +66,8 @@ public class BackgroundStepService extends Service implements SensorEventListene
         mSharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
         mEditor = mSharedPreferences.edit();
         mCurrentPlayerId = mSharedPreferences.getString(Constants.PREFERENCES_GOOGLE_PLAYER_ID, null);
-//        String userJson = mSharedPreferences.getString(Constants.PREFERENCES_USER, null);
-//        Gson userGson = new Gson();
-//        User currentUser = userGson.fromJson(userJson, User.class);
-//        playerCharacter = currentUser.getPlayedCharacter();
-//        fullnessLevel = playerCharacter.getFullnessLevel();
+
+        firebaseHungerListener();
         return START_STICKY;
     }
 
@@ -87,6 +83,8 @@ public class BackgroundStepService extends Service implements SensorEventListene
     public void onSensorChanged(SensorEvent event) {
         previousDayStepCount = mSharedPreferences.getInt(Constants.PREFERENCES_PREVIOUS_STEPS_KEY, 0);
 
+        firebaseHungerListener();
+
         int stepsInSensor = (int) event.values[0];
 
         if(stepsInSensor < previousDayStepCount) {
@@ -100,82 +98,40 @@ public class BackgroundStepService extends Service implements SensorEventListene
         mEditor.commit();
         String dailyStepsString = Integer.toString(dailySteps);
 
-
         if((mCurrentPlayerId != null) && (dailySteps % 10 < 1)) {
-            Firebase firebaseStepsRef = new Firebase(Constants.FIREBASE_URL_STEPS + "/" + mCurrentPlayerId + "/");
+            Firebase firebaseStepsRef = new Firebase(Constants.FIREBASE_URL_USERS + "/" + mCurrentPlayerId + "/");
             Map<String, Object> firebaseDailySteps = new HashMap<>();
-            firebaseDailySteps.put("daily_steps", dailyStepsString);
+            firebaseDailySteps.put("dailySteps", dailyStepsString);
             firebaseStepsRef.updateChildren(firebaseDailySteps);
-            firebaseStepListener();
+            firebaseHungerListener();
         }
 
-//         if((mCurrentPlayerId != null) && (dailySteps % 50 < 1)) {
-//
-//             Firebase firebaseCharacterRef = new Firebase(Constants.FIREBASE_URL_USERS + "/" + mCurrentPlayerId + "/character");
-//             Map<String, Object> firebaseHungerLevel = new HashMap<>();
-//             firebaseHungerLevel.put("fullness_level", fullnessLevel);
-//             firebaseCharacterRef.updateChildren(firebaseHungerLevel);
-//             firebaseHungerListener();
-//        }
+         if((mCurrentPlayerId != null) && (dailySteps % 50 < 1)) {
+             int newHunger = mFullnessLevel - 2;
+
+             Firebase firebaseCharacterRef = new Firebase(Constants.FIREBASE_URL_USERS + "/" + mCurrentPlayerId + "/character");
+             Map<String, Object> firebaseHungerLevel = new HashMap<>();
+             firebaseHungerLevel.put("fullnessLevel", newHunger);
+             firebaseCharacterRef.updateChildren(firebaseHungerLevel);
+             firebaseHungerListener();
+        }
     }
 
     @Override
     public void onAccuracyChanged(Sensor sensor, int accuracy) {}
 
-    private void firebaseStepListener() {
-
-        Firebase firebaseStepsRef = new Firebase(Constants.FIREBASE_URL_STEPS + "/" + mCurrentPlayerId);
-        Query queryRef = firebaseStepsRef.orderByValue();
-
-        queryRef.addChildEventListener(new ChildEventListener() {
-            @Override
-            public void onChildAdded(DataSnapshot dataSnapshot, String s) {
-                Log.d("Firebase Update", dataSnapshot.getKey());
-                Log.d("Firebase Update", dataSnapshot.getValue().toString());
-            }
-
-            @Override
-            public void onChildChanged(DataSnapshot dataSnapshot, String s) {}
-
-            @Override
-            public void onChildRemoved(DataSnapshot dataSnapshot) {}
-
-            @Override
-            public void onChildMoved(DataSnapshot dataSnapshot, String s) {}
-
-            @Override
-            public void onCancelled(FirebaseError firebaseError) {}
-        });
-
-        queryRef.addValueEventListener(new ValueEventListener() {
-            @Override
-            public void onDataChange(DataSnapshot dataSnapshot) {}
-
-            @Override
-            public void onCancelled(FirebaseError firebaseError) {}
-        });
-    }
-
     private void firebaseHungerListener() {
 
-        Firebase firebaseCharacterRef = new Firebase(Constants.FIREBASE_URL_USERS + "/" + mCurrentPlayerId + "/character");
+        Firebase firebaseCharacterRef = new Firebase(Constants.FIREBASE_URL_USERS + "/" + mCurrentPlayerId + "/character/fullnessLevel");
         Query queryRef = firebaseCharacterRef.orderByValue();
 
-        queryRef.addChildEventListener(new ChildEventListener() {
+        queryRef.addListenerForSingleValueEvent(new ValueEventListener() {
+
             @Override
-            public void onChildAdded(DataSnapshot dataSnapshot, String s) {
-                Log.d("Firebase Update", dataSnapshot.getKey());
-                Log.d("Firebase Update", dataSnapshot.getValue().toString());
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                long fullnessLevelLong = (long) dataSnapshot.getValue();
+                mFullnessLevel = (int) fullnessLevelLong;
             }
-
-            @Override
-            public void onChildChanged(DataSnapshot dataSnapshot, String s) {}
-
-            @Override
-            public void onChildRemoved(DataSnapshot dataSnapshot) {}
-
-            @Override
-            public void onChildMoved(DataSnapshot dataSnapshot, String s) {}
 
             @Override
             public void onCancelled(FirebaseError firebaseError) {}
@@ -189,16 +145,6 @@ public class BackgroundStepService extends Service implements SensorEventListene
             public void onCancelled(FirebaseError firebaseError) {}
         });
     }
-
-
-//    @Override
-//    public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String key) {
-//        if(key.equals(Constants.PREFERENCES_PREVIOUS_STEPS_KEY)) {
-//            previousDayStepCount = mSharedPreferences.getInt(Constants.PREFERENCES_PREVIOUS_STEPS_KEY, 0);
-//        }
-//
-//    }
-
 
     @Nullable
     @Override

@@ -198,7 +198,8 @@ public class EventDialogFragment extends android.support.v4.app.DialogFragment i
                                 String itemName = dataSnapshot.child("name").getValue().toString();
                                 String itemDescription = dataSnapshot.child("description").getValue().toString();
                                 int healthPoints = (int) dataSnapshot.child("health_points").getValue();
-                                item = new Item(itemName, itemDescription, healthPoints, effectsHealth);
+                                int itemId = (int) dataSnapshot.getValue();
+                                item = new Item(itemName, itemDescription, healthPoints, effectsHealth, itemId);
                             }
 
                         }

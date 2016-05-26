@@ -252,7 +252,7 @@ public class MainActivity extends FragmentActivity
     //TODO: Move this logic to a separate service class
     @Override
     public void onConnected(Bundle connectionHint) {
-        mCurrentPlayerId = Games.Players.getCurrentPlayerId(mGoogleApiClient);
+        mCurrentPlayerId = Games.Players.getCurrentPlayerId(mGoogleApiClient).toString();
         mEditor.putString(Constants.PREFERENCES_GOOGLE_PLAYER_ID, mCurrentPlayerId);
         if (mCurrentMatch != null) {
             Games.TurnBasedMultiplayer
@@ -281,8 +281,6 @@ public class MainActivity extends FragmentActivity
 
         if (mCurrentMatch == null) {
             mUserFirebaseRef.child("joinedMatch").setValue(false);
-        } else {
-            mUserFirebaseRef.child("joinedMatch").setValue(true);
         }
         if(mCurrentMatchId != null) {
             mUserFirebaseRef.child("character").addListenerForSingleValueEvent(new ValueEventListener() {
@@ -314,6 +312,7 @@ public class MainActivity extends FragmentActivity
                 }
             });
             instantiatePlayerIDs();
+            mUserFirebaseRef.child("joinedMatch").setValue(true);
         }
     }
 
@@ -731,8 +730,8 @@ public class MainActivity extends FragmentActivity
         if(key.equals(Constants.PREFERENCES_STEPS_IN_SENSOR_KEY) && (mCurrentMatch != null)) {
             stepsInSensor = mSharedPreferences.getInt(Constants.PREFERENCES_STEPS_IN_SENSOR_KEY, 0);
             dailySteps = mSharedPreferences.getInt(Constants.PREFERENCES_DAILY_STEPS, 0);
-            initializeEventDialogFragments();
-            checkSafehouseDistance();
+//            initializeEventDialogFragments();
+//            checkSafehouseDistance();
         }
 
         //TODO: Add listener for isCampaignEnded boolean to trigger end of game screen
