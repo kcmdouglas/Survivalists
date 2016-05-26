@@ -37,5 +37,5 @@ public class Constants {
     public static final String PREFERENCES_NEXT_SAFEHOUSE_ID = "nextSafehouseId";
     public static final String PREFERENCES_USER = "user";
     public static final String PREFERENCES_CHARACTER = "character";
-    public static final String PREFERENCES_TEAM_CHARACTERS = "teamCharacters";
+    public static final String PREFERENCES_TEAM_IDs = "teamIDs";
 }

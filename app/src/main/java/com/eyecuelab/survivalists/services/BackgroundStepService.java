@@ -14,6 +14,7 @@ import android.os.Bundle;
 import android.os.IBinder;
 import android.preference.PreferenceManager;
 import android.support.annotation.Nullable;
+import android.text.TextUtils;
 import android.util.Log;
 import android.widget.Toast;
 
@@ -30,8 +31,11 @@ import com.firebase.client.Query;
 import com.firebase.client.ValueEventListener;
 import com.google.gson.Gson;
 
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Calendar;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -51,6 +55,7 @@ public class BackgroundStepService extends Service implements SensorEventListene
     String mCurrentPlayerId;
     int dailySteps;
     int mFullnessLevel;
+    int mHealthLevel;
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
@@ -67,7 +72,7 @@ public class BackgroundStepService extends Service implements SensorEventListene
         mEditor = mSharedPreferences.edit();
         mCurrentPlayerId = mSharedPreferences.getString(Constants.PREFERENCES_GOOGLE_PLAYER_ID, null);
 
-        firebaseHungerListener();
+        firebaseStatsListener();
         return START_STICKY;
     }
 
@@ -82,8 +87,6 @@ public class BackgroundStepService extends Service implements SensorEventListene
     @Override
     public void onSensorChanged(SensorEvent event) {
         previousDayStepCount = mSharedPreferences.getInt(Constants.PREFERENCES_PREVIOUS_STEPS_KEY, 0);
-
-        firebaseHungerListener();
 
         int stepsInSensor = (int) event.values[0];
 
@@ -103,29 +106,39 @@ public class BackgroundStepService extends Service implements SensorEventListene
             Map<String, Object> firebaseDailySteps = new HashMap<>();
             firebaseDailySteps.put("dailySteps", dailyStepsString);
             firebaseStepsRef.updateChildren(firebaseDailySteps);
-            firebaseHungerListener();
+            firebaseStatsListener();
         }
 
          if((mCurrentPlayerId != null) && (dailySteps % 50 < 1)) {
-             int newHunger = mFullnessLevel - 2;
+             int newHunger;
+             int newHealth;
+             if(mFullnessLevel > 0) {
+                 newHunger = mFullnessLevel - 1;
+                 newHealth = mHealthLevel;
+             } else {
+                 newHunger = mFullnessLevel;
+                 newHealth = mHealthLevel - 1;
+
+             }
+
 
              Firebase firebaseCharacterRef = new Firebase(Constants.FIREBASE_URL_USERS + "/" + mCurrentPlayerId + "/character");
-             Map<String, Object> firebaseHungerLevel = new HashMap<>();
-             firebaseHungerLevel.put("fullnessLevel", newHunger);
-             firebaseCharacterRef.updateChildren(firebaseHungerLevel);
-             firebaseHungerListener();
+             Map<String, Object> firebaseStatsLevel = new HashMap<>();
+             firebaseStatsLevel.put("fullnessLevel", newHunger);
+             firebaseStatsLevel.put("health", newHealth);
+             firebaseCharacterRef.updateChildren(firebaseStatsLevel);
+             firebaseStatsListener();
         }
     }
 
     @Override
     public void onAccuracyChanged(Sensor sensor, int accuracy) {}
 
-    private void firebaseHungerListener() {
+    private void firebaseStatsListener() {
 
-        Firebase firebaseCharacterRef = new Firebase(Constants.FIREBASE_URL_USERS + "/" + mCurrentPlayerId + "/character/fullnessLevel");
-        Query queryRef = firebaseCharacterRef.orderByValue();
+        Firebase firebaseCharacterRef = new Firebase(Constants.FIREBASE_URL_USERS + "/" + mCurrentPlayerId + "/character/");
 
-        queryRef.addListenerForSingleValueEvent(new ValueEventListener() {
+        firebaseCharacterRef.child("fullnessLevel").addListenerForSingleValueEvent(new ValueEventListener() {
 
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
@@ -137,13 +150,19 @@ public class BackgroundStepService extends Service implements SensorEventListene
             public void onCancelled(FirebaseError firebaseError) {}
         });
 
-        queryRef.addValueEventListener(new ValueEventListener() {
+        firebaseCharacterRef.child("health").addListenerForSingleValueEvent(new ValueEventListener() {
+
             @Override
-            public void onDataChange(DataSnapshot dataSnapshot) {}
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                long healthLevelLong = (long) dataSnapshot.getValue();
+                mHealthLevel = (int) healthLevelLong;
+            }
 
             @Override
             public void onCancelled(FirebaseError firebaseError) {}
         });
+
+
     }
 
     @Nullable

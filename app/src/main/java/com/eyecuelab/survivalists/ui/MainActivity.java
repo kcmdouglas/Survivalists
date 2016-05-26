@@ -17,6 +17,7 @@ import android.support.v4.app.FragmentActivity;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentTransaction;
 
+import android.text.TextUtils;
 import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
@@ -124,6 +125,7 @@ public class MainActivity extends FragmentActivity
     private boolean isRecurringAlarmSet;
     private ArrayList<Character> mCharacters;
     ArrayList<String> mPlayerIDs;
+    private long matchInitiatedTime;
 
     @Override
     protected void onStart() {
@@ -531,6 +533,12 @@ public class MainActivity extends FragmentActivity
         }
         turnData = new byte[1];
 
+        if(mCurrentMatch != null) {
+            matchInitiatedTime = mCurrentMatch.getCreationTimestamp();
+            //TODO: change number for createCampaign duration in takeTurn method to reflect actual user settings
+            createCampaign(1);
+        }
+
         ArrayList<Participant> allPlayers = mCurrentMatch.getParticipants();
         int nextPlayerNumber = Integer.parseInt(mCurrentMatch.getLastUpdaterId().substring(2));
         try {
@@ -733,6 +741,9 @@ public class MainActivity extends FragmentActivity
 //            initializeEventDialogFragments();
 //            checkSafehouseDistance();
         }
+        if(key.equals("everyoneJoined")) {
+
+        }
 
         //TODO: Add listener for isCampaignEnded boolean to trigger end of game screen
     }
@@ -769,6 +780,7 @@ public class MainActivity extends FragmentActivity
 
     public void createCampaign(int campaignLength) {
         Calendar campaignCalendar = Calendar.getInstance();
+        campaignCalendar.setTimeInMillis(matchInitiatedTime);
         campaignCalendar.set(Calendar.HOUR, 18);
         campaignCalendar.add(Calendar.DATE, campaignLength);
         Intent intent = new Intent(this, CampaignEndAlarmReceiver.class);
@@ -776,10 +788,6 @@ public class MainActivity extends FragmentActivity
         AlarmManager am = (AlarmManager) getApplicationContext().getSystemService(ALARM_SERVICE);
         am.set(AlarmManager.RTC_WAKEUP, campaignCalendar.getTimeInMillis(), pendingIntent);
         Log.d("CreateCampaign", "Campaign Created");
-
-
-//        mEditor.putInt(Constants.PREFERENCES_PREVIOUS_STEPS_KEY, 0).commit();
-//        assignRandomCharacters();
     }
 
     public void showMessage(final String message) {
@@ -816,6 +824,10 @@ public class MainActivity extends FragmentActivity
 
             }
         });
+
+        mEditor.putString(Constants.PREFERENCES_TEAM_IDs, TextUtils.join(",", mPlayerIDs));
+        mEditor.commit();
+
     }
         public void setupBackpackContent () {
             //TODO: Remove these fake objects for testing:
