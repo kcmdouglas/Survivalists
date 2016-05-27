@@ -14,7 +14,6 @@ import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentActivity;
-import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentTransaction;
 
 import android.text.TextUtils;
@@ -25,13 +24,11 @@ import android.view.WindowManager;
 import android.widget.AdapterView;
 import android.widget.Button;
 import android.widget.GridView;
-import android.widget.TextView;
 import android.widget.Toast;
 
 import com.eyecuelab.survivalists.Constants;
 import com.eyecuelab.survivalists.R;
 
-import com.eyecuelab.survivalists.SurvivalistsApplication;
 import com.eyecuelab.survivalists.adapters.InventoryAdapter;
 import com.eyecuelab.survivalists.models.Character;
 import com.eyecuelab.survivalists.models.Item;
@@ -49,7 +46,6 @@ import com.firebase.client.Firebase;
 import com.firebase.client.FirebaseError;
 import com.firebase.client.ValueEventListener;
 import com.google.android.gms.common.ConnectionResult;
-import com.google.android.gms.common.SignInButton;
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.common.api.ResultCallback;
 import com.google.android.gms.games.Games;
@@ -70,6 +66,8 @@ import org.parceler.Parcels;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
 
 import butterknife.Bind;
 import butterknife.ButterKnife;
@@ -88,9 +86,10 @@ public class MainActivity extends FragmentActivity
     private int stepsInSensor;
     private int dailySteps;
     private String mCurrentMatchId;
-    private String mMatchDuration;
+    private int mMatchDuration;
     private int mLastSafeHouseId;
-    private int mNextSafeHouseId;
+    private int mReachedSafeHouseId;
+    private int mReachedSafeHousePseudoId;
     private ArrayList<String> invitees;
     private byte[] turnData;
     private SharedPreferences mSharedPreferences;
@@ -197,13 +196,17 @@ public class MainActivity extends FragmentActivity
 
         //TODO: Move to the startGame function
 
-        mNextSafeHouseId = mSharedPreferences.getInt(Constants.PREFERENCES_NEXT_SAFEHOUSE_ID, 1);
-        mLastSafeHouseId = mSharedPreferences.getInt(Constants.PREFERENCES_LAST_SAFEHOUSE_ID, 0);
 
         String safehouseJson = mSharedPreferences.getString("nextSafehouse", null);
         Gson gson = new Gson();
         mNextSafehouse = gson.fromJson(safehouseJson, SafeHouse.class);
-        //safehouseTextView.setText(Integer.toString(mNextSafeHouseId));
+
+        String playerIDsString = mSharedPreferences.getString(Constants.PREFERENCES_TEAM_IDs, null);
+        String [] playerIDArray = TextUtils.split(",", playerIDsString);
+
+        for(int i = 0; i < playerIDArray.length; i++ ) {
+            mPlayerIDs.add(playerIDArray[i]);
+        }
 
 
 
@@ -377,35 +380,7 @@ public class MainActivity extends FragmentActivity
         }
     }
 
-    public void saveSafehouse() {
-        //TODO: Edit saveSafehouse method to call Firebase, find out the next safehouse in the randomized list, and then query that ID number against the safehouse node
 
-
-
-
-
-        Firebase safehouseFirebaseRef = new Firebase(Constants.FIREBASE_URL_SAFEHOUSES + "/" + mNextSafeHouseId + "/");
-        safehouseFirebaseRef.addListenerForSingleValueEvent(new ValueEventListener() {
-            @Override
-            public void onDataChange(DataSnapshot dataSnapshot) {
-                String houseName = dataSnapshot.child("houseName").getValue().toString();
-                String description = dataSnapshot.child("description").getValue().toString();
-
-                // Build the next safehouse object and save it to shared preferences
-                SafeHouse nextSafeHouse = new SafeHouse(mNextSafeHouseId, houseName, description);
-                Gson gson = new Gson();
-                String nextSafehouseJson = gson.toJson(nextSafeHouse);
-                mEditor.putString("nextSafehouse", nextSafehouseJson);
-                mEditor.commit();
-                String safehouseJson = mSharedPreferences.getString("nextSafehouse", null);
-                Gson safehouseGson = new Gson();
-                mNextSafehouse = safehouseGson.fromJson(safehouseJson, SafeHouse.class);
-            }
-
-            @Override
-            public void onCancelled(FirebaseError firebaseError) {}
-        });
-    }
 
     public void testMethod() {
         Intent notebook = new Intent(MainActivity.this, NotebookActivity.class);
@@ -509,16 +484,42 @@ public class MainActivity extends FragmentActivity
             }
 
             mEditor.putString("matchId", mCurrentMatchId);
-            mEditor.putInt("lastSafehouseId", 0);
-            mEditor.putInt("nextSafehouseId", 1);
             mEditor.commit();
+
+            final ArrayList<Integer> safehouseIDs = new ArrayList<>();
+
+            Firebase safehouseFirebase = new Firebase(Constants.FIREBASE_URL_SAFEHOUSES);
+
+            safehouseFirebase.addListenerForSingleValueEvent(new ValueEventListener() {
+                @Override
+                public void onDataChange(DataSnapshot dataSnapshot) {
+                    for(DataSnapshot safehouse : dataSnapshot.getChildren()) {
+                        int safehouseId = Integer.valueOf(safehouse.getKey());
+                        safehouseIDs.add(safehouseId);
+                    }
+                }
+
+                @Override
+                public void onCancelled(FirebaseError firebaseError) {
+
+                }
+            });
+
+            Collections.shuffle(safehouseIDs);
+            Map<String, Object> dailySafehouseMap = new HashMap<>();
+
+
+            for(int i = 0; i < mMatchDuration; i++) {
+                dailySafehouseMap.put(Integer.toString(i), safehouseIDs.get(i));
+            }
 
             Firebase teamFirebaseRef = new Firebase(Constants.FIREBASE_URL_TEAM + "/" + "")
                     .child(mCurrentMatchId);
             teamFirebaseRef.child("matchStart").setValue(mCurrentMatch.getCreationTimestamp());
             teamFirebaseRef.child("matchDuration").setValue(mMatchDuration);
-            teamFirebaseRef.child("lastSafehouseId").setValue(0);
-            teamFirebaseRef.child("nextSafehouseId").setValue(1);
+            teamFirebaseRef.child("lastSafehousePseudoId").setValue(0);
+            teamFirebaseRef.child("nextSafehousePseudoId").setValue(1);
+            teamFirebaseRef.child("safehouseIdMap").updateChildren(dailySafehouseMap);
             Firebase playerFirebase = teamFirebaseRef.child("players");
             if (wholeParty != null) {
                 for (int i = 0; i < wholeParty.size(); i++) {
@@ -529,7 +530,7 @@ public class MainActivity extends FragmentActivity
             }
 
             mUserFirebaseRef.child("teamId").setValue(mCurrentMatchId);
-            createCampaign(15);
+            createCampaign(mMatchDuration);
             saveSafehouse();
             turnData = new byte[1];
             //Take as many turns as there are players, to invite all players at once
@@ -748,7 +749,7 @@ public class MainActivity extends FragmentActivity
             dailySteps = mSharedPreferences.getInt(Constants.PREFERENCES_DAILY_STEPS, 0);
             dailyGoal = mSharedPreferences.getInt(Constants.PREFERENCES_DAILY_GOAL, 5000);
             if (dailyGoal < dailySteps && !reachedDailySafehouse) {
-                checkSafehouseDistance();
+                saveSafehouse();
             }
             initializeEventDialogFragments();
 
@@ -760,22 +761,101 @@ public class MainActivity extends FragmentActivity
         //TODO: Add listener for isCampaignEnded boolean to trigger end of game screen
     }
 
-    //TODO: Move most checkSafehouseDistance to BackgroundStepService EXCEPT Dialog triggers
-    public void checkSafehouseDistance() {
-        //TODO: change checkSafehouseDistance and saveSafehouse into one method
+    public void saveSafehouse() {
+        //TODO: Edit saveSafehouse method to call Firebase, find out the next safehouse in the randomized list, and then query that ID number against the safehouse node
+        //Sets the user's own atSafehouse node
+        Firebase firebaseAtSafeHouseRef = new Firebase(Constants.FIREBASE_URL_USERS + "/" + mCurrentPlayerId +"/atSafeHouse");
+        firebaseAtSafeHouseRef.setValue(true);
+
+        //Gets the pseudo ID of the next safehouse
+        Firebase nextTeamSafehouse = new Firebase (Constants.FIREBASE_URL_TEAM+"/"+ mCurrentMatchId +"/");
+        nextTeamSafehouse.child("nextSafehousePseudoId").addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                long safehousePseudoIdLong = (long) dataSnapshot.getValue();
+                mReachedSafeHousePseudoId = (int) safehousePseudoIdLong;
+            }
+
+            @Override
+            public void onCancelled(FirebaseError firebaseError) {
+
+            }
+        });
+
+        //Gets the actual safehouse ID
+        nextTeamSafehouse.child("safehouseIdMap/" + mReachedSafeHousePseudoId).addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                long nextSafehouseId = (long) dataSnapshot.getValue();
+                mReachedSafeHouseId = (int) nextSafehouseId;
+            }
+
+            @Override
+            public void onCancelled(FirebaseError firebaseError) {
+
+            }
+        });
+
+        //Creates safehouse object from the actual safehouse ID
+        Firebase safehouseFirebaseRef = new Firebase(Constants.FIREBASE_URL_SAFEHOUSES + "/" + mReachedSafeHouseId + "/");
+        safehouseFirebaseRef.addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                String houseName = dataSnapshot.child("houseName").getValue().toString();
+                String description = dataSnapshot.child("description").getValue().toString();
+
+                // Build the next safehouse object and save it to shared preferences
+                SafeHouse nextSafeHouse = new SafeHouse(mReachedSafeHouseId, houseName, description);
+                Gson gson = new Gson();
+                String nextSafehouseJson = gson.toJson(nextSafeHouse);
+                mEditor.putString("nextSafehouse", nextSafehouseJson);
+                mEditor.commit();
+                String safehouseJson = mSharedPreferences.getString("nextSafehouse", null);
+                Gson safehouseGson = new Gson();
+                mNextSafehouse = safehouseGson.fromJson(safehouseJson, SafeHouse.class);
+            }
+
+            @Override
+            public void onCancelled(FirebaseError firebaseError) {}
+        });
+
+        //Sets boolean for reaching the safehouse so the dialog is only triggered once per day
         mEditor.putBoolean(Constants.PREFERENCES_REACHED_SAFEHOUSE, true).apply();
 
 
-        //pull next safehouse object from shared preferences
+        //Checks if the rest of the team has made it to the safehouse
+        final ArrayList<Boolean> teammatesAtSafehouse = new ArrayList<>();
 
-            mPriorSafehouse = mNextSafehouse;
-            mLastSafeHouseId = mNextSafehouse.getHouseId();
-            mNextSafeHouseId = mLastSafeHouseId + 1;
-            mEditor.putInt("lastSafehouseId", mLastSafeHouseId);
-            mEditor.putInt("nextSafehouseId", mNextSafeHouseId);
-            mEditor.commit();
-            saveSafehouse();
-            showEventDialog(2);
+        for(int i = 0; i < mPlayerIDs.size(); i++) {
+            Firebase firebaseUserRef = new Firebase(Constants.FIREBASE_URL_USERS + "/" + mPlayerIDs.get(i)+ "/atSafeHouse" );
+
+            firebaseUserRef.addListenerForSingleValueEvent(new ValueEventListener() {
+                @Override
+                public void onDataChange(DataSnapshot dataSnapshot) {
+                    boolean atSafeHouse = (boolean) dataSnapshot.getValue();
+
+                    if(atSafeHouse) {
+                        teammatesAtSafehouse.add(atSafeHouse);
+                    }
+
+                }
+
+                @Override
+                public void onCancelled(FirebaseError firebaseError) {
+
+                }
+            });
+        }
+
+        //If the rest of the team has made it to the safehouse, this resets the last safehouse pseudo ID and the next safehouse pseudo ID
+        if(mPlayerIDs.size() == teammatesAtSafehouse.size()) {
+            Firebase firebaseTeam = new Firebase (Constants.FIREBASE_URL_TEAM + "/" + mCurrentMatchId);
+            firebaseTeam.child("lastSafehousePseudoId").setValue(mReachedSafeHousePseudoId);
+            firebaseTeam.child("nextSafehousePseudoId").setValue((mReachedSafeHouseId + 1));
+        }
+
+
+        showEventDialog(2);
     }
 
     public void initiateDailyCountResetService() {
