@@ -14,23 +14,19 @@ import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentActivity;
-import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentTransaction;
 
 import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
-import android.view.WindowManager;
 import android.widget.AdapterView;
 import android.widget.Button;
 import android.widget.GridView;
-import android.widget.TextView;
 import android.widget.Toast;
 
 import com.eyecuelab.survivalists.Constants;
 import com.eyecuelab.survivalists.R;
 
-import com.eyecuelab.survivalists.SurvivalistsApplication;
 import com.eyecuelab.survivalists.adapters.InventoryAdapter;
 import com.eyecuelab.survivalists.models.Character;
 import com.eyecuelab.survivalists.models.Item;
@@ -48,7 +44,6 @@ import com.firebase.client.Firebase;
 import com.firebase.client.FirebaseError;
 import com.firebase.client.ValueEventListener;
 import com.google.android.gms.common.ConnectionResult;
-import com.google.android.gms.common.SignInButton;
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.common.api.ResultCallback;
 import com.google.android.gms.games.Games;
@@ -140,8 +135,12 @@ public class MainActivity extends FragmentActivity
 
         //Remove notification and navigation bars
         View decorView = getWindow().getDecorView();
-        int uiOptions = View.SYSTEM_UI_FLAG_HIDE_NAVIGATION | View.SYSTEM_UI_FLAG_FULLSCREEN;
-        decorView.setSystemUiVisibility(uiOptions);
+        decorView.setSystemUiVisibility(View.SYSTEM_UI_FLAG_LAYOUT_STABLE
+                | View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
+                | View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
+                | View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
+                | View.SYSTEM_UI_FLAG_FULLSCREEN
+                | View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY);
 
         //set content view AFTER ABOVE sequence (to avoid crash)
         setContentView(R.layout.activity_notebook);
@@ -342,7 +341,8 @@ public class MainActivity extends FragmentActivity
                 mContext.startActivity(intent);
                 break;
             case R.id.mapTabButton:
-                Toast.makeText(this, "Map Button!", Toast.LENGTH_SHORT).show();
+                Intent newCampaignIntent = new Intent(MainActivity.this, NewCampaignActivity.class);
+                startActivity(newCampaignIntent);
                 break;
             case R.id.rightInteractionBUtton:
                 Toast.makeText(this, "Are you encouraged?", Toast.LENGTH_SHORT).show();
@@ -846,7 +846,7 @@ public class MainActivity extends FragmentActivity
             try {
                 GridView inventoryGridView = (GridView) findViewById(R.id.backpackGridView);
                 //TODO: Figure out why android studio thinks this catch is required (and isn't happy)
-                inventoryGridView.setAdapter(new InventoryAdapter(this, items, weapons, R.layout.row_grid));
+                inventoryGridView.setAdapter(new InventoryAdapter(this, items, weapons, R.layout.inventory_row_grid));
                 inventoryGridView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
                     @Override
                     public void onItemClick(AdapterView<?> parent, View view, int position, long id) {

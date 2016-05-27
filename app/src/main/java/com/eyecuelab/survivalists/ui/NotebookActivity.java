@@ -60,7 +60,7 @@ public class NotebookActivity extends AppCompatActivity implements View.OnClickL
         try {
             GridView inventoryGridView = (GridView) findViewById(R.id.backpackGridView);
             //TODO: Figure out why android studio thinks this catch is required (and isn't happy)
-            inventoryGridView.setAdapter(new InventoryAdapter(NotebookActivity.this, items, weapons, R.layout.row_grid));
+            inventoryGridView.setAdapter(new InventoryAdapter(NotebookActivity.this, items, weapons, R.layout.inventory_row_grid));
             inventoryGridView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
                 @Override
                 public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
