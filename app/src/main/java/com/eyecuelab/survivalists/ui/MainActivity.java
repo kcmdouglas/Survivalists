@@ -121,11 +121,13 @@ public class MainActivity extends FragmentActivity
     private boolean eventThreeInitiated;
     private boolean eventFourInitiated;
     private boolean eventFiveInitiated;
+    private boolean reachedDailySafehouse;
 
     private boolean isRecurringAlarmSet;
     private ArrayList<Character> mCharacters;
     ArrayList<String> mPlayerIDs;
     private long matchInitiatedTime;
+    int dailyGoal;
 
     @Override
     protected void onStart() {
@@ -176,6 +178,7 @@ public class MainActivity extends FragmentActivity
         eventThreeInitiated = mSharedPreferences.getBoolean(Constants.PREFERENCES_INITIATE_EVENT_3, false);
         eventFourInitiated = mSharedPreferences.getBoolean(Constants.PREFERENCES_INITIATE_EVENT_4, false);
         eventFiveInitiated = mSharedPreferences.getBoolean(Constants.PREFERENCES_INITIATE_EVENT_5, false);
+        reachedDailySafehouse = mSharedPreferences.getBoolean(Constants.PREFERENCES_REACHED_SAFEHOUSE, false);
 
         //TODO: Move daily alarm setting to the startGame function
         //Set recurring alarm
@@ -375,16 +378,21 @@ public class MainActivity extends FragmentActivity
     }
 
     public void saveSafehouse() {
+        //TODO: Edit saveSafehouse method to call Firebase, find out the next safehouse in the randomized list, and then query that ID number against the safehouse node
+
+
+
+
+
         Firebase safehouseFirebaseRef = new Firebase(Constants.FIREBASE_URL_SAFEHOUSES + "/" + mNextSafeHouseId + "/");
         safehouseFirebaseRef.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
                 String houseName = dataSnapshot.child("houseName").getValue().toString();
                 String description = dataSnapshot.child("description").getValue().toString();
-                int stepsRequired = Integer.parseInt(dataSnapshot.child("stepsRequired").getValue().toString());
 
                 // Build the next safehouse object and save it to shared preferences
-                SafeHouse nextSafeHouse = new SafeHouse(mNextSafeHouseId, houseName, description, stepsRequired);
+                SafeHouse nextSafeHouse = new SafeHouse(mNextSafeHouseId, houseName, description);
                 Gson gson = new Gson();
                 String nextSafehouseJson = gson.toJson(nextSafeHouse);
                 mEditor.putString("nextSafehouse", nextSafehouseJson);
@@ -738,11 +746,15 @@ public class MainActivity extends FragmentActivity
         if(key.equals(Constants.PREFERENCES_STEPS_IN_SENSOR_KEY) && (mCurrentMatch != null)) {
             stepsInSensor = mSharedPreferences.getInt(Constants.PREFERENCES_STEPS_IN_SENSOR_KEY, 0);
             dailySteps = mSharedPreferences.getInt(Constants.PREFERENCES_DAILY_STEPS, 0);
-//            initializeEventDialogFragments();
-//            checkSafehouseDistance();
-        }
-        if(key.equals("everyoneJoined")) {
+            dailyGoal = mSharedPreferences.getInt(Constants.PREFERENCES_DAILY_GOAL, 5000);
+            if (dailyGoal < dailySteps && !reachedDailySafehouse) {
+                checkSafehouseDistance();
+            }
+            initializeEventDialogFragments();
 
+        }
+        if(key.equals(Constants.PREFERENCES_REACHED_SAFEHOUSE)) {
+            reachedDailySafehouse = mSharedPreferences.getBoolean(Constants.PREFERENCES_REACHED_SAFEHOUSE, true);
         }
 
         //TODO: Add listener for isCampaignEnded boolean to trigger end of game screen
@@ -750,19 +762,20 @@ public class MainActivity extends FragmentActivity
 
     //TODO: Move most checkSafehouseDistance to BackgroundStepService EXCEPT Dialog triggers
     public void checkSafehouseDistance() {
+        //TODO: change checkSafehouseDistance and saveSafehouse into one method
+        mEditor.putBoolean(Constants.PREFERENCES_REACHED_SAFEHOUSE, true).apply();
+
+
         //pull next safehouse object from shared preferences
-//        if(mNextSafehouse.reachedSafehouse(dailySteps))
-//        {
-//            mPriorSafehouse = mNextSafehouse;
-//            mLastSafeHouseId = mNextSafehouse.getHouseId();
-//            mNextSafeHouseId = mLastSafeHouseId + 1;
-//            mEditor.putInt("lastSafehouseId", mLastSafeHouseId);
-//            mEditor.putInt("nextSafehouseId", mNextSafeHouseId);
-//            mEditor.commit();
-//            safehouseTextView.setText(Integer.toString(mNextSafeHouseId));
-//            saveSafehouse();
-//            showEventDialog(2);
-//        }
+
+            mPriorSafehouse = mNextSafehouse;
+            mLastSafeHouseId = mNextSafehouse.getHouseId();
+            mNextSafeHouseId = mLastSafeHouseId + 1;
+            mEditor.putInt("lastSafehouseId", mLastSafeHouseId);
+            mEditor.putInt("nextSafehouseId", mNextSafeHouseId);
+            mEditor.commit();
+            saveSafehouse();
+            showEventDialog(2);
     }
 
     public void initiateDailyCountResetService() {
