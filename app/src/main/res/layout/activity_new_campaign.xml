@@ -28,20 +28,26 @@
     <!--Settings layout, visible on init-->
     <android.support.percent.PercentRelativeLayout
         android:id="@+id/settingsField"
-        app:layout_heightPercent="22%"
+        app:layout_heightPercent="30%"
         app:layout_widthPercent="85%"
-        app:layout_marginTopPercent="14%"
+        app:layout_marginTopPercent="11%"
         android:layout_alignParentEnd="true"
         android:layout_alignParentRight="true"
         android:visibility="visible">
+
+        <ImageView
+            android:id="@+id/topDivider"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:src="@drawable/divider_one"/>
 
         <SeekBar
             android:id="@+id/difficultySeekBar"
             android:layout_alignParentEnd="true"
             android:layout_alignParentRight="true"
-            android:layout_height="45dp"
+            android:layout_below="@+id/topDivider"
+            android:layout_height="35dp"
             android:layout_width="230dp"
-            app:layout_marginTopPercent="8%"
             app:layout_marginRightPercent="3%"
             android:max="2"
             android:background="@drawable/status_field_one"/>
@@ -52,7 +58,7 @@
             android:layout_height="wrap_content"
             android:layout_toLeftOf="@+id/difficultySeekBar"
             android:layout_toStartOf="@+id/difficultySeekBar"
-            app:layout_marginTopPercent="18%"
+            app:layout_marginTopPercent="25%"
             app:layout_marginRightPercent="3%"
             android:textColor="@android:color/black"
             android:textAllCaps="true"
@@ -77,7 +83,7 @@
             android:id="@+id/campaignLengthSeekBar"
             android:layout_alignParentEnd="true"
             android:layout_alignParentRight="true"
-            android:layout_height="45dp"
+            android:layout_height="35dp"
             android:layout_width="230dp"
             app:layout_marginTopPercent="50%"
             app:layout_marginRightPercent="3%"
@@ -85,13 +91,14 @@
             android:background="@drawable/status_field_two"/>
 
         <TextView
+            android:id="@+id/lengthTitle"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:textColor="@android:color/black"
             android:layout_below="@+id/difficultyTitle"
             android:layout_alignStart="@+id/difficultyTitle"
             android:layout_alignLeft="@+id/difficultyTitle"
-            app:layout_marginTopPercent="35%"
+            app:layout_marginTopPercent="23%"
             app:layout_marginRightPercent="3%"
             android:text="Length"
             android:textAllCaps="true"
@@ -110,6 +117,44 @@
             android:textStyle="bold"
             android:textSize="12sp"
             android:layout_below="@+id/campaignLengthSeekBar"/>
+
+        <SeekBar
+            android:id="@+id/partySizeSeekBar"
+            android:layout_alignParentEnd="true"
+            android:layout_alignParentRight="true"
+            android:layout_height="45dp"
+            android:layout_width="230dp"
+            app:layout_marginTopPercent="55%"
+            app:layout_marginRightPercent="3%"
+            android:max="2"
+            android:background="@drawable/status_field_three"/>
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textColor="@android:color/black"
+            android:layout_below="@+id/lengthTitle"
+            android:layout_alignStart="@+id/lengthTitle"
+            android:layout_alignLeft="@+id/lengthTitle"
+            app:layout_marginTopPercent="20%"
+            app:layout_marginRightPercent="3%"
+            android:text="Party Size"
+            android:textAllCaps="true"
+            android:textStyle="bold" />
+
+        <TextView
+            android:id="@+id/partySizeText"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentEnd="true"
+            android:layout_alignParentRight="true"
+            app:layout_marginRightPercent="5%"
+            android:text="2 Players"
+            android:textColor="@android:color/black"
+            android:textAllCaps="true"
+            android:textStyle="bold"
+            android:textSize="12sp"
+            android:layout_below="@+id/partySizeSeekBar"/>
 
     </android.support.percent.PercentRelativeLayout>
 
@@ -163,7 +208,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             app:layout_marginTopPercent="5%"
-            android:src="@drawable/divider_one"/>
+            android:src="@drawable/divider_two"/>
 
         <ListView
             android:id="@+id/infoListView"
@@ -212,7 +257,7 @@
 
         <ListView
             android:id="@+id/invitePlayersListView"
-            app:layout_marginTopPercent="14.5%"
+            app:layout_marginTopPercent="12%"
             app:layout_marginBottomPercent="6%"
             android:layout_width="match_parent"
             android:layout_height="match_parent">

@@ -4,7 +4,6 @@ import android.content.Context;
 import android.support.percent.PercentRelativeLayout;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
-import android.text.Layout;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
@@ -12,7 +11,6 @@ import android.widget.Button;
 import android.widget.ListView;
 import android.widget.SeekBar;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import com.eyecuelab.survivalists.R;
 
@@ -72,7 +70,7 @@ public class NewCampaignActivity extends AppCompatActivity implements View.OnCli
 
         initiateSeekBars();
 
-        ArrayAdapter<String> infoAdapter = new ArrayAdapter<>(NewCampaignActivity.this, R.layout.simple_list_item, getResources().getStringArray(R.array.difficultyDescriptions));
+        ArrayAdapter<String> infoAdapter = new ArrayAdapter<>(NewCampaignActivity.this, R.layout.info_list_item, getResources().getStringArray(R.array.difficultyDescriptions));
         infoListView.setAdapter(infoAdapter);
     }
 
