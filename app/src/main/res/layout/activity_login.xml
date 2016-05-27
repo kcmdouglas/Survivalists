@@ -64,8 +64,7 @@
         android:layout_alignRight="@+id/loginButton"
         android:layout_alignEnd="@+id/loginButton"
         android:layout_alignLeft="@+id/loginButton"
-        android:layout_alignStart="@+id/loginButton"
-        android:backgroundTint="@color/com_facebook_button_background_color_selected" />
+        android:layout_alignStart="@+id/loginButton" />
 
 
 </RelativeLayout>

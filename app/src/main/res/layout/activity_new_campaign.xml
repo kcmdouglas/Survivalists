@@ -10,16 +10,30 @@
     <ImageView
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:src="@drawable/new_campaign_background"
+        android:src="@drawable/blank_notebook_page"
         android:scaleType="centerCrop"/>
 
+    <TextView
+        android:id="@+id/settingsTitle"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        app:layout_marginTopPercent="10%"
+        app:layout_marginLeftPercent="38%"
+        android:textColor="@android:color/black"
+        android:textStyle="bold"
+        android:textSize="18sp"
+        android:text="Campaign Settings"
+        />
+
+    <!--Settings layout, visible on init-->
     <android.support.percent.PercentRelativeLayout
+        android:id="@+id/settingsField"
         app:layout_heightPercent="22%"
         app:layout_widthPercent="85%"
         app:layout_marginTopPercent="14%"
         android:layout_alignParentEnd="true"
         android:layout_alignParentRight="true"
-        android:id="@+id/settingsField">
+        android:visibility="visible">
 
         <SeekBar
             android:id="@+id/difficultySeekBar"
@@ -36,14 +50,14 @@
             android:id="@+id/difficultyTitle"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:textColor="@android:color/black"
             android:layout_toLeftOf="@+id/difficultySeekBar"
             android:layout_toStartOf="@+id/difficultySeekBar"
             app:layout_marginTopPercent="18%"
             app:layout_marginRightPercent="3%"
-            android:text="Diffculty"
+            android:textColor="@android:color/black"
             android:textAllCaps="true"
-            android:textStyle="bold" />
+            android:textStyle="bold"
+            android:text="Diffculty" />
 
         <TextView
             android:id="@+id/difficultyDescription"
@@ -56,7 +70,7 @@
             android:textColor="@android:color/black"
             android:textAllCaps="true"
             android:textStyle="bold"
-            android:textSize="11sp"
+            android:textSize="12sp"
             android:layout_below="@+id/difficultySeekBar"/>
 
         <SeekBar
@@ -94,44 +108,142 @@
             android:textColor="@android:color/black"
             android:textAllCaps="true"
             android:textStyle="bold"
-            android:textSize="11sp"
+            android:textSize="12sp"
             android:layout_below="@+id/campaignLengthSeekBar"/>
 
     </android.support.percent.PercentRelativeLayout>
 
+    <!--Confirmed settings info, visible after confirmation-->
     <android.support.percent.PercentRelativeLayout
-        android:id="@+id/teamBuildingSection"
-        app:layout_heightPercent="41%"
+        android:id="@+id/settingsConfirmedSection"
+        app:layout_heightPercent="10%"
+        app:layout_widthPercent="83%"
+        android:layout_below="@+id/settingsTitle"
+        android:layout_alignParentEnd="true"
+        android:layout_alignParentRight="true"
+        android:visibility="gone">
+
+        <TextView
+            android:id="@+id/difficultyConfirmedText"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            app:layout_marginTopPercent="18%"
+            app:layout_marginRightPercent="3%"
+            android:textColor="@android:color/black"
+            android:textAllCaps="true"
+            android:textStyle="bold"
+            android:text="Diffculty: " />
+
+        <TextView
+            android:id="@+id/lengthConfirmedText"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textColor="@android:color/black"
+            android:layout_below="@+id/difficultyConfirmedText"
+            app:layout_marginTopPercent="15%"
+            app:layout_marginRightPercent="3%"
+            android:textAllCaps="true"
+            android:textStyle="bold"
+            android:text="Length: " />
+
+    </android.support.percent.PercentRelativeLayout>
+
+    <!--General info about settings, visible on init-->
+    <android.support.percent.PercentRelativeLayout
+        android:id="@+id/infoSection"
+        app:layout_heightPercent="45%"
         app:layout_widthPercent="83%"
         android:layout_alignParentEnd="true"
         android:layout_alignParentRight="true"
         android:layout_below="@+id/settingsField"
-        app:layout_marginTopPercent="1.5%">
+        app:layout_marginTopPercent="1%"
+        android:visibility="visible">
+
+        <ImageView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            app:layout_marginTopPercent="5%"
+            android:src="@drawable/divider_one"/>
 
         <ListView
-            android:id="@+id/invitePlayersListView"
+            android:id="@+id/infoListView"
+            app:layout_marginTopPercent="16%"
+            app:layout_marginBottomPercent="10%"
             android:layout_width="match_parent"
             android:layout_height="match_parent">
         </ListView>
 
+        <ImageView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:src="@drawable/divider_three"
+            android:layout_alignParentBottom="true"/>
+
     </android.support.percent.PercentRelativeLayout>
 
+    <!--Invite players section, visible after confirmation-->
     <android.support.percent.PercentRelativeLayout
-        android:id="@+id/bottomButtons"
-        app:layout_heightPercent="12%"
+        android:id="@+id/teamBuildingSection"
+        app:layout_heightPercent="55%"
         app:layout_widthPercent="83%"
-        app:layout_marginTopPercent="4.5%"
         android:layout_alignParentEnd="true"
         android:layout_alignParentRight="true"
-        android:layout_below="@+id/teamBuildingSection">
+        android:layout_below="@+id/settingsConfirmedSection"
+        app:layout_marginTopPercent="1%"
+        android:visibility="gone">
+
+        <TextView
+            android:id="@+id/pendingTeamTitle"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            app:layout_marginTopPercent="0%"
+            app:layout_marginLeftPercent="30%"
+            android:textColor="@android:color/black"
+            android:textStyle="bold"
+            android:textSize="18sp"
+            android:text="Pending Team"
+            />
+
+        <ImageView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            app:layout_marginTopPercent="5%"
+            android:src="@drawable/divider_one"/>
+
+        <ListView
+            android:id="@+id/invitePlayersListView"
+            app:layout_marginTopPercent="14.5%"
+            app:layout_marginBottomPercent="6%"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent">
+        </ListView>
+
+        <ImageView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:src="@drawable/divider_three"
+            android:layout_alignParentBottom="true"/>
+
+    </android.support.percent.PercentRelativeLayout>
+
+    <!--Bottom buttons, always visible-->
+    <android.support.percent.PercentRelativeLayout
+        android:id="@+id/bottomButtons"
+        app:layout_heightPercent="10%"
+        app:layout_widthPercent="83%"
+        app:layout_marginBottomPercent="10%"
+        android:layout_alignParentEnd="true"
+        android:layout_alignParentRight="true"
+        android:layout_alignParentBottom="true">
 
         <Button
-            app:layout_heightPercent="60%"
+            android:id="@+id/confirmationButton"
+            app:layout_heightPercent="70%"
             app:layout_widthPercent="50%"
-            app:layout_marginTopPercent="1%"
+            app:layout_marginTopPercent="15%"
             android:layout_centerHorizontal="true"
             android:background="@drawable/blank_notebook_interaction_btn"
-            android:text="Send Invitations"
+            android:text="Confirm settings"
             android:textAllCaps="true"
             android:textStyle="bold"/>
 
