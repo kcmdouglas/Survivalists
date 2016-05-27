@@ -13,8 +13,11 @@
         android:scaleType="centerCrop"/>
 
     <android.support.percent.PercentRelativeLayout
-        android:layout_width="match_parent"
-        app:layout_heightPercent="35%"
+        app:layout_heightPercent="22%"
+        app:layout_widthPercent="85%"
+        app:layout_marginTopPercent="14%"
+        android:layout_alignParentEnd="true"
+        android:layout_alignParentRight="true"
         android:id="@+id/settingsField">
 
         <SeekBar
@@ -23,9 +26,9 @@
             android:layout_alignParentRight="true"
             android:layout_height="45dp"
             android:layout_width="230dp"
-            app:layout_marginTopPercent="35%"
+            app:layout_marginTopPercent="8%"
             app:layout_marginRightPercent="3%"
-            android:max="5"
+            android:max="2"
             android:background="@drawable/status_field_one"/>
 
         <TextView
@@ -35,11 +38,25 @@
             android:textColor="@android:color/black"
             android:layout_toLeftOf="@+id/difficultySeekBar"
             android:layout_toStartOf="@+id/difficultySeekBar"
-            app:layout_marginTopPercent="43%"
+            app:layout_marginTopPercent="18%"
             app:layout_marginRightPercent="3%"
             android:text="Diffculty"
             android:textAllCaps="true"
             android:textStyle="bold" />
+
+        <TextView
+            android:id="@+id/difficultyDescription"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentEnd="true"
+            android:layout_alignParentRight="true"
+            app:layout_marginRightPercent="5%"
+            android:text="Walk in the park"
+            android:textColor="@android:color/black"
+            android:textAllCaps="true"
+            android:textStyle="bold"
+            android:textSize="11sp"
+            android:layout_below="@+id/difficultySeekBar"/>
 
         <SeekBar
             android:id="@+id/campaignLengthSeekBar"
@@ -47,9 +64,9 @@
             android:layout_alignParentRight="true"
             android:layout_height="45dp"
             android:layout_width="230dp"
-            app:layout_marginTopPercent="65%"
+            app:layout_marginTopPercent="50%"
             app:layout_marginRightPercent="3%"
-            android:max="5"
+            android:max="2"
             android:background="@drawable/status_field_two"/>
 
         <TextView
@@ -59,11 +76,63 @@
             android:layout_below="@+id/difficultyTitle"
             android:layout_alignStart="@+id/difficultyTitle"
             android:layout_alignLeft="@+id/difficultyTitle"
-            app:layout_marginTopPercent="25%"
+            app:layout_marginTopPercent="35%"
             app:layout_marginRightPercent="3%"
             android:text="Length"
             android:textAllCaps="true"
             android:textStyle="bold" />
+
+        <TextView
+            android:id="@+id/lengthText"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentEnd="true"
+            android:layout_alignParentRight="true"
+            app:layout_marginRightPercent="5%"
+            android:text="15 Days"
+            android:textColor="@android:color/black"
+            android:textAllCaps="true"
+            android:textStyle="bold"
+            android:textSize="11sp"
+            android:layout_below="@+id/campaignLengthSeekBar"/>
+
+    </android.support.percent.PercentRelativeLayout>
+
+    <android.support.percent.PercentRelativeLayout
+        android:id="@+id/teamBuildingSection"
+        app:layout_heightPercent="41%"
+        app:layout_widthPercent="83%"
+        android:layout_alignParentEnd="true"
+        android:layout_alignParentRight="true"
+        android:layout_below="@+id/settingsField"
+        app:layout_marginTopPercent="1.5%">
+
+        <ListView
+            android:id="@+id/invitePlayersListView"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent">
+        </ListView>
+
+    </android.support.percent.PercentRelativeLayout>
+
+    <android.support.percent.PercentRelativeLayout
+        android:id="@+id/bottomButtons"
+        app:layout_heightPercent="12%"
+        app:layout_widthPercent="83%"
+        app:layout_marginTopPercent="4.5%"
+        android:layout_alignParentEnd="true"
+        android:layout_alignParentRight="true"
+        android:layout_below="@+id/teamBuildingSection">
+
+        <Button
+            app:layout_heightPercent="60%"
+            app:layout_widthPercent="50%"
+            app:layout_marginTopPercent="1%"
+            android:layout_centerHorizontal="true"
+            android:background="@drawable/blank_notebook_interaction_btn"
+            android:text="Send Invitations"
+            android:textAllCaps="true"
+            android:textStyle="bold"/>
 
     </android.support.percent.PercentRelativeLayout>
 
