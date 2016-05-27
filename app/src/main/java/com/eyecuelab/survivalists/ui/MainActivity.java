@@ -32,7 +32,6 @@ import com.eyecuelab.survivalists.R;
 import com.eyecuelab.survivalists.adapters.InventoryAdapter;
 import com.eyecuelab.survivalists.models.Character;
 import com.eyecuelab.survivalists.models.Item;
-import com.eyecuelab.survivalists.models.User;
 import com.eyecuelab.survivalists.models.SafeHouse;
 import com.eyecuelab.survivalists.models.Weapon;
 import com.eyecuelab.survivalists.services.BackgroundStepService;
@@ -83,11 +82,9 @@ public class MainActivity extends FragmentActivity
     @Bind(R.id.rightInteractionBUtton) Button rightInteractionButton;
     @Bind(R.id.leftInteractionButton) Button leftInteractionButton;
 
-    private int stepsInSensor;
     private int dailySteps;
     private String mCurrentMatchId;
     private int mMatchDuration;
-    private int mLastSafeHouseId;
     private int mReachedSafeHouseId;
     private int mReachedSafeHousePseudoId;
     private ArrayList<String> invitees;
@@ -97,11 +94,9 @@ public class MainActivity extends FragmentActivity
     private GoogleApiClient mGoogleApiClient;
     private TurnBasedMatch mCurrentMatch;
     private String mCurrentPlayerId;
-    private SafeHouse mPriorSafehouse;
-    private SafeHouse mNextSafehouse;
+    private SafeHouse mReachedSafehouse;
     private Character mCurrentCharacter;
     private Firebase mUserFirebaseRef;
-    private User mCurrentUser;
 
     //Flags to indicate return activity
     private static final int RC_SIGN_IN =  100;
@@ -170,7 +165,6 @@ public class MainActivity extends FragmentActivity
 
         //Set counter text based on current shared preferences--these are updated in the shared preferences onChange listener
         dailySteps = mSharedPreferences.getInt(Constants.PREFERENCES_DAILY_STEPS, 0);
-        stepsInSensor = mSharedPreferences.getInt(Constants.PREFERENCES_STEPS_IN_SENSOR_KEY, 0);
 
         eventOneInitiated = mSharedPreferences.getBoolean(Constants.PREFERENCES_INITIATE_EVENT_1, false);
         eventTwoInitiated = mSharedPreferences.getBoolean(Constants.PREFERENCES_INITIATE_EVENT_2, false);
@@ -179,7 +173,6 @@ public class MainActivity extends FragmentActivity
         eventFiveInitiated = mSharedPreferences.getBoolean(Constants.PREFERENCES_INITIATE_EVENT_5, false);
         reachedDailySafehouse = mSharedPreferences.getBoolean(Constants.PREFERENCES_REACHED_SAFEHOUSE, false);
 
-        //TODO: Move daily alarm setting to the startGame function
         //Set recurring alarm
         if(!isRecurringAlarmSet) {
             isRecurringAlarmSet = true;
@@ -194,9 +187,6 @@ public class MainActivity extends FragmentActivity
             startService(mBackgroundStepServiceIntent);
         }
 
-        //TODO: Move to the startGame function
-
-
         String safehouseJson = mSharedPreferences.getString("nextSafehouse", null);
         Gson gson = new Gson();
         mNextSafehouse = gson.fromJson(safehouseJson, SafeHouse.class);
@@ -207,12 +197,6 @@ public class MainActivity extends FragmentActivity
         for(int i = 0; i < playerIDArray.length; i++ ) {
             mPlayerIDs.add(playerIDArray[i]);
         }
-
-
-
-//        if(mPlayerIDs == null) {
-//            characterButton.setEnabled(false);
-//        }
 
         setupBackpackContent();
     }
@@ -486,6 +470,7 @@ public class MainActivity extends FragmentActivity
             mEditor.putString("matchId", mCurrentMatchId);
             mEditor.commit();
 
+            //Collect all safehouse IDs, shuffle the list, then assign each campaign day with a safehouse ID
             final ArrayList<Integer> safehouseIDs = new ArrayList<>();
 
             Firebase safehouseFirebase = new Firebase(Constants.FIREBASE_URL_SAFEHOUSES);
@@ -513,6 +498,7 @@ public class MainActivity extends FragmentActivity
                 dailySafehouseMap.put(Integer.toString(i), safehouseIDs.get(i));
             }
 
+            //Create team node in database
             Firebase teamFirebaseRef = new Firebase(Constants.FIREBASE_URL_TEAM + "/" + "")
                     .child(mCurrentMatchId);
             teamFirebaseRef.child("matchStart").setValue(mCurrentMatch.getCreationTimestamp());
@@ -542,10 +528,22 @@ public class MainActivity extends FragmentActivity
         }
         turnData = new byte[1];
 
-        if(mCurrentMatch != null) {
-            matchInitiatedTime = mCurrentMatch.getCreationTimestamp();
-            //TODO: change number for createCampaign duration in takeTurn method to reflect actual user settings
-            createCampaign(1);
+        if(mMatchDuration == 0 && mCurrentMatch != null) {
+            Firebase getMatchDurationRef = new Firebase(Constants.FIREBASE_URL_TEAM + "/matchDuration");
+            getMatchDurationRef.addListenerForSingleValueEvent(new ValueEventListener() {
+                @Override
+                public void onDataChange(DataSnapshot dataSnapshot) {
+                    mMatchDuration = (int) dataSnapshot.getValue();
+                }
+
+                @Override
+                public void onCancelled(FirebaseError firebaseError) {
+
+                }
+            });
+            createCampaign(mMatchDuration);
+        } else if (mMatchDuration !=0 && mCurrentMatch != null) {
+            createCampaign(mMatchDuration);
         }
 
         ArrayList<Participant> allPlayers = mCurrentMatch.getParticipants();
@@ -737,7 +735,7 @@ public class MainActivity extends FragmentActivity
 
             ft.addToBackStack(null);
 
-            DialogFragment frag = SafehouseDialogFragment.newInstance(mStackLevel, mPriorSafehouse);
+            DialogFragment frag = SafehouseDialogFragment.newInstance(mStackLevel, mReachedSafehouse);
             frag.show(ft, "fragment_safehouse_dialog");
         }
     }
@@ -745,7 +743,6 @@ public class MainActivity extends FragmentActivity
     @Override
     public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String key) {
         if(key.equals(Constants.PREFERENCES_STEPS_IN_SENSOR_KEY) && (mCurrentMatch != null)) {
-            stepsInSensor = mSharedPreferences.getInt(Constants.PREFERENCES_STEPS_IN_SENSOR_KEY, 0);
             dailySteps = mSharedPreferences.getInt(Constants.PREFERENCES_DAILY_STEPS, 0);
             dailyGoal = mSharedPreferences.getInt(Constants.PREFERENCES_DAILY_GOAL, 5000);
             if (dailyGoal < dailySteps && !reachedDailySafehouse) {
@@ -762,7 +759,6 @@ public class MainActivity extends FragmentActivity
     }
 
     public void saveSafehouse() {
-        //TODO: Edit saveSafehouse method to call Firebase, find out the next safehouse in the randomized list, and then query that ID number against the safehouse node
         //Sets the user's own atSafehouse node
         Firebase firebaseAtSafeHouseRef = new Firebase(Constants.FIREBASE_URL_USERS + "/" + mCurrentPlayerId +"/atSafeHouse");
         firebaseAtSafeHouseRef.setValue(true);
@@ -808,11 +804,11 @@ public class MainActivity extends FragmentActivity
                 SafeHouse nextSafeHouse = new SafeHouse(mReachedSafeHouseId, houseName, description);
                 Gson gson = new Gson();
                 String nextSafehouseJson = gson.toJson(nextSafeHouse);
-                mEditor.putString("nextSafehouse", nextSafehouseJson);
+                mEditor.putString(Constants.PREFERENCES_REACHED_SAFEHOUSE, nextSafehouseJson);
                 mEditor.commit();
-                String safehouseJson = mSharedPreferences.getString("nextSafehouse", null);
+                String safehouseJson = mSharedPreferences.getString(Constants.PREFERENCES_REACHED_SAFEHOUSE, null);
                 Gson safehouseGson = new Gson();
-                mNextSafehouse = safehouseGson.fromJson(safehouseJson, SafeHouse.class);
+                mReachedSafehouse = safehouseGson.fromJson(safehouseJson, SafeHouse.class);
             }
 
             @Override
