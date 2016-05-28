@@ -45,10 +45,10 @@
             android:id="@+id/difficultySeekBar"
             android:layout_alignParentEnd="true"
             android:layout_alignParentRight="true"
-            android:layout_below="@+id/topDivider"
             android:layout_height="35dp"
             android:layout_width="230dp"
             app:layout_marginRightPercent="3%"
+            app:layout_marginTopPercent="15%"
             android:max="2"
             android:background="@drawable/status_field_one"/>
 
@@ -58,7 +58,7 @@
             android:layout_height="wrap_content"
             android:layout_toLeftOf="@+id/difficultySeekBar"
             android:layout_toStartOf="@+id/difficultySeekBar"
-            app:layout_marginTopPercent="25%"
+            app:layout_marginTopPercent="20%"
             app:layout_marginRightPercent="3%"
             android:textColor="@android:color/black"
             android:textAllCaps="true"
@@ -85,7 +85,7 @@
             android:layout_alignParentRight="true"
             android:layout_height="35dp"
             android:layout_width="230dp"
-            app:layout_marginTopPercent="50%"
+            app:layout_marginTopPercent="40%"
             app:layout_marginRightPercent="3%"
             android:max="2"
             android:background="@drawable/status_field_two"/>
@@ -98,7 +98,7 @@
             android:layout_below="@+id/difficultyTitle"
             android:layout_alignStart="@+id/difficultyTitle"
             android:layout_alignLeft="@+id/difficultyTitle"
-            app:layout_marginTopPercent="23%"
+            app:layout_marginTopPercent="18%"
             app:layout_marginRightPercent="3%"
             android:text="Length"
             android:textAllCaps="true"
@@ -124,9 +124,9 @@
             android:layout_alignParentRight="true"
             android:layout_height="45dp"
             android:layout_width="230dp"
-            app:layout_marginTopPercent="55%"
+            app:layout_marginTopPercent="65%"
             app:layout_marginRightPercent="3%"
-            android:max="2"
+            android:max="3"
             android:background="@drawable/status_field_three"/>
 
         <TextView
@@ -196,27 +196,27 @@
     <!--General info about settings, visible on init-->
     <android.support.percent.PercentRelativeLayout
         android:id="@+id/infoSection"
-        app:layout_heightPercent="45%"
+        app:layout_heightPercent="40%"
         app:layout_widthPercent="83%"
         android:layout_alignParentEnd="true"
         android:layout_alignParentRight="true"
         android:layout_below="@+id/settingsField"
-        app:layout_marginTopPercent="1%"
+        app:layout_marginTopPercent="0%"
         android:visibility="visible">
-
-        <ImageView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            app:layout_marginTopPercent="5%"
-            android:src="@drawable/divider_two"/>
 
         <ListView
             android:id="@+id/infoListView"
-            app:layout_marginTopPercent="16%"
+            app:layout_marginTopPercent="15%"
             app:layout_marginBottomPercent="10%"
             android:layout_width="match_parent"
             android:layout_height="match_parent">
         </ListView>
+
+        <ImageView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            app:layout_marginTopPercent="0%"
+            android:src="@drawable/divider_two"/>
 
         <ImageView
             android:layout_width="match_parent"
