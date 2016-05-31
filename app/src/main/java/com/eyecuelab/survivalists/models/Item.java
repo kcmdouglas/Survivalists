@@ -16,12 +16,11 @@ public class Item {
 
     public Item () {}
 
-    public Item(String name, String description, int healthPoints, boolean effectsHealth, int imageId) {
+    public Item(String name, String description, int healthPoints, boolean effectsHealth) {
         this.name=name;
         this.description = description;
         this.healthPoints = healthPoints;
         this.effectsHealth = effectsHealth;
-        this.imageId = imageId;
     }
 
     public void useItem(Character character) {

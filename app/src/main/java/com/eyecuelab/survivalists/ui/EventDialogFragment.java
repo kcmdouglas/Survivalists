@@ -199,7 +199,7 @@ public class EventDialogFragment extends android.support.v4.app.DialogFragment i
                                 String itemDescription = dataSnapshot.child("description").getValue().toString();
                                 int healthPoints = (int) dataSnapshot.child("health_points").getValue();
                                 int itemId = (int) dataSnapshot.getValue();
-                                item = new Item(itemName, itemDescription, healthPoints, effectsHealth, R.drawable.steak_inventory);
+                                item = new Item(itemName, itemDescription, healthPoints, effectsHealth);
                             }
 
                         }
