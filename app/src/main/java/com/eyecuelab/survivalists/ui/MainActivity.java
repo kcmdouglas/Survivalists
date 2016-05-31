@@ -20,7 +20,6 @@ import android.text.TextUtils;
 import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
-import android.view.WindowManager;
 import android.widget.AdapterView;
 import android.widget.Button;
 import android.widget.GridView;
@@ -136,11 +135,18 @@ public class MainActivity extends FragmentActivity
         super.onCreate(savedInstanceState);
         Firebase.setAndroidContext(this);
 
-        //Remove notification bar
-        this.getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN, WindowManager.LayoutParams.FLAG_FULLSCREEN);
+        //Remove notification and navigation bars
+        View decorView = getWindow().getDecorView();
+        decorView.setSystemUiVisibility(View.SYSTEM_UI_FLAG_LAYOUT_STABLE
+                | View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
+                | View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
+                | View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
+                | View.SYSTEM_UI_FLAG_FULLSCREEN
+                | View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY);
 
         //set content view AFTER ABOVE sequence (to avoid crash)
         setContentView(R.layout.activity_notebook);
+
         mContext = this;
         ButterKnife.bind(this);
 
@@ -330,7 +336,8 @@ public class MainActivity extends FragmentActivity
                 mContext.startActivity(intent);
                 break;
             case R.id.mapTabButton:
-                Toast.makeText(this, "Map Button!", Toast.LENGTH_SHORT).show();
+                Intent newCampaignIntent = new Intent(MainActivity.this, NewCampaignActivity.class);
+                startActivity(newCampaignIntent);
                 break;
             case R.id.rightInteractionBUtton:
                 Toast.makeText(this, "Are you encouraged?", Toast.LENGTH_SHORT).show();
@@ -943,7 +950,7 @@ public class MainActivity extends FragmentActivity
             try {
                 GridView inventoryGridView = (GridView) findViewById(R.id.backpackGridView);
                 //TODO: Figure out why android studio thinks this catch is required (and isn't happy)
-                inventoryGridView.setAdapter(new InventoryAdapter(this, items, weapons, R.layout.row_grid));
+                inventoryGridView.setAdapter(new InventoryAdapter(this, items, weapons, R.layout.inventory_row_grid));
                 inventoryGridView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
                     @Override
                     public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
