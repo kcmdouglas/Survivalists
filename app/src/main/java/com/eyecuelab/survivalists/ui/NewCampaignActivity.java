@@ -2,12 +2,10 @@ package com.eyecuelab.survivalists.ui;
 
 import android.app.AlarmManager;
 import android.app.PendingIntent;
-import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.preference.PreferenceManager;
 import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
 import android.support.percent.PercentRelativeLayout;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -26,18 +24,14 @@ import com.eyecuelab.survivalists.R;
 import com.eyecuelab.survivalists.models.Character;
 import com.eyecuelab.survivalists.models.SafeHouse;
 import com.eyecuelab.survivalists.util.CampaignEndAlarmReceiver;
-import com.eyecuelab.survivalists.util.MatchInitiatedListener;
 import com.eyecuelab.survivalists.util.MatchUpdateListener;
 import com.firebase.client.DataSnapshot;
 import com.firebase.client.Firebase;
 import com.firebase.client.FirebaseError;
 import com.firebase.client.ValueEventListener;
-import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.common.api.ResultCallback;
 import com.google.android.gms.games.Games;
-import com.google.android.gms.games.Player;
-import com.google.android.gms.games.multiplayer.Multiplayer;
 import com.google.android.gms.games.multiplayer.Participant;
 import com.google.android.gms.games.multiplayer.turnbased.TurnBasedMatch;
 import com.google.android.gms.games.multiplayer.turnbased.TurnBasedMatchConfig;
@@ -63,6 +57,8 @@ public class NewCampaignActivity extends AppCompatActivity implements View.OnCli
     private ArrayList<String> descriptions = new ArrayList<>();
     private ArrayList<String> lengths = new ArrayList<>();
     private ArrayList<String> invitedPlayers = new ArrayList<>();
+    Integer[] campaignDuration = {15, 30, 45};
+    Integer[] defaultDailyGoal = {5000, 7000, 10000};
 
     private ListView mInvitePlayersListView;
     private SharedPreferences mSharedPreferences;
@@ -131,6 +127,10 @@ public class NewCampaignActivity extends AppCompatActivity implements View.OnCli
 
         ArrayAdapter<String> infoAdapter = new ArrayAdapter<>(NewCampaignActivity.this, R.layout.info_list_item, getResources().getStringArray(R.array.difficultyDescriptions));
         infoListView.setAdapter(infoAdapter);
+
+        //Create Shared Preferences
+        mSharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
+        mEditor = mSharedPreferences.edit();
     }
 
     @Override
@@ -144,6 +144,7 @@ public class NewCampaignActivity extends AppCompatActivity implements View.OnCli
         switch (view.getId()) {
             case R.id.confirmationButton:
                 if (mConfirmingSettings == true) {
+                    saveCampaignSettings();
                     loadAvailablePlayers();
                 } else if (mPartySize == invitedPlayers.size()){
                     Toast.makeText(NewCampaignActivity.this, "Invitations sent", Toast.LENGTH_LONG).show();
@@ -161,6 +162,27 @@ public class NewCampaignActivity extends AppCompatActivity implements View.OnCli
         final int MIN_OPPONENTS = 1;
         Intent intent = Games.TurnBasedMultiplayer.getSelectOpponentsIntent(mGoogleApiClient, MIN_OPPONENTS, mPartySize, false);
         startActivityForResult(intent, WAITING_ROOM_TAG);
+        settingsLayout.setVisibility(View.GONE);
+        settingConfirmationLayout.setVisibility(View.VISIBLE);
+        generalInfoLayout.setVisibility(View.GONE);
+        playerInvitationLayout.setVisibility(View.VISIBLE);
+
+        int remainingInvites = mPartySize - invitedPlayers.size();
+        confirmationButton.setText(remainingInvites + " invitations remaining...");
+
+        difficultyConfirmedTextView.setText("Difficulty: " + descriptions.get(mDifficultyLevel));
+        lengthConfirmedTextView.setText("Length: " + lengths.get(mCampaignLength) + " Days");
+
+        String[] players = new String[] {"This Nose Knows", "Hello", "Testing", "This Nose Knows", "Hello", "Testing", "This Nose Knows", "Hello", "Testing",};
+        ArrayAdapter<String> adapter = new ArrayAdapter<>(this, R.layout.player_list_item, R.id.playerNameTextView, players);
+
+        invitePlayerListView.setAdapter(adapter);
+        invitePlayerListView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            @Override
+            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                invitedPlayers.add(String.valueOf(position));
+            }
+        });
     }
 
     public void initiateSeekBars() {
@@ -178,7 +200,7 @@ public class NewCampaignActivity extends AppCompatActivity implements View.OnCli
 
             @Override
             public void onStopTrackingTouch(SeekBar seekBar) {
-                mDifficultyLevel = progressTotal;
+                mDifficultyLevel = defaultDailyGoal[progressTotal];
             }
         });
 
@@ -196,7 +218,7 @@ public class NewCampaignActivity extends AppCompatActivity implements View.OnCli
 
             @Override
             public void onStopTrackingTouch(SeekBar seekBar) {
-                mCampaignLength = progressTotal;
+                mCampaignLength = campaignDuration[progressTotal];
             }
         });
 
@@ -366,7 +388,7 @@ public class NewCampaignActivity extends AppCompatActivity implements View.OnCli
                 int stepsRequired = Integer.parseInt(dataSnapshot.child("stepsRequired").getValue().toString());
 
                 // Build the next safehouse object and save it to shared preferences
-                SafeHouse nextSafeHouse = new SafeHouse(mNextSafeHouseId, houseName, description, stepsRequired);
+                SafeHouse nextSafeHouse = new SafeHouse(mNextSafeHouseId, houseName, description);
                 Gson gson = new Gson();
                 String nextSafehouseJson = gson.toJson(nextSafeHouse);
                 mEditor.putString("nextSafehouse", nextSafehouseJson);
@@ -433,5 +455,11 @@ public class NewCampaignActivity extends AppCompatActivity implements View.OnCli
             }
         });
 
+    }
+
+    public void saveCampaignSettings() {
+        mEditor.putInt(Constants.PREFERENCES_DURATION_SETTING, mCampaignLength);
+        mEditor.putInt(Constants.PREFERENCES_DEFAULT_DAILY_GOAL_SETTING, mDifficultyLevel);
+        mEditor.commit();
     }
 }
