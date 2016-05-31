@@ -52,6 +52,8 @@ public class MerchantDialogFragment extends android.support.v4.app.DialogFragmen
     public Item selectedInventoryItem;
     public Weapon selectedInventoryWeapon;
     public String playerId;
+    public Integer offerRandomizer;
+    public Integer selectedItemChooser;
 
     //empty constructor required for dialog fragments
     public MerchantDialogFragment() {};
@@ -194,6 +196,7 @@ public class MerchantDialogFragment extends android.support.v4.app.DialogFragmen
     public void onClick(View v) {
         switch (v.getId()){
             case R.id.acceptButton:
+                addItems();
                 dismiss();
                 break;
             case R.id.merchantCloseButton:
@@ -202,10 +205,85 @@ public class MerchantDialogFragment extends android.support.v4.app.DialogFragmen
         }
     }
 
+    private void addItems() {
+        switch (offerRandomizer){
+            case 0:
+                determineItemToRemove();
+                addItemToInventory(weaponOne);
+                addItemToInventory(weaponTwo);
+                break;
+            case 1:
+                determineItemToRemove();
+                addItemToInventory(weaponOne);
+                addItemToInventory(itemOne);
+                break;
+            case 2:
+                determineItemToRemove();
+                addItemToInventory(itemOne);
+                addItemToInventory(itemTwo);
+                break;
+        }
+    }
+
+    private void determineItemToRemove() {
+        if (userItemInventory != null && userWeaponInventory != null) {
+            if (selectedItemChooser == 0) {
+                removeItemFromInventory(selectedInventoryWeapon);
+            } else {
+                removeItemFromInventory(selectedInventoryItem);
+            }
+        } else if (userItemInventory != null) {
+            removeItemFromInventory(selectedInventoryItem);
+        } else if (userWeaponInventory != null){
+            removeItemFromInventory(selectedInventoryWeapon);
+        }
+    }
+
+    private void removeItemFromInventory(final Weapon weapon) {
+        Firebase inventoryRef = new Firebase (Constants.FIREBASE_URL_USERS + "/" + playerId + "/character/weapons");
+
+        inventoryRef.addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                for (DataSnapshot child : dataSnapshot.getChildren()) {
+                    if (child.getKey().toString().equals(weapon.getName()))  {
+                        child.getRef().removeValue();
+                        break;
+                    }
+                }
+            }
+
+            @Override
+            public void onCancelled(FirebaseError firebaseError) {
+
+            }
+        });
+    }
+    private void removeItemFromInventory(final Item item) {
+        Firebase inventoryRef = new Firebase (Constants.FIREBASE_URL_USERS + "/" + playerId + "/character/items");
+
+        inventoryRef.addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                for (DataSnapshot child : dataSnapshot.getChildren()) {
+                    if (child.getKey().toString().equals(item.getName()))  {
+                        child.getRef().removeValue();
+                        break;
+                    }
+                }
+            }
+
+            @Override
+            public void onCancelled(FirebaseError firebaseError) {
+
+            }
+        });
+    }
+
     public void randomizeItems() {
         //0 is weapon, 1 is item
-        Integer selectedItemChooser = (int) (Math.random() +.5);
-        Integer offerRandomizer = (int) (Math.random() * 2);
+        selectedItemChooser = (int) (Math.random() +.5);
+        offerRandomizer = (int) (Math.random() * 2);
         Collections.shuffle(allItems);
 
         if(userItemInventory != null) {
@@ -270,6 +348,44 @@ public class MerchantDialogFragment extends android.support.v4.app.DialogFragmen
             acceptButton.setEnabled(false);
             merchantOffer.setText("Seems like you have nothing to barter...");
         }
+    }
+
+    private void addItemToInventory(final Weapon weapon) {
+        final Firebase mFirebaseInventoryUpdate = new Firebase(Constants.FIREBASE_URL_USERS + "/" + playerId + "/character/weapons/");
+
+        mFirebaseInventoryUpdate.addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                int itemAmount = (int) dataSnapshot.getChildrenCount();
+                if (itemAmount < 4) {
+                    mFirebaseInventoryUpdate.child(weapon.getName()).setValue(weapon);
+                }
+            }
+
+            @Override
+            public void onCancelled(FirebaseError firebaseError) {
+
+            }
+        });
+    }
+
+    private void addItemToInventory(final Item item) {
+        final Firebase mFirebaseInventoryUpdate = new Firebase(Constants.FIREBASE_URL_USERS + "/" + playerId + "/character/items/");
+
+        mFirebaseInventoryUpdate.addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                int itemAmount = (int) dataSnapshot.getChildrenCount();
+                if (itemAmount < 12) {
+                    mFirebaseInventoryUpdate.child(item.getName()).setValue(item);
+                }
+            }
+
+            @Override
+            public void onCancelled(FirebaseError firebaseError) {
+
+            }
+        });
     }
 
 }
