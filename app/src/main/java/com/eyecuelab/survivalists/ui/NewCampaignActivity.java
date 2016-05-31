@@ -146,7 +146,6 @@ public class NewCampaignActivity extends AppCompatActivity implements View.OnCli
                 if (mConfirmingSettings == true) {
                     loadAvailablePlayers();
                 } else if (mPartySize == invitedPlayers.size()){
-                    sendInvitations();
                     Toast.makeText(NewCampaignActivity.this, "Invitations sent", Toast.LENGTH_LONG).show();
                 } else {
                     int remainingInvites = mPartySize - invitedPlayers.size();
@@ -162,11 +161,6 @@ public class NewCampaignActivity extends AppCompatActivity implements View.OnCli
         final int MIN_OPPONENTS = 1;
         Intent intent = Games.TurnBasedMultiplayer.getSelectOpponentsIntent(mGoogleApiClient, MIN_OPPONENTS, mPartySize, false);
         startActivityForResult(intent, WAITING_ROOM_TAG);
-    }
-
-    public void sendInvitations() {
-        confirmationButton.setText("Awaiting Responses...");
-        confirmationButton.setTextColor(getColor(android.R.color.darker_gray));
     }
 
     public void initiateSeekBars() {
@@ -211,7 +205,7 @@ public class NewCampaignActivity extends AppCompatActivity implements View.OnCli
 
             @Override
             public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
-                int currentCount = progress + 1;
+                int currentCount = progress + 2;
                 partyTextView.setText(currentCount + " Players");
                 progressTotal = progress + 1;
             }
@@ -222,7 +216,6 @@ public class NewCampaignActivity extends AppCompatActivity implements View.OnCli
             @Override
             public void onStopTrackingTouch(SeekBar seekBar) {
                 mPartySize = progressTotal;
-                Toast.makeText(NewCampaignActivity.this, "" + mPartySize, Toast.LENGTH_LONG).show();
             }
         });
     }
@@ -289,6 +282,7 @@ public class NewCampaignActivity extends AppCompatActivity implements View.OnCli
         turnData = mCurrentMatch.getData();
         mCurrentPlayerId = Games.Players.getCurrentPlayerId(mGoogleApiClient);
 
+        //First turn
         if (turnData == null) {
             mCurrentMatchId = mCurrentMatch.getMatchId();
             ArrayList<String> wholeParty = invitedPlayers;
@@ -304,6 +298,7 @@ public class NewCampaignActivity extends AppCompatActivity implements View.OnCli
             Firebase teamFirebaseRef = new Firebase(Constants.FIREBASE_URL_TEAM + "/" + "").child(mCurrentMatchId);
             teamFirebaseRef.child("matchStart").setValue(mCurrentMatch.getCreationTimestamp());
             teamFirebaseRef.child("matchDuration").setValue(Integer.parseInt(lengths.get(mCampaignLength)));
+            teamFirebaseRef.child("difficultyLevel").setValue(mDifficultyLevel);
             teamFirebaseRef.child("lastSafehouseId").setValue(0);
             teamFirebaseRef.child("nextSafehouseId").setValue(1);
 
@@ -321,6 +316,7 @@ public class NewCampaignActivity extends AppCompatActivity implements View.OnCli
             createCampaign(mCampaignLength);
             saveSafehouse();
             turnData = new byte[1];
+
             //Take as many turns as there are players, to invite all players at once
             for (int i = 0; i < mCurrentMatch.getParticipantIds().size(); i++) {
                 String nextPlayer = mCurrentMatch.getParticipantIds().get(i);
