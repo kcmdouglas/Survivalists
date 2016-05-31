@@ -3,6 +3,7 @@ package com.eyecuelab.survivalists.ui;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
+import android.text.TextUtils;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -22,6 +23,7 @@ import com.firebase.client.ValueEventListener;
 import org.parceler.Parcels;
 
 import java.lang.reflect.Array;
+import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.Collections;
 
@@ -39,11 +41,16 @@ public class MerchantDialogFragment extends android.support.v4.app.DialogFragmen
     @Bind(R.id.merchantCloseButton) Button merchantCloseButton;
     @Bind(R.id.acceptButton) Button acceptButton;
     @Bind(R.id.merchantOffer) TextView merchantOffer;
-    public ArrayList<Object> allItems;
-    public ArrayList<Object> userInventory;
-    public Object itemOne;
-    public Object itemTwo;
-    public Object selectedInventoryItem;
+    public ArrayList<Item> allItems;
+    public ArrayList<Weapon> allWeapons;
+    public ArrayList<Weapon> userWeaponInventory;
+    public ArrayList<Item> userItemInventory;
+    public Item itemOne;
+    public Item itemTwo;
+    public Weapon weaponOne;
+    public Weapon weaponTwo;
+    public Item selectedInventoryItem;
+    public Weapon selectedInventoryWeapon;
     public String playerId;
 
     //empty constructor required for dialog fragments
@@ -79,7 +86,7 @@ public class MerchantDialogFragment extends android.support.v4.app.DialogFragmen
                     long hitPointsLong = (long) child.child("hit_points").getValue();
                     int hitPoints = (int) hitPointsLong;
                     Weapon weapon = new Weapon(name, description, hitPoints);
-                    allItems.add(weapon);
+                    allWeapons.add(weapon);
                 }
             }
 
@@ -141,7 +148,7 @@ public class MerchantDialogFragment extends android.support.v4.app.DialogFragmen
                     int hitPoints = (int) hitPointsLong;
                     boolean effectsHealth = (boolean) child.child("effects_health").getValue();
                     Item item = new Item(name, description, hitPoints, effectsHealth);
-                    userInventory.add(item);
+                    userItemInventory.add(item);
                 }
             }
 
@@ -160,7 +167,7 @@ public class MerchantDialogFragment extends android.support.v4.app.DialogFragmen
                     long hitPointsLong = (long) child.child("hit_points").getValue();
                     int hitPoints = (int) hitPointsLong;
                     Weapon weapon = new Weapon(name, description, hitPoints);
-                    userInventory.add(weapon);
+                    userWeaponInventory.add(weapon);
                 }
             }
 
@@ -196,14 +203,73 @@ public class MerchantDialogFragment extends android.support.v4.app.DialogFragmen
     }
 
     public void randomizeItems() {
+        //0 is weapon, 1 is item
+        Integer selectedItemChooser = (int) (Math.random() +.5);
+        Integer offerRandomizer = (int) (Math.random() * 2);
         Collections.shuffle(allItems);
-        Collections.shuffle(userInventory);
-        selectedInventoryItem = userInventory.get(0);
-        itemOne = allItems.get(0);
-        itemTwo = allItems.get(1);
 
+        if(userItemInventory != null) {
+            Collections.shuffle(userItemInventory);
+            selectedInventoryItem = userItemInventory.get(0);
+        }
 
+        if(userWeaponInventory != null) {
+            Collections.shuffle(userWeaponInventory);
+            selectedInventoryWeapon = userWeaponInventory.get(0);
+        }
 
+        if (userWeaponInventory != null || userItemInventory != null) {
+            if (offerRandomizer == 0) {
+                weaponOne = allWeapons.get(0);
+                weaponTwo = allWeapons.get(1);
+
+                if (selectedInventoryItem != null && selectedInventoryWeapon !=null) {
+                    if (selectedItemChooser == 0) {
+                        merchantOffer.setText(String.format("I see you have a nice %s, would you trade for these: %s, %s?", selectedInventoryWeapon.getName(), weaponOne.getName(), weaponTwo.getName()));
+                    } else {
+                        merchantOffer.setText(String.format("I see you have a nice %s, would you trade for these: %s, %s?", selectedInventoryItem.getName(), weaponOne.getName(), weaponTwo.getName()));
+                    }
+                } else if (selectedInventoryItem != null){
+                    merchantOffer.setText(String.format("I see you have a nice %s, would you trade for these: %s, %s?", selectedInventoryItem.getName(), weaponOne.getName(), weaponTwo.getName()));
+                } else if (selectedInventoryWeapon != null) {
+                    merchantOffer.setText(String.format("I see you have a nice %s, would you trade for these: %s, %s?", selectedInventoryWeapon.getName(), weaponOne.getName(), weaponTwo.getName()));
+                }
+            } else if (offerRandomizer == 1) {
+                weaponOne = allWeapons.get(0);
+                itemOne = allItems.get(0);
+
+                if (selectedInventoryItem != null && selectedInventoryWeapon !=null) {
+                    if (selectedItemChooser == 0) {
+                        merchantOffer.setText(String.format("I see you have a nice %s, would you trade for these: %s, %s?", selectedInventoryWeapon.getName(), weaponOne.getName(), itemOne.getName()));
+                    } else {
+                        merchantOffer.setText(String.format("I see you have a nice %s, would you trade for these: %s, %s?", selectedInventoryItem.getName(), weaponOne.getName(), itemOne.getName()));
+                    }
+                } else if (selectedInventoryItem != null){
+                    merchantOffer.setText(String.format("I see you have a nice %s, would you trade for these: %s, %s?", selectedInventoryItem.getName(), weaponOne.getName(), itemOne.getName()));
+                } else if (selectedInventoryWeapon != null) {
+                    merchantOffer.setText(String.format("I see you have a nice %s, would you trade for these: %s, %s?", selectedInventoryWeapon.getName(), weaponOne.getName(), itemOne.getName()));
+                }
+
+            } else if (offerRandomizer == 2) {
+                itemOne = allItems.get(0);
+                itemTwo = allItems.get(1);
+
+                if (selectedInventoryItem != null && selectedInventoryWeapon !=null) {
+                    if (selectedItemChooser == 0) {
+                        merchantOffer.setText(String.format("I see you have a nice %s, would you trade for these: %s, %s?", selectedInventoryWeapon.getName(), itemTwo.getName(), itemOne.getName()));
+                    } else {
+                        merchantOffer.setText(String.format("I see you have a nice %s, would you trade for these: %s, %s?", selectedInventoryItem.getName(), itemTwo.getName(), itemOne.getName()));
+                    }
+                } else if (selectedInventoryItem != null){
+                    merchantOffer.setText(String.format("I see you have a nice %s, would you trade for these: %s, %s?", selectedInventoryItem.getName(), itemTwo.getName(), itemOne.getName()));
+                } else if (selectedInventoryWeapon != null) {
+                    merchantOffer.setText(String.format("I see you have a nice %s, would you trade for these: %s, %s?", selectedInventoryWeapon.getName(), itemTwo.getName(), itemOne.getName()));
+                }
+            }
+        } else {
+            acceptButton.setEnabled(false);
+            merchantOffer.setText("Seems like you have nothing to barter...");
+        }
     }
 
 }
