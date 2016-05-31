@@ -71,8 +71,7 @@ import butterknife.Bind;
 import butterknife.ButterKnife;
 
 public class MainActivity extends FragmentActivity
-        implements View.OnClickListener, GoogleApiClient.ConnectionCallbacks,
-        GoogleApiClient.OnConnectionFailedListener, SharedPreferences.OnSharedPreferenceChangeListener {
+        implements View.OnClickListener, SharedPreferences.OnSharedPreferenceChangeListener {
 
     private static final String TAG = "MainActivity";
 
@@ -124,14 +123,6 @@ public class MainActivity extends FragmentActivity
     int dailyGoal;
 
     @Override
-    protected void onStart() {
-        super.onStart();
-        if (mGoogleApiClient != null) {
-            mGoogleApiClient.connect();
-        }
-    }
-
-    @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         Firebase.setAndroidContext(this);
@@ -154,14 +145,6 @@ public class MainActivity extends FragmentActivity
         //Create Shared Preferences
         mSharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
         mEditor = mSharedPreferences.edit();
-
-        if (mGoogleApiClient == null) {
-            FragmentTransaction fragmentTransaction = getSupportFragmentManager().beginTransaction();
-            fragmentTransaction.add(TitleFragment.newInstance(), null);
-            fragmentTransaction.commit();
-        }
-
-        initializeGoogleApi();
 
         campaignButton.setOnClickListener(this);
         mapButton.setOnClickListener(this);
@@ -211,7 +194,6 @@ public class MainActivity extends FragmentActivity
     @Override
     protected void onResume() {
         super.onResume();
-        mGoogleApiClient.reconnect();
         mSharedPreferences.registerOnSharedPreferenceChangeListener(this);
         if(mPlayerIDs == null) {
            // characterButton.setEnabled(false);
@@ -247,75 +229,6 @@ public class MainActivity extends FragmentActivity
         return false;
     }
 
-    //GOOGLE GAMES API LOGIC BEGINS HERE
-    //TODO: Move this logic to a separate service class
-    @Override
-    public void onConnected(Bundle connectionHint) {
-        mCurrentPlayerId = Games.Players.getCurrentPlayerId(mGoogleApiClient).toString();
-        mEditor.putString(Constants.PREFERENCES_GOOGLE_PLAYER_ID, mCurrentPlayerId);
-        String userName = Games.Players.getCurrentPlayer(mGoogleApiClient).getDisplayName();
-
-        //Save to shared preferences
-        mEditor.putString("userId", mCurrentPlayerId);
-        mEditor.putString("userName", userName);
-        mEditor.commit();
-
-        saveUserInfoToFirebase();
-
-        //Save user info to firebase
-        mUserFirebaseRef = new Firebase(Constants.FIREBASE_URL_USERS + "/" + mCurrentPlayerId);
-        mUserFirebaseRef.child("displayName").setValue(userName);
-        mUserFirebaseRef.child("atSafeHouse").setValue(false);
-
-        if (mCurrentMatch == null) {
-            mUserFirebaseRef.child("joinedMatch").setValue(false);
-        }
-        if(mCurrentMatchId != null) {
-            mUserFirebaseRef.child("character").addListenerForSingleValueEvent(new ValueEventListener() {
-                @Override
-                public void onDataChange(DataSnapshot dataSnapshot) {
-                    String name = dataSnapshot.child("name").getValue().toString();
-                    long ageLong = (long) dataSnapshot.child("age").getValue();
-                    int age = (int) ageLong;
-                    String description = dataSnapshot.child("description").getValue().toString();
-                    long characterIdLong = (long) dataSnapshot.child("characterId").getValue();
-                    int characterId = (int) characterIdLong;
-                    long healthLong = (long) dataSnapshot.child("health").getValue();
-                    int health = (int) healthLong;
-                    long fullnessLevelLong = (long) dataSnapshot.child("fullnessLevel").getValue();
-                    int fullnessLevel = (int) fullnessLevelLong;
-                    String characterUrl = dataSnapshot.child("characterPictureUrl").getValue().toString();
-                    mCurrentCharacter = new Character(name, description, age, health, fullnessLevel, characterUrl, characterId);
-                    Log.d("Current Character ID: ", mCurrentCharacter.getCharacterId() + "");
-
-                    Gson gson = new Gson();
-                    String currentCharacter = gson.toJson(mCurrentCharacter);
-                    mEditor.putString(Constants.PREFERENCES_CHARACTER, currentCharacter);
-                    mEditor.commit();
-                }
-
-                @Override
-                public void onCancelled(FirebaseError firebaseError) {
-
-                }
-            });
-            instantiatePlayerIDs();
-            mUserFirebaseRef.child("joinedMatch").setValue(true);
-        }
-    }
-
-    @Override
-    public void onConnectionSuspended(int i) {
-        mGoogleApiClient.connect();
-    }
-
-    @Override
-    public void onConnectionFailed(ConnectionResult connectionResult) {
-        if (!BaseGameUtils.resolveConnectionFailure(this,
-                mGoogleApiClient, connectionResult, RC_SIGN_IN, "Sign in error!")) {
-        }
-    }
-
     @Override
     public void onClick(View view) {
         switch (view.getId()) {
@@ -335,29 +248,6 @@ public class MainActivity extends FragmentActivity
             case R.id.leftInteractionButton:
                 Toast.makeText(this, "Item given!", Toast.LENGTH_SHORT).show();
                 break;
-        }
-    }
-
-    public void initializeGoogleApi() {
-        mGoogleApiClient = new GoogleApiClient.Builder(this)
-                .addConnectionCallbacks(this)
-                .addOnConnectionFailedListener(this)
-                .addApi(Games.API)
-                .addScope(Games.SCOPE_GAMES)
-                .build();
-    }
-
-    public void saveUserInfoToFirebase() {
-        String userName = Games.Players.getCurrentPlayer(mGoogleApiClient).getDisplayName();
-        mUserFirebaseRef = new Firebase(Constants.FIREBASE_URL_USERS + "/" + mCurrentPlayerId + "/");
-
-        if (mCurrentMatch != null) {
-            mUserFirebaseRef.child("displayName").setValue(userName);
-            mUserFirebaseRef.child("atSafeHouse").setValue(false);
-            //Update in match boolean
-            mUserFirebaseRef.child("joinedMatch").setValue(true);
-        } else {
-            mUserFirebaseRef.child("joinedMatch").setValue(false);
         }
     }
 
@@ -583,6 +473,7 @@ public class MainActivity extends FragmentActivity
         mEditor.commit();
 
     }
+
     public void setupBackpackContent () {
         //TODO: Remove these fake objects for testing:
         ArrayList<Weapon> weapons = new ArrayList<>();

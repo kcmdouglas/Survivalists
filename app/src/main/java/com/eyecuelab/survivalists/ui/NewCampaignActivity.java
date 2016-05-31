@@ -131,6 +131,11 @@ public class NewCampaignActivity extends AppCompatActivity implements View.OnCli
         //Create Shared Preferences
         mSharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
         mEditor = mSharedPreferences.edit();
+
+        int navigationFlag = getIntent().getIntExtra("statusTag", -1);
+        if (navigationFlag == 2) {
+            initializeWaitingRoomUi();
+        }
     }
 
     @Override
@@ -274,6 +279,7 @@ public class NewCampaignActivity extends AppCompatActivity implements View.OnCli
 
         difficultyConfirmedTextView.setText("Difficulty: " + descriptions.get(mDifficultyLevel));
         lengthConfirmedTextView.setText("Length: " + lengths.get(mCampaignLength) + " Days");
+        confirmationButton.setText("Waiting for players to join...");
 
         ArrayAdapter<String> adapter = new ArrayAdapter<>(this, R.layout.player_list_item, R.id.playerNameTextView, invitedPlayers);
 

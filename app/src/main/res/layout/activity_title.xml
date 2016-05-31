@@ -2,7 +2,6 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context="com.eyecuelab.survivalists.ui.TitleFragment"
     android:background="@drawable/splash_screen_background"
     android:id="@+id/title_fragment">
 
@@ -10,41 +9,41 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent">
 
-        <ImageButton
+        <Button
+            android:id="@+id/currentCampaignButton"
             android:layout_width="200dp"
             android:layout_height="50dp"
-            android:id="@+id/returnCurrentButton"
             android:layout_marginBottom="186dp"
             android:layout_alignParentBottom="true"
             android:layout_centerHorizontal="true"
             android:background="@drawable/return_campaign_btn"
             android:scaleType="centerCrop" />
 
-        <ImageButton
+        <Button
+            android:id="@+id/startCampaignButton"
             android:layout_width="200dp"
             android:layout_height="50dp"
-            android:id="@+id/startCampaignButton"
             android:layout_marginTop="79dp"
-            android:layout_alignTop="@+id/returnCurrentButton"
+            android:layout_alignTop="@+id/currentCampaignButton"
             android:layout_centerHorizontal="true"
             android:background="@drawable/start_campaign_btn"/>
 
-        <ImageButton
+        <Button
+            android:id="@+id/loginButton"
             android:layout_width="30dp"
             android:layout_height="30dp"
-            android:id="@+id/settingsButton"
             android:layout_alignParentTop="true"
             android:layout_alignParentRight="true"
             android:layout_alignParentEnd="true"
             android:layout_marginRight="22dp"
             android:layout_marginEnd="22dp"
             android:layout_marginTop="22dp"
-            android:background="@drawable/settings_icon_white"/>
+            android:background="@drawable/games_controller_white" />
 
-        <ImageButton
+        <Button
+            android:id="@+id/joinCampaignButton"
             android:layout_width="200dp"
             android:layout_height="50dp"
-            android:id="@+id/joinCampaignButton"
             android:layout_marginTop="22dp"
             android:layout_below="@+id/startCampaignButton"
             android:layout_centerHorizontal="true"

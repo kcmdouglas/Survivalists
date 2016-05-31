@@ -95,7 +95,8 @@
             android:name=".ui.NotebookActivity"
             android:configChanges="orientation|keyboardHidden"
             android:screenOrientation="portrait" />
-        <activity android:name=".ui.NewCampaignActivity"></activity>
+        <activity android:name=".ui.NewCampaignActivity" />
+        <activity android:name=".ui.TitleActivity"></activity>
     </application>
 
 </manifest>
