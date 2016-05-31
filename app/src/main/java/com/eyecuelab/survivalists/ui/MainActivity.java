@@ -84,6 +84,7 @@ public class MainActivity extends FragmentActivity
     private int dailySteps;
     private String mCurrentMatchId;
     private int mMatchDuration;
+    private int mDefaultGoal;
     private int mReachedSafeHouseId;
     private int mReachedSafeHousePseudoId;
     private ArrayList<String> invitees;
@@ -200,9 +201,9 @@ public class MainActivity extends FragmentActivity
         String playerIDsString = mSharedPreferences.getString(Constants.PREFERENCES_TEAM_IDs, null);
         String [] playerIDArray = TextUtils.split(",", playerIDsString);
 
-        for(int i = 0; i < playerIDArray.length; i++ ) {
-            mPlayerIDs.add(playerIDArray[i]);
-        }
+//        for(int i = 0; i < playerIDArray.length; i++ ) {
+//            mPlayerIDs.add(playerIDArray[i]);
+//        }
 
         setupBackpackContent();
     }
@@ -474,6 +475,9 @@ public class MainActivity extends FragmentActivity
                 wholeParty.add(creatorId);
             }
 
+            mMatchDuration = mSharedPreferences.getInt(Constants.PREFERENCES_DURATION_SETTING, 0);
+            mDefaultGoal = mSharedPreferences.getInt(Constants.PREFERENCES_DAILY_GOAL, 0);
+
             mEditor.putString("matchId", mCurrentMatchId);
             mEditor.commit();
 
@@ -510,6 +514,7 @@ public class MainActivity extends FragmentActivity
                     .child(mCurrentMatchId);
             teamFirebaseRef.child("matchStart").setValue(mCurrentMatch.getCreationTimestamp());
             teamFirebaseRef.child("matchDuration").setValue(mMatchDuration);
+            teamFirebaseRef.child("defaultDailyGoal").setValue(mDefaultGoal);
             teamFirebaseRef.child("lastSafehousePseudoId").setValue(0);
             teamFirebaseRef.child("nextSafehousePseudoId").setValue(1);
             teamFirebaseRef.child("safehouseIdMap").updateChildren(dailySafehouseMap);
@@ -536,8 +541,8 @@ public class MainActivity extends FragmentActivity
         turnData = new byte[1];
 
         if(mMatchDuration == 0 && mCurrentMatch != null) {
-            Firebase getMatchDurationRef = new Firebase(Constants.FIREBASE_URL_TEAM + "/matchDuration");
-            getMatchDurationRef.addListenerForSingleValueEvent(new ValueEventListener() {
+            Firebase teamRef = new Firebase(Constants.FIREBASE_URL_TEAM + "/" + mCurrentMatchId +"/matchDuration");
+            teamRef.child("matchDuration").addListenerForSingleValueEvent(new ValueEventListener() {
                 @Override
                 public void onDataChange(DataSnapshot dataSnapshot) {
                     mMatchDuration = (int) dataSnapshot.getValue();
@@ -548,6 +553,19 @@ public class MainActivity extends FragmentActivity
 
                 }
             });
+            teamRef.child("defaultDailyGoal").addListenerForSingleValueEvent(new ValueEventListener() {
+                @Override
+                public void onDataChange(DataSnapshot dataSnapshot) {
+                    mDefaultGoal = (int) dataSnapshot.getValue();
+                    mEditor.putInt(Constants.PREFERENCES_DEFAULT_DAILY_GOAL_SETTING, mDefaultGoal).apply();
+                }
+
+                @Override
+                public void onCancelled(FirebaseError firebaseError) {
+
+                }
+            });
+
             createCampaign(mMatchDuration);
         } else if (mMatchDuration !=0 && mCurrentMatch != null) {
             createCampaign(mMatchDuration);
@@ -925,52 +943,53 @@ public class MainActivity extends FragmentActivity
         mEditor.commit();
 
     }
-        public void setupBackpackContent () {
-            //TODO: Remove these fake objects for testing:
-            ArrayList<Weapon> weapons = new ArrayList<>();
-            weapons.add(new Weapon("Axe!", "This is an axe!", 5));
-            ArrayList<Item> items = new ArrayList<>();
-            items.add(new Item("Axe!", "This is an axe!", 5, true, R.drawable.axe_inventory));
-            items.add(new Item("Health Pack", "This is a health pack!", 5, true, R.drawable.firstaid_inventory));
-            items.add(new Item("Flare", "This is a flare!", 5, true, R.drawable.flare_inventory));
-            items.add(new Item("Steak", "This is a steak!", 5, true, R.drawable.steak_inventory));
-            items.add(new Item("Axe!", "This is an axe!", 5, true, R.drawable.axe_inventory));
-            items.add(new Item("Health Pack", "This is a health pack!", 5, true, R.drawable.firstaid_inventory));
-            items.add(new Item("Flare", "This is a flare!", 5, true, R.drawable.flare_inventory));
-            items.add(new Item("Steak", "This is a steak!", 5, true, R.drawable.steak_inventory));
-            items.add(new Item("Axe!", "This is an axe!", 5, true, R.drawable.axe_inventory));
-            items.add(new Item("Health Pack", "This is a health pack!", 5, true, R.drawable.firstaid_inventory));
-            items.add(new Item("Flare", "This is a flare!", 5, true, R.drawable.flare_inventory));
-            items.add(new Item("Steak", "This is a steak!", 5, true, R.drawable.steak_inventory));
-            items.add(new Item("Axe!", "This is an axe!", 5, true, R.drawable.axe_inventory));
-            items.add(new Item("Health Pack", "This is a health pack!", 5, true, R.drawable.firstaid_inventory));
-            items.add(new Item("Flare", "This is a flare!", 5, true, R.drawable.flare_inventory));
-            items.add(new Item("Steak", "This is a steak!", 5, true, R.drawable.steak_inventory));
+    public void setupBackpackContent () {
+        //TODO: Remove these fake objects for testing:
+        ArrayList<Weapon> weapons = new ArrayList<>();
+        weapons.add(new Weapon("Axe!", "This is an axe!", 5));
+        ArrayList<Item> items = new ArrayList<>();
+        items.add(new Item("Axe!", "This is an axe!", 5, true, R.drawable.axe_inventory));
+        items.add(new Item("Health Pack", "This is a health pack!", 5, true, R.drawable.firstaid_inventory));
+        items.add(new Item("Flare", "This is a flare!", 5, true, R.drawable.flare_inventory));
+        items.add(new Item("Steak", "This is a steak!", 5, true, R.drawable.steak_inventory));
+        items.add(new Item("Axe!", "This is an axe!", 5, true, R.drawable.axe_inventory));
+        items.add(new Item("Health Pack", "This is a health pack!", 5, true, R.drawable.firstaid_inventory));
+        items.add(new Item("Flare", "This is a flare!", 5, true, R.drawable.flare_inventory));
+        items.add(new Item("Steak", "This is a steak!", 5, true, R.drawable.steak_inventory));
+        items.add(new Item("Axe!", "This is an axe!", 5, true, R.drawable.axe_inventory));
+        items.add(new Item("Health Pack", "This is a health pack!", 5, true, R.drawable.firstaid_inventory));
+        items.add(new Item("Flare", "This is a flare!", 5, true, R.drawable.flare_inventory));
+        items.add(new Item("Steak", "This is a steak!", 5, true, R.drawable.steak_inventory));
+        items.add(new Item("Axe!", "This is an axe!", 5, true, R.drawable.axe_inventory));
+        items.add(new Item("Health Pack", "This is a health pack!", 5, true, R.drawable.firstaid_inventory));
+        items.add(new Item("Flare", "This is a flare!", 5, true, R.drawable.flare_inventory));
+        items.add(new Item("Steak", "This is a steak!", 5, true, R.drawable.steak_inventory));
 
-            try {
-                GridView inventoryGridView = (GridView) findViewById(R.id.backpackGridView);
-                //TODO: Figure out why android studio thinks this catch is required (and isn't happy)
-                inventoryGridView.setAdapter(new InventoryAdapter(this, items, weapons, R.layout.inventory_row_grid));
-                inventoryGridView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-                    @Override
-                    public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                        Toast.makeText(MainActivity.this, "" + position, Toast.LENGTH_SHORT).show();
+        try {
+            GridView inventoryGridView = (GridView) findViewById(R.id.backpackGridView);
+            //TODO: Figure out why android studio thinks this catch is required (and isn't happy)
+            inventoryGridView.setAdapter(new InventoryAdapter(this, items, weapons, R.layout.inventory_row_grid));
+            inventoryGridView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+                @Override
+                public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                    Toast.makeText(MainActivity.this, "" + position, Toast.LENGTH_SHORT).show();
+                }
+            });
+            //This stops the grid from being scrolled.
+            inventoryGridView.setOnTouchListener(new View.OnTouchListener() {
+                @Override
+                public boolean onTouch(View v, MotionEvent event) {
+                    if (event.getAction() == MotionEvent.ACTION_MOVE) {
+                        return true;
                     }
-                });
-                //This stops the grid from being scrolled.
-                inventoryGridView.setOnTouchListener(new View.OnTouchListener() {
-                    @Override
-                    public boolean onTouch(View v, MotionEvent event) {
-                        if (event.getAction() == MotionEvent.ACTION_MOVE) {
-                            return true;
-                        }
-                        return false;
-                    }
-                });
+                    return false;
+                }
+            });
 
-            } catch (NullPointerException nullPointer) {
-                Log.e(TAG, nullPointer.getMessage());
-            }
-
+        } catch (NullPointerException nullPointer) {
+            Log.e(TAG, nullPointer.getMessage());
         }
+
     }
+
+}
