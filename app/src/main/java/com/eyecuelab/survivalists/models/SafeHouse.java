@@ -11,16 +11,19 @@ public class SafeHouse {
     int houseId;
     String houseName;
     String description;
-    int stepsRequired;
-    boolean arrivedAtSafeHouse = false;
 
     public SafeHouse() {}
 
-    public SafeHouse(int houseId, String houseName, String description,int stepsRequired) {
+    public SafeHouse(SafeHouse safehouse) {
+        this.houseId = safehouse.houseId;
+        this.houseName = safehouse.houseName;
+        this.description = safehouse.description;
+    }
+
+    public SafeHouse(int houseId, String houseName, String description) {
         this.houseId = houseId;
         this.houseName = houseName;
         this.description = description;
-        this.stepsRequired = stepsRequired;
     }
 
     public int getHouseId() {
@@ -35,23 +38,5 @@ public class SafeHouse {
         return description;
     }
 
-    public int getStepsRequired() {
-        return stepsRequired;
-    }
-
-    public boolean reachedSafehouse(int dailySteps) {
-        if (dailySteps >= stepsRequired) {
-            arrivedAtSafeHouse = true;
-        }
-        return arrivedAtSafeHouse;
-    }
-
-    public int stepsLeftToHouse(int dailySteps) {
-        if (dailySteps < stepsRequired) {
-            return stepsRequired - dailySteps;
-        } else {
-            return -1;
-        }
-    }
 
 }

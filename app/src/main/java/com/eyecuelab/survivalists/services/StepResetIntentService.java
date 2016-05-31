@@ -7,6 +7,7 @@ import android.os.Bundle;
 import android.preference.PreferenceManager;
 
 import com.eyecuelab.survivalists.Constants;
+import com.firebase.client.Firebase;
 
 /**
  * Created by eyecuelab on 5/12/16.
@@ -30,6 +31,13 @@ public class StepResetIntentService extends IntentService implements SharedPrefe
 
         int numberOfEvents = (int) (Math.random() * 5 + 1);
         resetEventCounts(numberOfEvents);
+
+        String playerId = mSharedPreferences.getString(Constants.PREFERENCES_GOOGLE_PLAYER_ID, null);
+
+        mEditor.putBoolean(Constants.PREFERENCES_REACHED_SAFEHOUSE, false).apply();
+
+        Firebase safehouseBooleanRef = new Firebase(Constants.FIREBASE_URL_USERS + "/" + playerId + "/atSafeHouse");
+        safehouseBooleanRef.setValue(false);
 
 
     }
