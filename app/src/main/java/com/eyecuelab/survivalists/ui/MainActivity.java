@@ -187,9 +187,9 @@ public class MainActivity extends FragmentActivity
             startService(mBackgroundStepServiceIntent);
         }
 
-        String safehouseJson = mSharedPreferences.getString("nextSafehouse", null);
+        String safehouseJson = mSharedPreferences.getString(Constants.PREFERENCES_REACHED_SAFEHOUSE, null);
         Gson gson = new Gson();
-        mNextSafehouse = gson.fromJson(safehouseJson, SafeHouse.class);
+        mReachedSafehouse = gson.fromJson(safehouseJson, SafeHouse.class);
 
         String playerIDsString = mSharedPreferences.getString(Constants.PREFERENCES_TEAM_IDs, null);
         String [] playerIDArray = TextUtils.split(",", playerIDsString);
