@@ -199,7 +199,7 @@ public class MainActivity extends FragmentActivity
         mReachedSafehouse = gson.fromJson(safehouseJson, SafeHouse.class);
 
         String playerIDsString = mSharedPreferences.getString(Constants.PREFERENCES_TEAM_IDs, null);
-        String [] playerIDArray = TextUtils.split(",", playerIDsString);
+//        String [] playerIDArray = TextUtils.split(",", playerIDsString);
 
 //        for(int i = 0; i < playerIDArray.length; i++ ) {
 //            mPlayerIDs.add(playerIDArray[i]);
