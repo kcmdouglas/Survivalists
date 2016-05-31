@@ -18,7 +18,6 @@ public class InvitationListener extends MainActivity
     @Override
     public void onInvitationReceived(final Invitation invitation) {
         Log.v(TAG, "invitation: " + invitation.getInviter().getDisplayName());
-        invitationReceived(invitation);
     }
 
     @Override
