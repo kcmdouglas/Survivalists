@@ -1,6 +1,10 @@
 package com.eyecuelab.survivalists.ui;
 
+import android.annotation.TargetApi;
 import android.content.Context;
+import android.content.SharedPreferences;
+import android.os.Build;
+import android.preference.PreferenceManager;
 import android.support.percent.PercentRelativeLayout;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -13,6 +17,7 @@ import android.widget.SeekBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.eyecuelab.survivalists.Constants;
 import com.eyecuelab.survivalists.R;
 
 import java.util.ArrayList;
@@ -25,9 +30,13 @@ public class NewCampaignActivity extends AppCompatActivity implements View.OnCli
     private int mCampaignLength;
     private int mPartySize;
     private boolean mConfirmingSettings = true;
+    private SharedPreferences mSharedPreferences;
+    private SharedPreferences.Editor mEditor;
     private ArrayList<String> descriptions = new ArrayList<>();
     private ArrayList<String> lengths = new ArrayList<>();
     private ArrayList<String> invitedPlayers = new ArrayList<>();
+    Integer[] campaignDuration = {15, 30, 45};
+    Integer[] defaultDailyGoal = {5000, 7000, 10000};
 
     private ListView mInvitePlayersListView;
     private Context mContext;
@@ -66,6 +75,11 @@ public class NewCampaignActivity extends AppCompatActivity implements View.OnCli
         ButterKnife.bind(this);
         confirmationButton.setOnClickListener(this);
 
+
+
+
+
+
         descriptions.add("Walk in the park");
         descriptions.add("Walk the line");
         descriptions.add("Walk the talk");
@@ -77,6 +91,10 @@ public class NewCampaignActivity extends AppCompatActivity implements View.OnCli
 
         ArrayAdapter<String> infoAdapter = new ArrayAdapter<>(NewCampaignActivity.this, R.layout.info_list_item, getResources().getStringArray(R.array.difficultyDescriptions));
         infoListView.setAdapter(infoAdapter);
+
+        //Create Shared Preferences
+        mSharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
+        mEditor = mSharedPreferences.edit();
     }
 
     @Override
@@ -84,6 +102,7 @@ public class NewCampaignActivity extends AppCompatActivity implements View.OnCli
         switch (view.getId()) {
             case R.id.confirmationButton:
                 if (mConfirmingSettings == true) {
+                    saveCampaignSettings();
                     loadAvailablePlayers();
                 } else if (mPartySize == invitedPlayers.size()){
                     sendInvitations();
@@ -121,6 +140,7 @@ public class NewCampaignActivity extends AppCompatActivity implements View.OnCli
         });
     }
 
+    @TargetApi(Build.VERSION_CODES.M)
     public void sendInvitations() {
         confirmationButton.setText("Awaiting Responses...");
         confirmationButton.setTextColor(getColor(android.R.color.darker_gray));
@@ -141,7 +161,7 @@ public class NewCampaignActivity extends AppCompatActivity implements View.OnCli
 
             @Override
             public void onStopTrackingTouch(SeekBar seekBar) {
-                mDifficultyLevel = progressTotal;
+                mDifficultyLevel = defaultDailyGoal[progressTotal];
             }
         });
 
@@ -159,7 +179,7 @@ public class NewCampaignActivity extends AppCompatActivity implements View.OnCli
 
             @Override
             public void onStopTrackingTouch(SeekBar seekBar) {
-                mCampaignLength = progressTotal;
+                mCampaignLength = campaignDuration[progressTotal];
             }
         });
 
@@ -183,4 +203,14 @@ public class NewCampaignActivity extends AppCompatActivity implements View.OnCli
             }
         });
     }
+
+    public void saveCampaignSettings() {
+
+        mEditor.putInt(Constants.PREFERENCES_DURATION_SETTING, mCampaignLength);
+        mEditor.putInt(Constants.PREFERENCES_DEFAULT_DAILY_GOAL_SETTING, mDifficultyLevel);
+        mEditor.commit();
+
+    }
+
+
 }

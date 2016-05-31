@@ -16,6 +16,7 @@ public class StepResetIntentService extends IntentService implements SharedPrefe
 
     private SharedPreferences mSharedPreferences;
     private SharedPreferences.Editor mEditor;
+    private int defaultDailyGoal;
 
     @Override
     protected void onHandleIntent(Intent intent) {
@@ -36,8 +37,15 @@ public class StepResetIntentService extends IntentService implements SharedPrefe
 
         mEditor.putBoolean(Constants.PREFERENCES_REACHED_SAFEHOUSE, false).apply();
 
-        Firebase safehouseBooleanRef = new Firebase(Constants.FIREBASE_URL_USERS + "/" + playerId + "/atSafeHouse");
-        safehouseBooleanRef.setValue(false);
+        defaultDailyGoal = mSharedPreferences.getInt(Constants.PREFERENCES_DEFAULT_DAILY_GOAL_SETTING, 5000);
+
+        int randomizedDailyGoal = (int) (Math.random() * ((defaultDailyGoal + 500) + defaultDailyGoal) + defaultDailyGoal);
+
+        Firebase playerRef = new Firebase(Constants.FIREBASE_URL_USERS + "/" + playerId + "/");
+        playerRef.child("atSafeHouse").setValue(false);
+
+        playerRef.child("dailyGoal").setValue(randomizedDailyGoal);
+
 
 
     }
@@ -45,10 +53,10 @@ public class StepResetIntentService extends IntentService implements SharedPrefe
     public void resetEventCounts(int events) {
 
         int eventOneSteps = (int) (Math.random() * 500 + 1);
-        int eventTwoSteps = (int) (Math.random() * (750 + 350) +350);
-        int eventThreeSteps = (int) (Math.random() * (1000 + 650) + 650);
-        int eventFourSteps = (int) (Math.random() * (1500 + 1000) + 100);
-        int eventFiveSteps = (int) (Math.random() * (2000 + 1500) + 1500);
+        int eventTwoSteps = (int) (Math.random() * (1000 + 500) +500);
+        int eventThreeSteps = (int) (Math.random() * (1500 + 1000) + 1000);
+        int eventFourSteps = (int) (Math.random() * (2000 + 1500) + 1500);
+        int eventFiveSteps = (int) (Math.random() * (3000 + 2000) + 2000);
 
         switch(events) {
             case 1:
