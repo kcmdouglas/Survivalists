@@ -5,7 +5,6 @@ import android.content.SharedPreferences;
 import android.preference.PreferenceManager;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
-import android.text.TextUtils;
 import android.util.Log;
 import android.view.Gravity;
 import android.view.View;
@@ -14,21 +13,11 @@ import android.widget.Toast;
 
 import com.eyecuelab.survivalists.Constants;
 import com.eyecuelab.survivalists.R;
-import com.eyecuelab.survivalists.models.Character;
-import com.firebase.client.DataSnapshot;
 import com.firebase.client.Firebase;
-import com.firebase.client.FirebaseError;
-import com.firebase.client.ValueEventListener;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.games.Games;
 import com.google.android.gms.games.multiplayer.turnbased.TurnBasedMatch;
-import com.google.example.games.basegameutils.BaseGameUtils;
-import com.google.gson.Gson;
-
-import org.parceler.Parcels;
-
-import java.util.ArrayList;
 
 import butterknife.Bind;
 import butterknife.ButterKnife;
@@ -106,7 +95,7 @@ public class TitleActivity extends AppCompatActivity implements GoogleApiClient.
 
         switch (view.getId()) {
             case R.id.currentCampaignButton:
-                Intent currentCampaignIntent = new Intent(this, NotebookActivity.class);
+                Intent currentCampaignIntent = new Intent(this, MainActivity.class);
                 startActivity(currentCampaignIntent);
                 break;
             case R.id.startCampaignButton:
@@ -127,58 +116,23 @@ public class TitleActivity extends AppCompatActivity implements GoogleApiClient.
     //Google api logic
     @Override
     public void onConnected(Bundle connectionHint) {
-        mCurrentPlayerId = Games.Players.getCurrentPlayerId(mGoogleApiClient).toString();
-        String userName = Games.Players.getCurrentPlayer(mGoogleApiClient).getDisplayName();
-
-        //Save to shared preferences
-        mEditor.putString(Constants.PREFERENCES_GOOGLE_PLAYER_ID, mCurrentPlayerId);
-        mEditor.putString("userId", mCurrentPlayerId);
-        mEditor.putString("userName", userName);
-        mEditor.commit();
-
-        saveUserInfoToFirebase();
-
-        //Save user info to firebase
-        mUserFirebaseRef = new Firebase(Constants.FIREBASE_URL_USERS + "/" + mCurrentPlayerId);
-        mUserFirebaseRef.child("displayName").setValue(userName);
-        mUserFirebaseRef.child("atSafeHouse").setValue(false);
+        mCurrentPlayerId = Games.Players.getCurrentPlayerId(mGoogleApiClient);
 
         if (mCurrentMatch == null) {
+            String userName = Games.Players.getCurrentPlayer(mGoogleApiClient).getDisplayName();
+
+            //Save to shared preferences
+            mEditor.putString(Constants.PREFERENCES_GOOGLE_PLAYER_ID, mCurrentPlayerId);
+            mEditor.putString("userId", mCurrentPlayerId);
+            mEditor.putString("userName", userName);
+            mEditor.commit();
+
+            //Save user info to firebase
+            mUserFirebaseRef = new Firebase(Constants.FIREBASE_URL_USERS + "/" + mCurrentPlayerId);
+            mUserFirebaseRef.child("displayName").setValue(userName);
+            mUserFirebaseRef.child("atSafeHouse").setValue(false);
             mUserFirebaseRef.child("joinedMatch").setValue(false);
         }
-        //TODO: Move this to the main activity
-//        if(mCurrentMatchId != null) {
-//            mUserFirebaseRef.child("character").addListenerForSingleValueEvent(new ValueEventListener() {
-//                @Override
-//                public void onDataChange(DataSnapshot dataSnapshot) {
-//                    String name = dataSnapshot.child("name").getValue().toString();
-//                    long ageLong = (long) dataSnapshot.child("age").getValue();
-//                    int age = (int) ageLong;
-//                    String description = dataSnapshot.child("description").getValue().toString();
-//                    long characterIdLong = (long) dataSnapshot.child("characterId").getValue();
-//                    int characterId = (int) characterIdLong;
-//                    long healthLong = (long) dataSnapshot.child("health").getValue();
-//                    int health = (int) healthLong;
-//                    long fullnessLevelLong = (long) dataSnapshot.child("fullnessLevel").getValue();
-//                    int fullnessLevel = (int) fullnessLevelLong;
-//                    String characterUrl = dataSnapshot.child("characterPictureUrl").getValue().toString();
-//                    mCurrentCharacter = new Character(name, description, age, health, fullnessLevel, characterUrl, characterId);
-//                    Log.d("Current Character ID: ", mCurrentCharacter.getCharacterId() + "");
-//
-//                    Gson gson = new Gson();
-//                    String currentCharacter = gson.toJson(mCurrentCharacter);
-//                    mEditor.putString(Constants.PREFERENCES_CHARACTER, currentCharacter);
-//                    mEditor.commit();
-//                }
-//
-//                @Override
-//                public void onCancelled(FirebaseError firebaseError) {
-//
-//                }
-//            });
-//            instantiatePlayerIDs();
-//            mUserFirebaseRef.child("joinedMatch").setValue(true);
-//        }
     }
 
     @Override
@@ -196,49 +150,8 @@ public class TitleActivity extends AppCompatActivity implements GoogleApiClient.
                 .addConnectionCallbacks(this)
                 .addOnConnectionFailedListener(this)
                 .addApi(Games.API)
-                .setGravityForPopups(Gravity.TOP)
                 .build();
     }
-
-    public void saveUserInfoToFirebase() {
-        String userName = Games.Players.getCurrentPlayer(mGoogleApiClient).getDisplayName();
-        mUserFirebaseRef = new Firebase(Constants.FIREBASE_URL_USERS + "/" + mCurrentPlayerId + "/");
-
-        if (mCurrentMatch != null) {
-            mUserFirebaseRef.child("displayName").setValue(userName);
-            mUserFirebaseRef.child("atSafeHouse").setValue(false);
-            //Update in match boolean
-            mUserFirebaseRef.child("joinedMatch").setValue(true);
-        } else {
-            mUserFirebaseRef.child("joinedMatch").setValue(false);
-        }
-    }
-
-    //TODO: This might be needed here
-//    public void instantiatePlayerIDs() {
-//        mPlayerIDs = new ArrayList<>();
-//        Firebase playerIDRef = new Firebase(Constants.FIREBASE_URL_TEAM + "/" + mCurrentMatchId + "/players/");
-//        playerIDRef.addListenerForSingleValueEvent(new ValueEventListener() {
-//            @Override
-//            public void onDataChange(DataSnapshot dataSnapshot) {
-//                for (DataSnapshot child : dataSnapshot.getChildren()) {
-//                    String playerId = child.getValue().toString();
-//                    if (!(playerId.equals(mCurrentPlayerId))) {
-//                        mPlayerIDs.add(playerId);
-//                    }
-//                }
-//            }
-//
-//            @Override
-//            public void onCancelled(FirebaseError firebaseError) {
-//
-//            }
-//        });
-//
-//        mEditor.putString(Constants.PREFERENCES_TEAM_IDs, TextUtils.join(",", mPlayerIDs));
-//        mEditor.commit();
-//
-//    }
 
     public void googleButtonHandle() {
         if (mGoogleApiClient.isConnected()) {

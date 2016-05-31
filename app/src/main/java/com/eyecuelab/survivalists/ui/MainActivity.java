@@ -189,6 +189,7 @@ public class MainActivity extends FragmentActivity
 //        }
 
         setupBackpackContent();
+        loadCharacter();
     }
 
     @Override
@@ -239,8 +240,7 @@ public class MainActivity extends FragmentActivity
                 mContext.startActivity(intent);
                 break;
             case R.id.mapTabButton:
-                Intent newCampaignIntent = new Intent(MainActivity.this, NewCampaignActivity.class);
-                startActivity(newCampaignIntent);
+                Toast.makeText(this, "Inflate map here", Toast.LENGTH_SHORT).show();
                 break;
             case R.id.rightInteractionBUtton:
                 Toast.makeText(this, "Are you encouraged?", Toast.LENGTH_SHORT).show();
@@ -483,18 +483,6 @@ public class MainActivity extends FragmentActivity
         items.add(new Item("Health Pack", "This is a health pack!", 5, true, R.drawable.firstaid_inventory));
         items.add(new Item("Flare", "This is a flare!", 5, true, R.drawable.flare_inventory));
         items.add(new Item("Steak", "This is a steak!", 5, true, R.drawable.steak_inventory));
-        items.add(new Item("Axe!", "This is an axe!", 5, true, R.drawable.axe_inventory));
-        items.add(new Item("Health Pack", "This is a health pack!", 5, true, R.drawable.firstaid_inventory));
-        items.add(new Item("Flare", "This is a flare!", 5, true, R.drawable.flare_inventory));
-        items.add(new Item("Steak", "This is a steak!", 5, true, R.drawable.steak_inventory));
-        items.add(new Item("Axe!", "This is an axe!", 5, true, R.drawable.axe_inventory));
-        items.add(new Item("Health Pack", "This is a health pack!", 5, true, R.drawable.firstaid_inventory));
-        items.add(new Item("Flare", "This is a flare!", 5, true, R.drawable.flare_inventory));
-        items.add(new Item("Steak", "This is a steak!", 5, true, R.drawable.steak_inventory));
-        items.add(new Item("Axe!", "This is an axe!", 5, true, R.drawable.axe_inventory));
-        items.add(new Item("Health Pack", "This is a health pack!", 5, true, R.drawable.firstaid_inventory));
-        items.add(new Item("Flare", "This is a flare!", 5, true, R.drawable.flare_inventory));
-        items.add(new Item("Steak", "This is a steak!", 5, true, R.drawable.steak_inventory));
 
         try {
             GridView inventoryGridView = (GridView) findViewById(R.id.backpackGridView);
@@ -523,4 +511,38 @@ public class MainActivity extends FragmentActivity
 
     }
 
+    public void loadCharacter() {
+        if(mCurrentMatchId != null) {
+            mUserFirebaseRef.child("character").addListenerForSingleValueEvent(new ValueEventListener() {
+                @Override
+                public void onDataChange(DataSnapshot dataSnapshot) {
+                    String name = dataSnapshot.child("name").getValue().toString();
+                    long ageLong = (long) dataSnapshot.child("age").getValue();
+                    int age = (int) ageLong;
+                    String description = dataSnapshot.child("description").getValue().toString();
+                    long characterIdLong = (long) dataSnapshot.child("characterId").getValue();
+                    int characterId = (int) characterIdLong;
+                    long healthLong = (long) dataSnapshot.child("health").getValue();
+                    int health = (int) healthLong;
+                    long fullnessLevelLong = (long) dataSnapshot.child("fullnessLevel").getValue();
+                    int fullnessLevel = (int) fullnessLevelLong;
+                    String characterUrl = dataSnapshot.child("characterPictureUrl").getValue().toString();
+                    mCurrentCharacter = new Character(name, description, age, health, fullnessLevel, characterUrl, characterId);
+                    Log.d("Current Character ID: ", mCurrentCharacter.getCharacterId() + "");
+
+                    Gson gson = new Gson();
+                    String currentCharacter = gson.toJson(mCurrentCharacter);
+                    mEditor.putString(Constants.PREFERENCES_CHARACTER, currentCharacter);
+                    mEditor.commit();
+                }
+
+                @Override
+                public void onCancelled(FirebaseError firebaseError) {
+
+                }
+            });
+            instantiatePlayerIDs();
+            mUserFirebaseRef.child("joinedMatch").setValue(true);
+        }
+    }
 }

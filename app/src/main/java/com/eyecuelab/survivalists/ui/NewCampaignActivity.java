@@ -52,10 +52,10 @@ public class NewCampaignActivity extends AppCompatActivity implements View.OnCli
     private int mLastSafeHouseId;
     private int mNextSafeHouseId;
     private boolean mConfirmingSettings = true;
+    private String mDifficultyDescription;
     private String mCurrentMatchId;
     private String mCurrentPlayerId;
-    private ArrayList<String> descriptions = new ArrayList<>();
-    private ArrayList<String> lengths = new ArrayList<>();
+    private ArrayList<String> difficultyDescriptions = new ArrayList<>();
     private ArrayList<String> invitedPlayers = new ArrayList<>();
     Integer[] campaignDuration = {15, 30, 45};
     Integer[] defaultDailyGoal = {5000, 7000, 10000};
@@ -100,6 +100,7 @@ public class NewCampaignActivity extends AppCompatActivity implements View.OnCli
                 | View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
                 | View.SYSTEM_UI_FLAG_FULLSCREEN
                 | View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY);
+
         //set content view AFTER ABOVE sequence (to avoid crash)
         setContentView(R.layout.activity_new_campaign);
 
@@ -111,12 +112,13 @@ public class NewCampaignActivity extends AppCompatActivity implements View.OnCli
 
         confirmationButton.setOnClickListener(this);
 
-        descriptions.add("Walk in the park");
-        descriptions.add("Walk the line");
-        descriptions.add("Walk the talk");
-        lengths.add("15");
-        lengths.add("30");
-        lengths.add("45");
+        difficultyDescriptions.add("Walk in the park");
+        difficultyDescriptions.add("Walk the line");
+        difficultyDescriptions.add("Walk the talk");
+
+        mCampaignLength = campaignDuration[0];
+        mDifficultyLevel = 0;
+        mDifficultyDescription = difficultyDescriptions.get(0);
 
         initiateSeekBars();
 
@@ -175,19 +177,8 @@ public class NewCampaignActivity extends AppCompatActivity implements View.OnCli
         int remainingInvites = mPartySize - invitedPlayers.size();
         confirmationButton.setText(remainingInvites + " invitations remaining...");
 
-        difficultyConfirmedTextView.setText("Difficulty: " + descriptions.get(mDifficultyLevel));
-        lengthConfirmedTextView.setText("Length: " + lengths.get(mCampaignLength) + " Days");
-
-        String[] players = new String[] {"This Nose Knows", "Hello", "Testing", "This Nose Knows", "Hello", "Testing", "This Nose Knows", "Hello", "Testing",};
-        ArrayAdapter<String> adapter = new ArrayAdapter<>(this, R.layout.player_list_item, R.id.playerNameTextView, players);
-
-        invitePlayerListView.setAdapter(adapter);
-        invitePlayerListView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-            @Override
-            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                invitedPlayers.add(String.valueOf(position));
-            }
-        });
+        difficultyConfirmedTextView.setText("Difficulty: " + mDifficultyDescription);
+        lengthConfirmedTextView.setText("Length: " + mCampaignLength + " Days");
     }
 
     public void initiateSeekBars() {
@@ -197,7 +188,7 @@ public class NewCampaignActivity extends AppCompatActivity implements View.OnCli
             @Override
             public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
                 progressTotal = progress;
-                difficultyTextView.setText(descriptions.get(progress));
+                difficultyTextView.setText(difficultyDescriptions.get(progress));
             }
 
             @Override
@@ -206,6 +197,7 @@ public class NewCampaignActivity extends AppCompatActivity implements View.OnCli
             @Override
             public void onStopTrackingTouch(SeekBar seekBar) {
                 mDifficultyLevel = defaultDailyGoal[progressTotal];
+                mDifficultyDescription = difficultyDescriptions.get(progressTotal);
             }
         });
 
@@ -214,7 +206,7 @@ public class NewCampaignActivity extends AppCompatActivity implements View.OnCli
 
             @Override
             public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
-                lengthTextView.setText(lengths.get(progress) + " Days");
+                lengthTextView.setText(campaignDuration[progress] + " Days");
                 progressTotal = progress;
             }
 
@@ -251,6 +243,15 @@ public class NewCampaignActivity extends AppCompatActivity implements View.OnCli
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
 
+        //Remove notification and navigation bars
+        View decorView = getWindow().getDecorView();
+        decorView.setSystemUiVisibility(View.SYSTEM_UI_FLAG_LAYOUT_STABLE
+                | View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
+                | View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
+                | View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
+                | View.SYSTEM_UI_FLAG_FULLSCREEN
+                | View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY);
+
         //Back from inviting players
         if (requestCode == WAITING_ROOM_TAG) {
             invitedPlayers = data.getStringArrayListExtra(Games.EXTRA_PLAYER_IDS);
@@ -277,8 +278,9 @@ public class NewCampaignActivity extends AppCompatActivity implements View.OnCli
         generalInfoLayout.setVisibility(View.GONE);
         playerInvitationLayout.setVisibility(View.VISIBLE);
 
-        difficultyConfirmedTextView.setText("Difficulty: " + descriptions.get(mDifficultyLevel));
-        lengthConfirmedTextView.setText("Length: " + lengths.get(mCampaignLength) + " Days");
+        //TODO: Need to pull these parameters from firebase
+//        difficultyConfirmedTextView.setText("Difficulty: " + difficultyDescriptions.get(mDifficultyLevel));
+//        lengthConfirmedTextView.setText("Length: " + lengths.get(mCampaignLength) + " Days");
         confirmationButton.setText("Waiting for players to join...");
 
         ArrayAdapter<String> adapter = new ArrayAdapter<>(this, R.layout.player_list_item, R.id.playerNameTextView, invitedPlayers);
@@ -325,7 +327,7 @@ public class NewCampaignActivity extends AppCompatActivity implements View.OnCli
 
             Firebase teamFirebaseRef = new Firebase(Constants.FIREBASE_URL_TEAM + "/" + "").child(mCurrentMatchId);
             teamFirebaseRef.child("matchStart").setValue(mCurrentMatch.getCreationTimestamp());
-            teamFirebaseRef.child("matchDuration").setValue(Integer.parseInt(lengths.get(mCampaignLength)));
+            teamFirebaseRef.child("matchDuration").setValue(mCampaignLength);
             teamFirebaseRef.child("difficultyLevel").setValue(mDifficultyLevel);
             teamFirebaseRef.child("lastSafehouseId").setValue(0);
             teamFirebaseRef.child("nextSafehouseId").setValue(1);
