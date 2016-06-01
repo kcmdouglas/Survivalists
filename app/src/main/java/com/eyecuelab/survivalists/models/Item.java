@@ -16,6 +16,13 @@ public class Item {
 
     public Item () {}
 
+    public Item(Item otherItem) {
+        this.name=otherItem.name;
+        this.description = otherItem.description;
+        this.healthPoints = otherItem.healthPoints;
+        this.effectsHealth = otherItem.effectsHealth;
+    }
+
     public Item(String name, String description, int healthPoints, boolean effectsHealth) {
         this.name=name;
         this.description = description;

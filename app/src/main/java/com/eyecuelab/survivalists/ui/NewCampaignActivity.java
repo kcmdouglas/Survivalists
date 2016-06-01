@@ -22,7 +22,9 @@ import android.widget.Toast;
 import com.eyecuelab.survivalists.Constants;
 import com.eyecuelab.survivalists.R;
 import com.eyecuelab.survivalists.models.Character;
+import com.eyecuelab.survivalists.models.Item;
 import com.eyecuelab.survivalists.models.SafeHouse;
+import com.eyecuelab.survivalists.models.Weapon;
 import com.eyecuelab.survivalists.util.CampaignEndAlarmReceiver;
 import com.eyecuelab.survivalists.util.MatchUpdateListener;
 import com.firebase.client.DataSnapshot;
@@ -70,6 +72,10 @@ public class NewCampaignActivity extends AppCompatActivity implements View.OnCli
     private TurnBasedMatch mCurrentMatch;
     private byte[] turnData;
     final int WAITING_ROOM_TAG = 1;
+    private ArrayList<Weapon> allWeapons;
+    private ArrayList<Item> allFood;
+    private ArrayList<Item> allMedicine;
+
 
     @Bind(R.id.difficultySeekBar) SeekBar difficultySeekBar;
     @Bind(R.id.campaignLengthSeekBar) SeekBar lengthSeekBar;
@@ -138,6 +144,66 @@ public class NewCampaignActivity extends AppCompatActivity implements View.OnCli
         if (navigationFlag == 2) {
             initializeWaitingRoomUi();
         }
+        Firebase itemRef = new Firebase(Constants.FIREBASE_URL_ITEMS);
+
+        itemRef.child("weapons").addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                for(DataSnapshot child: dataSnapshot.getChildren()) {
+                    String name = child.child("name").getValue().toString();
+                    String description = child.child("description").getValue().toString();
+                    long hitPointsLong = (long) child.child("hit_points").getValue();
+                    int hitPoints = (int) hitPointsLong;
+                    Weapon weapon = new Weapon(name, description, hitPoints);
+                    allWeapons.add(weapon);
+                }
+            }
+
+            @Override
+            public void onCancelled(FirebaseError firebaseError) {
+
+            }
+        });
+
+        itemRef.child("food").addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                for(DataSnapshot child: dataSnapshot.getChildren()) {
+                    String name = child.child("name").getValue().toString();
+                    String description = child.child("description").getValue().toString();
+                    long hitPointsLong = (long) child.child("health_points").getValue();
+                    int hitPoints = (int) hitPointsLong;
+                    boolean effectsHealth = (boolean) child.child("effects_health").getValue();
+                    Item item = new Item(name, description, hitPoints, effectsHealth);
+                    allFood.add(item);
+                }
+            }
+
+            @Override
+            public void onCancelled(FirebaseError firebaseError) {
+
+            }
+        });
+
+        itemRef.child("medicine").addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                for(DataSnapshot child: dataSnapshot.getChildren()) {
+                    String name = child.child("name").getValue().toString();
+                    String description = child.child("description").getValue().toString();
+                    long hitPointsLong = (long) child.child("hit_points").getValue();
+                    int hitPoints = (int) hitPointsLong;
+                    boolean effectsHealth = (boolean) child.child("effects_health").getValue();
+                    Item item = new Item(name, description, hitPoints, effectsHealth);
+                    allMedicine.add(item);
+                }
+            }
+
+            @Override
+            public void onCancelled(FirebaseError firebaseError) {
+
+            }
+        });
     }
 
     @Override
@@ -462,7 +528,33 @@ public class NewCampaignActivity extends AppCompatActivity implements View.OnCli
 
             }
         });
+        assignStarterInventory();
+    }
+    private void assignStarterInventory() {
+        if (turnData == null && invitedPlayers != null) {
+            Collections.shuffle(allWeapons);
+            Collections.shuffle(allMedicine);
+            Collections.shuffle(allFood);
+            Weapon freebieWeapon = new Weapon(allWeapons.get(0));
+            Item freebieFoodOne = new Item(allFood.get(0));
+            Item freebieFoodTwo = new Item(allFood.get(1));
+            Item freebieMedicineOne = new Item(allMedicine.get(0));
+            Item freebieMedicineTwo = new Item(allMedicine.get(1));
+            for (int i = 0; i < invitedPlayers.size(); i++) {
+                try {
+                    String playerBeingAssignId = invitedPlayers.get(i);
+                    Firebase inventoryRef = new Firebase (Constants.FIREBASE_URL_USERS + playerBeingAssignId + "/character/");
+                    inventoryRef.child("weapon/" + freebieWeapon.getName()).setValue(freebieWeapon);
+                    inventoryRef.child("item/" + freebieFoodOne.getName()).setValue(freebieFoodOne);
+                    inventoryRef.child("item/" + freebieFoodTwo.getName()).setValue(freebieFoodTwo);
+                    inventoryRef.child("item/" + freebieMedicineOne.getName()).setValue(freebieMedicineOne);
+                    inventoryRef.child("item/" + freebieMedicineTwo.getName()).setValue(freebieMedicineTwo);
+                } catch (IndexOutOfBoundsException indexOutOfBounds) {
+                    indexOutOfBounds.getStackTrace();
+                }
+            }
 
+        }
     }
 
     public void saveCampaignSettings() {

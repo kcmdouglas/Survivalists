@@ -479,10 +479,10 @@ public class MainActivity extends FragmentActivity
         ArrayList<Weapon> weapons = new ArrayList<>();
         weapons.add(new Weapon("Axe!", "This is an axe!", 5));
         ArrayList<Item> items = new ArrayList<>();
-        items.add(new Item("Axe!", "This is an axe!", 5, true, R.drawable.axe_inventory));
-        items.add(new Item("Health Pack", "This is a health pack!", 5, true, R.drawable.firstaid_inventory));
-        items.add(new Item("Flare", "This is a flare!", 5, true, R.drawable.flare_inventory));
-        items.add(new Item("Steak", "This is a steak!", 5, true, R.drawable.steak_inventory));
+//        items.add(new Item("Axe!", "This is an axe!", 5, true, R.drawable.axe_inventory));
+//        items.add(new Item("Health Pack", "This is a health pack!", 5, true, R.drawable.firstaid_inventory));
+//        items.add(new Item("Flare", "This is a flare!", 5, true, R.drawable.flare_inventory));
+//        items.add(new Item("Steak", "This is a steak!", 5, true, R.drawable.steak_inventory));
 
         try {
             GridView inventoryGridView = (GridView) findViewById(R.id.backpackGridView);
