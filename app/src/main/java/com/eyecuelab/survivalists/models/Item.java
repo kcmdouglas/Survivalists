@@ -68,11 +68,11 @@ public class Item {
     }
 
     public String getName() {
-        return null;
+        return name;
     }
 
     public String getDescription() {
-        return null;
+        return description;
     }
 
     public int getHealthPoints() {
@@ -85,5 +85,22 @@ public class Item {
 
     public void setHealthPoints(int healthPoints) {
         this.healthPoints = healthPoints;
+    }
+
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public void setDescription(String description) {
+        this.description = description;
+    }
+
+    public void setEffectsHealth(boolean effectsHealth) {
+        this.effectsHealth = effectsHealth;
+    }
+
+    public void setImageId(int imageId) {
+        this.imageId = imageId;
     }
 }

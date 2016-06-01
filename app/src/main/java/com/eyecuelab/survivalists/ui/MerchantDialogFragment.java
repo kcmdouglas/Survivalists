@@ -72,7 +72,7 @@ public class MerchantDialogFragment extends android.support.v4.app.DialogFragmen
         mSharedPreferences = PreferenceManager.getDefaultSharedPreferences(getContext());
         mEditor = mSharedPreferences.edit();
         playerId = mSharedPreferences.getString(Constants.PREFERENCES_GOOGLE_PLAYER_ID, null);
-
+        allWeapons = new ArrayList<>();
 
 
         allItems = new ArrayList<>();
@@ -124,7 +124,7 @@ public class MerchantDialogFragment extends android.support.v4.app.DialogFragmen
                 for(DataSnapshot child: dataSnapshot.getChildren()) {
                     String name = child.child("name").getValue().toString();
                     String description = child.child("description").getValue().toString();
-                    long hitPointsLong = (long) child.child("hit_points").getValue();
+                    long hitPointsLong = (long) child.child("health_points").getValue();
                     int hitPoints = (int) hitPointsLong;
                     boolean effectsHealth = (boolean) child.child("effects_health").getValue();
                     Item item = new Item(name, description, hitPoints, effectsHealth);

@@ -43,6 +43,7 @@ import com.google.gson.Gson;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Collections;
+import java.util.HashMap;
 
 import butterknife.Bind;
 import butterknife.ButterKnife;
@@ -97,6 +98,9 @@ public class NewCampaignActivity extends AppCompatActivity implements View.OnCli
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         Firebase.setAndroidContext(this);
+        allWeapons = new ArrayList<>();
+        allMedicine = new ArrayList<>();
+        allFood = new ArrayList<>();
 
         //Remove notification and navigation bars
         View decorView = getWindow().getDecorView();
@@ -150,11 +154,7 @@ public class NewCampaignActivity extends AppCompatActivity implements View.OnCli
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
                 for(DataSnapshot child: dataSnapshot.getChildren()) {
-                    String name = child.child("name").getValue().toString();
-                    String description = child.child("description").getValue().toString();
-                    long hitPointsLong = (long) child.child("hit_points").getValue();
-                    int hitPoints = (int) hitPointsLong;
-                    Weapon weapon = new Weapon(name, description, hitPoints);
+                    Weapon weapon = child.getValue(Weapon.class);
                     allWeapons.add(weapon);
                 }
             }
@@ -171,9 +171,9 @@ public class NewCampaignActivity extends AppCompatActivity implements View.OnCli
                 for(DataSnapshot child: dataSnapshot.getChildren()) {
                     String name = child.child("name").getValue().toString();
                     String description = child.child("description").getValue().toString();
-                    long hitPointsLong = (long) child.child("health_points").getValue();
+                    long hitPointsLong = (long) child.child("healthPoints").getValue();
                     int hitPoints = (int) hitPointsLong;
-                    boolean effectsHealth = (boolean) child.child("effects_health").getValue();
+                    boolean effectsHealth = (boolean) child.child("effectsHealth").getValue();
                     Item item = new Item(name, description, hitPoints, effectsHealth);
                     allFood.add(item);
                 }
@@ -191,9 +191,9 @@ public class NewCampaignActivity extends AppCompatActivity implements View.OnCli
                 for(DataSnapshot child: dataSnapshot.getChildren()) {
                     String name = child.child("name").getValue().toString();
                     String description = child.child("description").getValue().toString();
-                    long hitPointsLong = (long) child.child("hit_points").getValue();
+                    long hitPointsLong = (long) child.child("healthPoints").getValue();
                     int hitPoints = (int) hitPointsLong;
-                    boolean effectsHealth = (boolean) child.child("effects_health").getValue();
+                    boolean effectsHealth = (boolean) child.child("effectsHealth").getValue();
                     Item item = new Item(name, description, hitPoints, effectsHealth);
                     allMedicine.add(item);
                 }
@@ -418,7 +418,7 @@ public class NewCampaignActivity extends AppCompatActivity implements View.OnCli
                 String nextPlayer = mCurrentMatch.getParticipantIds().get(i);
                 Games.TurnBasedMultiplayer.takeTurn(mGoogleApiClient, mCurrentMatchId, turnData, nextPlayer);
             }
-
+            assignStarterInventory();
             assignRandomCharacters();
         }
         turnData = new byte[1];
@@ -528,33 +528,31 @@ public class NewCampaignActivity extends AppCompatActivity implements View.OnCli
 
             }
         });
-        assignStarterInventory();
     }
     private void assignStarterInventory() {
-        if (turnData == null && invitedPlayers != null) {
-            Collections.shuffle(allWeapons);
-            Collections.shuffle(allMedicine);
-            Collections.shuffle(allFood);
-            Weapon freebieWeapon = new Weapon(allWeapons.get(0));
-            Item freebieFoodOne = new Item(allFood.get(0));
-            Item freebieFoodTwo = new Item(allFood.get(1));
-            Item freebieMedicineOne = new Item(allMedicine.get(0));
-            Item freebieMedicineTwo = new Item(allMedicine.get(1));
-            for (int i = 0; i < invitedPlayers.size(); i++) {
-                try {
-                    String playerBeingAssignId = invitedPlayers.get(i);
-                    Firebase inventoryRef = new Firebase (Constants.FIREBASE_URL_USERS + playerBeingAssignId + "/character/");
-                    inventoryRef.child("weapon/" + freebieWeapon.getName()).setValue(freebieWeapon);
-                    inventoryRef.child("item/" + freebieFoodOne.getName()).setValue(freebieFoodOne);
-                    inventoryRef.child("item/" + freebieFoodTwo.getName()).setValue(freebieFoodTwo);
-                    inventoryRef.child("item/" + freebieMedicineOne.getName()).setValue(freebieMedicineOne);
-                    inventoryRef.child("item/" + freebieMedicineTwo.getName()).setValue(freebieMedicineTwo);
-                } catch (IndexOutOfBoundsException indexOutOfBounds) {
-                    indexOutOfBounds.getStackTrace();
-                }
-            }
+        for (int i = 0; i < invitedPlayers.size(); i++) {
+            try {
+                Collections.shuffle(allWeapons);
+                Collections.shuffle(allMedicine);
+                Collections.shuffle(allFood);
+                Weapon freebieWeapon = allWeapons.get(0);
+                Item freebieFoodOne = allFood.get(0);
+                Item freebieFoodTwo = allFood.get(1);
+                Item freebieMedicineOne = allMedicine.get(0);
+                Item freebieMedicineTwo = allMedicine.get(1);
 
+                String playerBeingAssignId = invitedPlayers.get(i);
+                Firebase inventoryRef = new Firebase (Constants.FIREBASE_URL_USERS + "/" + playerBeingAssignId + "/");
+                inventoryRef.child("weapon").push().setValue(freebieWeapon);
+                inventoryRef.child("item").push().setValue(freebieFoodOne);
+                inventoryRef.child("item").push().setValue(freebieFoodTwo);
+                inventoryRef.child("item").push().setValue(freebieMedicineOne);
+                inventoryRef.child("item").push().setValue(freebieMedicineTwo);
+            } catch (IndexOutOfBoundsException indexOutOfBounds) {
+                indexOutOfBounds.getStackTrace();
+            }
         }
+
     }
 
     public void saveCampaignSettings() {

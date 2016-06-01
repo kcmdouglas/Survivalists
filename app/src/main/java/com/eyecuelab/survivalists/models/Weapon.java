@@ -37,11 +37,11 @@ public class Weapon{
     }
 
     public String getName() {
-        return null;
+        return name;
     }
 
     public String getDescription() {
-        return null;
+        return description;
     }
 
     public int getHitPoints() {
