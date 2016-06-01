@@ -13,6 +13,7 @@ public class Item {
     int healthPoints;
     boolean effectsHealth;
     int imageId;
+    String pushId;
 
     public Item () {}
 
@@ -102,5 +103,13 @@ public class Item {
 
     public void setImageId(int imageId) {
         this.imageId = imageId;
+    }
+
+    public String getPushId() {
+        return pushId;
+    }
+
+    public void setPushId(String pushId) {
+        this.pushId = pushId;
     }
 }

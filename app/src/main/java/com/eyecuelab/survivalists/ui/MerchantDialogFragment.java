@@ -342,14 +342,17 @@ public class MerchantDialogFragment extends android.support.v4.app.DialogFragmen
     }
 
     private void addItemToInventory(final Weapon weapon) {
-        final Firebase mFirebaseInventoryUpdate = new Firebase(Constants.FIREBASE_URL_USERS + "/" + playerId + "/weapons/");
+        final Firebase weaponUpdate = new Firebase(Constants.FIREBASE_URL_USERS + "/" + playerId + "/weapons/");
 
-        mFirebaseInventoryUpdate.addListenerForSingleValueEvent(new ValueEventListener() {
+        weaponUpdate.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
                 int itemAmount = (int) dataSnapshot.getChildrenCount();
                 if (itemAmount < 4) {
-                    mFirebaseInventoryUpdate.push().setValue(weapon);
+                    Firebase newWeaponRef = weaponUpdate.push();
+                    String weaponPushId = newWeaponRef.getKey();
+                    weapon.setPushId(weaponPushId);
+                    newWeaponRef.setValue(weapon);
                 } else {
                 }
             }
@@ -362,13 +365,15 @@ public class MerchantDialogFragment extends android.support.v4.app.DialogFragmen
     }
 
     private void addItemToInventory(final Item item) {
-        final Firebase mFirebaseInventoryUpdate = new Firebase(Constants.FIREBASE_URL_USERS + "/" + playerId + "/items/");
+        final Firebase itemUpdate = new Firebase(Constants.FIREBASE_URL_USERS + "/" + playerId + "/items/");
 
-        mFirebaseInventoryUpdate.addListenerForSingleValueEvent(new ValueEventListener() {
+        itemUpdate.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
                 int itemAmount = (int) dataSnapshot.getChildrenCount();
                 if (itemAmount < 12) {
+                    Firebase newItemRef = itemUpdate.push();
+                    String itemPushId
                     mFirebaseInventoryUpdate.push().setValue(item);
                 } else {
                 }

@@ -7,6 +7,7 @@ public class Weapon{
     String name;
     String description;
     int hitPoints;
+    String pushId;
 
     public Weapon () {}
 
@@ -58,5 +59,13 @@ public class Weapon{
 
     public void setDescription(String description) {
         this.description = description;
+    }
+
+    public String getPushId() {
+        return pushId;
+    }
+
+    public void setPushId(String pushId) {
+        this.pushId = pushId;
     }
 }

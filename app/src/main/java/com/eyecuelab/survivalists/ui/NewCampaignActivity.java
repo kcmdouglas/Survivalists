@@ -525,19 +525,36 @@ public class NewCampaignActivity extends AppCompatActivity implements View.OnCli
                 Collections.shuffle(allWeapons);
                 Collections.shuffle(allMedicine);
                 Collections.shuffle(allFood);
+                ArrayList<Item> itemsToPush = new ArrayList<>();
                 Weapon freebieWeapon = allWeapons.get(0);
                 Item freebieFoodOne = allFood.get(0);
+                itemsToPush.add(freebieFoodOne);
                 Item freebieFoodTwo = allFood.get(1);
+                itemsToPush.add(freebieFoodTwo);
                 Item freebieMedicineOne = allMedicine.get(0);
+                itemsToPush.add(freebieMedicineOne);
                 Item freebieMedicineTwo = allMedicine.get(1);
+                itemsToPush.add(freebieMedicineTwo);
 
                 String playerBeingAssignId = invitedPlayers.get(i);
-                Firebase inventoryRef = new Firebase (Constants.FIREBASE_URL_USERS + "/" + playerBeingAssignId + "/");
-                inventoryRef.child("weapons").push().setValue(freebieWeapon);
-                inventoryRef.child("items").push().setValue(freebieFoodOne);
-                inventoryRef.child("items").push().setValue(freebieFoodTwo);
-                inventoryRef.child("items").push().setValue(freebieMedicineOne);
-                inventoryRef.child("items").push().setValue(freebieMedicineTwo);
+
+                for(int j = 0; j < itemsToPush.size(); j++) {
+                    Item item = itemsToPush.get(j);
+                    Firebase itemRef = new Firebase (Constants.FIREBASE_URL_USERS + "/" + playerBeingAssignId + "/items");
+                    Firebase newItemRef = itemRef.push();
+                    String itemPushId = newItemRef.getKey();
+                    item.setPushId(itemPushId);
+                    newItemRef.setValue(item);
+                }
+
+
+                Firebase weaponRef = new Firebase (Constants.FIREBASE_URL_USERS + "/" + playerBeingAssignId + "/weapons");
+                Firebase newWeaponRef = weaponRef.push();
+                String weaponPushId = newWeaponRef.getKey();
+
+                freebieWeapon.setPushId(weaponPushId);
+                newWeaponRef.setValue(freebieWeapon);
+
             } catch (IndexOutOfBoundsException indexOutOfBounds) {
                 indexOutOfBounds.getStackTrace();
             }
