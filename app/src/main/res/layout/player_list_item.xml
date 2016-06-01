@@ -31,8 +31,8 @@
         android:layout_marginLeft="10dp"
         android:layout_marginStart="10dp"
         android:layout_gravity="center"
-        android:textOff="Invite Player"
-        android:textOn="Cancel Invite"
+        android:textOff="Cancel Invite"
+        android:textOn="Invite player"
         android:textStyle="bold"
         android:background="@drawable/blank_notebook_interaction_btn"
         android:text="" />
