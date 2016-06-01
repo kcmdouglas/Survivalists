@@ -83,11 +83,7 @@ public class MerchantDialogFragment extends android.support.v4.app.DialogFragmen
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
                 for(DataSnapshot child: dataSnapshot.getChildren()) {
-                    String name = child.child("name").getValue().toString();
-                    String description = child.child("description").getValue().toString();
-                    long hitPointsLong = (long) child.child("hit_points").getValue();
-                    int hitPoints = (int) hitPointsLong;
-                    Weapon weapon = new Weapon(name, description, hitPoints);
+                    Weapon weapon = child.getValue(Weapon.class);
                     allWeapons.add(weapon);
                 }
             }
@@ -102,12 +98,7 @@ public class MerchantDialogFragment extends android.support.v4.app.DialogFragmen
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
                 for(DataSnapshot child: dataSnapshot.getChildren()) {
-                    String name = child.child("name").getValue().toString();
-                    String description = child.child("description").getValue().toString();
-                    long hitPointsLong = (long) child.child("health_points").getValue();
-                    int hitPoints = (int) hitPointsLong;
-                    boolean effectsHealth = (boolean) child.child("effects_health").getValue();
-                    Item item = new Item(name, description, hitPoints, effectsHealth);
+                    Item item = child.getValue(Item.class);
                     allItems.add(item);
                 }
             }
@@ -122,12 +113,7 @@ public class MerchantDialogFragment extends android.support.v4.app.DialogFragmen
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
                 for(DataSnapshot child: dataSnapshot.getChildren()) {
-                    String name = child.child("name").getValue().toString();
-                    String description = child.child("description").getValue().toString();
-                    long hitPointsLong = (long) child.child("health_points").getValue();
-                    int hitPoints = (int) hitPointsLong;
-                    boolean effectsHealth = (boolean) child.child("effects_health").getValue();
-                    Item item = new Item(name, description, hitPoints, effectsHealth);
+                    Item item = child.getValue(Item.class);
                     allItems.add(item);
                 }
             }
@@ -138,18 +124,13 @@ public class MerchantDialogFragment extends android.support.v4.app.DialogFragmen
             }
         });
 
-        Firebase userRef = new Firebase(Constants.FIREBASE_URL_USERS + "/" + playerId + "/character");
+        Firebase userRef = new Firebase(Constants.FIREBASE_URL_USERS + "/" + playerId + "/");
 
         userRef.child("items").addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
                 for(DataSnapshot child : dataSnapshot.getChildren()) {
-                    String name = child.child("name").getValue().toString();
-                    String description = child.child("description").getValue().toString();
-                    long hitPointsLong = (long) child.child("hit_points").getValue();
-                    int hitPoints = (int) hitPointsLong;
-                    boolean effectsHealth = (boolean) child.child("effects_health").getValue();
-                    Item item = new Item(name, description, hitPoints, effectsHealth);
+                    Item item = child.getValue(Item.class);
                     userItemInventory.add(item);
                 }
             }
@@ -164,11 +145,7 @@ public class MerchantDialogFragment extends android.support.v4.app.DialogFragmen
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
                 for(DataSnapshot child: dataSnapshot.getChildren()) {
-                    String name = child.child("name").getValue().toString();
-                    String description = child.child("description").getValue().toString();
-                    long hitPointsLong = (long) child.child("hit_points").getValue();
-                    int hitPoints = (int) hitPointsLong;
-                    Weapon weapon = new Weapon(name, description, hitPoints);
+                    Weapon weapon = child.getValue(Weapon.class);
                     userWeaponInventory.add(weapon);
                 }
             }
@@ -240,13 +217,13 @@ public class MerchantDialogFragment extends android.support.v4.app.DialogFragmen
     }
 
     private void removeItemFromInventory(final Weapon weapon) {
-        Firebase inventoryRef = new Firebase (Constants.FIREBASE_URL_USERS + "/" + playerId + "/character/weapons");
+        Firebase inventoryRef = new Firebase (Constants.FIREBASE_URL_USERS + "/" + playerId + "/weapons");
 
         inventoryRef.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
                 for (DataSnapshot child : dataSnapshot.getChildren()) {
-                    if (child.getKey().toString().equals(weapon.getName()))  {
+                    if (child.getValue(Item.class).equals(weapon))  {
                         child.getRef().removeValue();
                         break;
                     }
@@ -260,13 +237,13 @@ public class MerchantDialogFragment extends android.support.v4.app.DialogFragmen
         });
     }
     private void removeItemFromInventory(final Item item) {
-        Firebase inventoryRef = new Firebase (Constants.FIREBASE_URL_USERS + "/" + playerId + "/character/items");
+        Firebase inventoryRef = new Firebase (Constants.FIREBASE_URL_USERS + "/" + playerId + "/items");
 
         inventoryRef.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
                 for (DataSnapshot child : dataSnapshot.getChildren()) {
-                    if (child.getKey().toString().equals(item.getName()))  {
+                    if (child.getValue(Item.class).equals(item))  {
                         child.getRef().removeValue();
                         break;
                     }
@@ -351,14 +328,14 @@ public class MerchantDialogFragment extends android.support.v4.app.DialogFragmen
     }
 
     private void addItemToInventory(final Weapon weapon) {
-        final Firebase mFirebaseInventoryUpdate = new Firebase(Constants.FIREBASE_URL_USERS + "/" + playerId + "/character/weapons/");
+        final Firebase mFirebaseInventoryUpdate = new Firebase(Constants.FIREBASE_URL_USERS + "/" + playerId + "/weapons/");
 
         mFirebaseInventoryUpdate.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
                 int itemAmount = (int) dataSnapshot.getChildrenCount();
                 if (itemAmount < 4) {
-                    mFirebaseInventoryUpdate.child(weapon.getName()).setValue(weapon);
+                    mFirebaseInventoryUpdate.push().setValue(weapon);
                 }
             }
 
@@ -370,14 +347,14 @@ public class MerchantDialogFragment extends android.support.v4.app.DialogFragmen
     }
 
     private void addItemToInventory(final Item item) {
-        final Firebase mFirebaseInventoryUpdate = new Firebase(Constants.FIREBASE_URL_USERS + "/" + playerId + "/character/items/");
+        final Firebase mFirebaseInventoryUpdate = new Firebase(Constants.FIREBASE_URL_USERS + "/" + playerId + "/items/");
 
         mFirebaseInventoryUpdate.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
                 int itemAmount = (int) dataSnapshot.getChildrenCount();
                 if (itemAmount < 12) {
-                    mFirebaseInventoryUpdate.child(item.getName()).setValue(item);
+                    mFirebaseInventoryUpdate.push().setValue(item);
                 }
             }
 

@@ -543,11 +543,11 @@ public class NewCampaignActivity extends AppCompatActivity implements View.OnCli
 
                 String playerBeingAssignId = invitedPlayers.get(i);
                 Firebase inventoryRef = new Firebase (Constants.FIREBASE_URL_USERS + "/" + playerBeingAssignId + "/");
-                inventoryRef.child("weapon").push().setValue(freebieWeapon);
-                inventoryRef.child("item").push().setValue(freebieFoodOne);
-                inventoryRef.child("item").push().setValue(freebieFoodTwo);
-                inventoryRef.child("item").push().setValue(freebieMedicineOne);
-                inventoryRef.child("item").push().setValue(freebieMedicineTwo);
+                inventoryRef.child("weapons").push().setValue(freebieWeapon);
+                inventoryRef.child("items").push().setValue(freebieFoodOne);
+                inventoryRef.child("items").push().setValue(freebieFoodTwo);
+                inventoryRef.child("items").push().setValue(freebieMedicineOne);
+                inventoryRef.child("items").push().setValue(freebieMedicineTwo);
             } catch (IndexOutOfBoundsException indexOutOfBounds) {
                 indexOutOfBounds.getStackTrace();
             }
