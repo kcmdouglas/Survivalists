@@ -4,11 +4,13 @@ import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.text.TextUtils;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.eyecuelab.survivalists.Constants;
 import com.eyecuelab.survivalists.R;
@@ -58,7 +60,7 @@ public class MerchantDialogFragment extends android.support.v4.app.DialogFragmen
     //empty constructor required for dialog fragments
     public MerchantDialogFragment() {};
 
-    public static android.support.v4.app.DialogFragment newInstance(int number, SafeHouse safehouse) {
+    public static android.support.v4.app.DialogFragment newInstance(int number) {
         MerchantDialogFragment frag = new MerchantDialogFragment();
         Bundle args = new Bundle();
         args.putInt("number", number);
@@ -73,17 +75,20 @@ public class MerchantDialogFragment extends android.support.v4.app.DialogFragmen
         mEditor = mSharedPreferences.edit();
         playerId = mSharedPreferences.getString(Constants.PREFERENCES_GOOGLE_PLAYER_ID, null);
         allWeapons = new ArrayList<>();
-
-
         allItems = new ArrayList<>();
+        userItemInventory = new ArrayList<>();
+        userWeaponInventory = new ArrayList<>();
 
-        Firebase itemRef = new Firebase(Constants.FIREBASE_URL_ITEMS);
+
+        Firebase itemRef = new Firebase(Constants.FIREBASE_URL_ITEMS +"/");
 
         itemRef.child("weapons").addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
                 for(DataSnapshot child: dataSnapshot.getChildren()) {
                     Weapon weapon = child.getValue(Weapon.class);
+                    Log.d("Weapon:", weapon + "");
+                    Log.d("Name:", weapon.getName());
                     allWeapons.add(weapon);
                 }
             }
@@ -124,14 +129,25 @@ public class MerchantDialogFragment extends android.support.v4.app.DialogFragmen
             }
         });
 
+
+    }
+
+    @Override
+    public View onCreateView(LayoutInflater inflater, ViewGroup container,
+                             Bundle savedInstanceState) {
+        View view = inflater.inflate(R.layout.fragment_merchant_dialog, container, false);
+        super.onViewCreated(view, savedInstanceState);
+        ButterKnife.bind(this, view);
         Firebase userRef = new Firebase(Constants.FIREBASE_URL_USERS + "/" + playerId + "/");
 
         userRef.child("items").addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
                 for(DataSnapshot child : dataSnapshot.getChildren()) {
-                    Item item = child.getValue(Item.class);
+                    Item item = new Item(child.getValue(Item.class));
+                    Log.d("Inventory", item.getName());
                     userItemInventory.add(item);
+                    Log.d("Item Inventory", userItemInventory.size() + "");
                 }
             }
 
@@ -145,9 +161,12 @@ public class MerchantDialogFragment extends android.support.v4.app.DialogFragmen
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
                 for(DataSnapshot child: dataSnapshot.getChildren()) {
-                    Weapon weapon = child.getValue(Weapon.class);
+                    Weapon weapon = new Weapon(child.getValue(Weapon.class));
+                    Log.d("Inventory", weapon.getName());
                     userWeaponInventory.add(weapon);
+                    Log.d("Weapon Inventory", userWeaponInventory.size() + "");
                 }
+                randomizeItems();
             }
 
             @Override
@@ -156,15 +175,8 @@ public class MerchantDialogFragment extends android.support.v4.app.DialogFragmen
             }
         });
 
-    }
-
-    @Override
-    public View onCreateView(LayoutInflater inflater, ViewGroup container,
-                             Bundle savedInstanceState) {
-        View view = inflater.inflate(R.layout.fragment_merchant_dialog, container, false);
-        super.onViewCreated(view, savedInstanceState);
-        ButterKnife.bind(this, view);
-
+        acceptButton.setOnClickListener(this);
+        merchantCloseButton.setOnClickListener(this);
 
         return view;
     }
@@ -217,14 +229,15 @@ public class MerchantDialogFragment extends android.support.v4.app.DialogFragmen
     }
 
     private void removeItemFromInventory(final Weapon weapon) {
-        Firebase inventoryRef = new Firebase (Constants.FIREBASE_URL_USERS + "/" + playerId + "/weapons");
+        final Firebase inventoryRef = new Firebase (Constants.FIREBASE_URL_USERS + "/" + playerId + "/weapons");
 
         inventoryRef.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
                 for (DataSnapshot child : dataSnapshot.getChildren()) {
-                    if (child.getValue(Item.class).equals(weapon))  {
-                        child.getRef().removeValue();
+                    String key = child.getKey();
+                    if (child.getValue(Weapon.class).equals(weapon))  {
+                        inventoryRef.child(key).removeValue();
                         break;
                     }
                 }
@@ -237,14 +250,14 @@ public class MerchantDialogFragment extends android.support.v4.app.DialogFragmen
         });
     }
     private void removeItemFromInventory(final Item item) {
-        Firebase inventoryRef = new Firebase (Constants.FIREBASE_URL_USERS + "/" + playerId + "/items");
+        final Firebase inventoryRef = new Firebase (Constants.FIREBASE_URL_USERS + "/" + playerId + "/items");
 
         inventoryRef.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
-                for (DataSnapshot child : dataSnapshot.getChildren()) {
-                    if (child.getValue(Item.class).equals(item))  {
-                        child.getRef().removeValue();
+                for (DataSnapshot indvItem : dataSnapshot.getChildren()) {
+                    if (indvItem.getValue(Item.class).equals(item))  {
+                        inventoryRef.child(indvItem.getKey()).removeValue();
                         break;
                     }
                 }
@@ -262,18 +275,19 @@ public class MerchantDialogFragment extends android.support.v4.app.DialogFragmen
         selectedItemChooser = (int) (Math.random() +.5);
         offerRandomizer = (int) (Math.random() * 2);
         Collections.shuffle(allItems);
+        Collections.shuffle(allWeapons);
 
-        if(userItemInventory != null) {
+        if(userItemInventory.size() > 0) {
             Collections.shuffle(userItemInventory);
             selectedInventoryItem = userItemInventory.get(0);
         }
 
-        if(userWeaponInventory != null) {
+        if(userWeaponInventory.size() > 0) {
             Collections.shuffle(userWeaponInventory);
             selectedInventoryWeapon = userWeaponInventory.get(0);
         }
 
-        if (userWeaponInventory != null || userItemInventory != null) {
+        if (userWeaponInventory.size() > 0 || userItemInventory.size() > 0) {
             if (offerRandomizer == 0) {
                 weaponOne = allWeapons.get(0);
                 weaponTwo = allWeapons.get(1);
@@ -321,9 +335,9 @@ public class MerchantDialogFragment extends android.support.v4.app.DialogFragmen
                     merchantOffer.setText(String.format("I see you have a nice %s, would you trade for these: %s, %s?", selectedInventoryWeapon.getName(), itemTwo.getName(), itemOne.getName()));
                 }
             }
-        } else {
-            acceptButton.setEnabled(false);
-            merchantOffer.setText("Seems like you have nothing to barter...");
+//        } else {
+//            acceptButton.setEnabled(false);
+//            merchantOffer.setText("Seems like you have nothing to barter...");
         }
     }
 
@@ -336,6 +350,7 @@ public class MerchantDialogFragment extends android.support.v4.app.DialogFragmen
                 int itemAmount = (int) dataSnapshot.getChildrenCount();
                 if (itemAmount < 4) {
                     mFirebaseInventoryUpdate.push().setValue(weapon);
+                } else {
                 }
             }
 
@@ -355,6 +370,7 @@ public class MerchantDialogFragment extends android.support.v4.app.DialogFragmen
                 int itemAmount = (int) dataSnapshot.getChildrenCount();
                 if (itemAmount < 12) {
                     mFirebaseInventoryUpdate.push().setValue(item);
+                } else {
                 }
             }
 

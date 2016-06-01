@@ -169,12 +169,7 @@ public class NewCampaignActivity extends AppCompatActivity implements View.OnCli
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
                 for(DataSnapshot child: dataSnapshot.getChildren()) {
-                    String name = child.child("name").getValue().toString();
-                    String description = child.child("description").getValue().toString();
-                    long hitPointsLong = (long) child.child("healthPoints").getValue();
-                    int hitPoints = (int) hitPointsLong;
-                    boolean effectsHealth = (boolean) child.child("effectsHealth").getValue();
-                    Item item = new Item(name, description, hitPoints, effectsHealth);
+                    Item item = child.getValue(Item.class);
                     allFood.add(item);
                 }
             }
@@ -189,12 +184,7 @@ public class NewCampaignActivity extends AppCompatActivity implements View.OnCli
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
                 for(DataSnapshot child: dataSnapshot.getChildren()) {
-                    String name = child.child("name").getValue().toString();
-                    String description = child.child("description").getValue().toString();
-                    long hitPointsLong = (long) child.child("healthPoints").getValue();
-                    int hitPoints = (int) hitPointsLong;
-                    boolean effectsHealth = (boolean) child.child("effectsHealth").getValue();
-                    Item item = new Item(name, description, hitPoints, effectsHealth);
+                    Item item = child.getValue(Item.class);
                     allMedicine.add(item);
                 }
             }
