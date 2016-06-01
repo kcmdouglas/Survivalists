@@ -1,12 +1,15 @@
 package com.eyecuelab.survivalists.models;
 
 
+import android.net.Uri;
+
 import java.util.ArrayList;
 
 public class User {
     public String UID;
     public String displayName;
     public String teamId;
+    public Uri imageUri;
     public boolean atSafeHouse;
     public boolean joinedMatch;
     public Character playedCharacter;
@@ -18,10 +21,11 @@ public class User {
     public User() {
     }
 
-    public User (String UID, String  displayName, String teamId) {
+    public User (String UID, String  displayName, String teamId, Uri imageUri) {
         this.UID = UID;
         this.displayName = displayName;
         this.teamId = teamId;
+        this.imageUri = imageUri;
     }
 
     public String getUID() {
@@ -83,4 +87,12 @@ public class User {
     public void setPlayedCharacter(Character playedCharacter) { this.playedCharacter = playedCharacter; }
 
     public Character getPlayedCharacter() { return playedCharacter; }
+
+    public Uri getImageUri() {
+        return imageUri;
+    }
+
+    public void setImageUri(Uri imageUri) {
+        this.imageUri = imageUri;
+    }
 }
