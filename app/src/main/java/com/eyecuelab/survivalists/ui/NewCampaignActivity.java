@@ -32,8 +32,13 @@ import com.firebase.client.Firebase;
 import com.firebase.client.FirebaseError;
 import com.firebase.client.ValueEventListener;
 import com.google.android.gms.common.api.GoogleApiClient;
+import com.google.android.gms.common.api.ResolvingResultCallbacks;
 import com.google.android.gms.common.api.ResultCallback;
+import com.google.android.gms.common.api.Status;
 import com.google.android.gms.games.Games;
+import com.google.android.gms.games.multiplayer.Invitation;
+import com.google.android.gms.games.multiplayer.InvitationBuffer;
+import com.google.android.gms.games.multiplayer.Invitations;
 import com.google.android.gms.games.multiplayer.Participant;
 import com.google.android.gms.games.multiplayer.turnbased.TurnBasedMatch;
 import com.google.android.gms.games.multiplayer.turnbased.TurnBasedMatchConfig;
@@ -129,8 +134,8 @@ public class NewCampaignActivity extends BaseGameActivity implements View.OnClic
         mEditor = mSharedPreferences.edit();
 
         int navigationFlag = getIntent().getIntExtra("statusTag", -1);
-        if (navigationFlag == 2) {
-            initializeWaitingRoomUi();
+        if (navigationFlag == Constants.JOIN_CAMPAIGN_INTENT) {
+            setupJoinMatchesUi();
         }
     }
 
@@ -310,6 +315,56 @@ public class NewCampaignActivity extends BaseGameActivity implements View.OnClic
                 }
             });
         }
+    }
+
+    public void setupJoinMatchesUi() {
+        settingsLayout.setVisibility(View.GONE);
+        settingConfirmationLayout.setVisibility(View.VISIBLE);
+        generalInfoLayout.setVisibility(View.GONE);
+        playerInvitationLayout.setVisibility(View.VISIBLE);
+
+        //TODO: Need to pull these parameters from firebase or shared preferences
+//        difficultyConfirmedTextView.setText("Difficulty: " + difficultyDescriptions.get(mDifficultyLevel));
+//        lengthConfirmedTextView.setText("Length: " + lengths.get(mCampaignLength) + " Days");
+        confirmationButton.setText("Waiting for players to join...");
+
+        Games.Invitations.loadInvitations(mGoogleApiClient).setResultCallback(new ResultCallback<Invitations.LoadInvitationsResult>() {
+            @Override
+            public void onResult(@NonNull Invitations.LoadInvitationsResult loadInvitationsResult) {
+                InvitationBuffer invitationBuffer = loadInvitationsResult.getInvitations();
+                for (int i = 0; i < invitationBuffer.getCount(); i++) {
+                    Invitation invitation = invitationBuffer.get(i);
+                    Participant inviter = invitation.getInviter();
+
+                    String userName = inviter.getDisplayName();
+                    Log.v("TAG", userName);
+                }
+            }
+        });
+
+//        ArrayList<String> playerIds =
+//            ArrayList<User> matchUsers = new ArrayList<>();
+//
+//            for (int i = 1; i < playerIds.size(); i++) {
+//                String playerId = playerIds.get(i);
+//                Participant participant = mCurrentMatch.getParticipant(playerId);
+//
+//                String UID = participant.getParticipantId();
+//                String displayName = participant.getDisplayName();
+//                Uri imageUri = participant.getIconImageUri();
+//
+//                User currentUser = new User(UID, displayName, mCurrentMatchId, imageUri);
+//                matchUsers.add(currentUser);
+//
+//            }
+//
+//            invitePlayerListView.setAdapter(new PlayerAdapter(this, matchUsers, R.layout.player_list_item));
+//            invitePlayerListView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+//                @Override
+//                public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+//                }
+//            });
+//        }
     }
 
     public void loadMatch(String matchId) {

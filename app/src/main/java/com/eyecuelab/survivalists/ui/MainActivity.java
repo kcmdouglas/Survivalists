@@ -73,10 +73,9 @@ public class MainActivity extends FragmentActivity
     private Character mCurrentCharacter;
     private Firebase mUserFirebaseRef;
 
-    //Flags to indicate return activity
-    private static final int RC_SIGN_IN =  100;
-    private static final int RC_SELECT_PLAYERS = 200;
-    private static final int RC_WAITING_ROOM = 300;
+    //Flags to indicate navigation
+    private final int START_CAMPAIGN_INTENT = 2;
+    private final int JOIN_CAMPAIGN_INTENT = 3;
 
     private Context mContext;
 

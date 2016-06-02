@@ -97,14 +97,14 @@ public class TitleActivity extends BaseGameActivity implements GoogleApiClient.C
                 startActivity(currentCampaignIntent);
                 break;
             case R.id.startCampaignButton:
-                campaignEditorIntent.putExtra("statusTag", 1);
+                campaignEditorIntent.putExtra("statusTag", Constants.START_CAMPAIGN_INTENT);
                 startActivity(campaignEditorIntent);
                 break;
             case R.id.loginButton:
                 googleButtonHandler();
                 break;
             case R.id.joinCampaignButton:
-                campaignEditorIntent.putExtra("statusTag", 2);
+                campaignEditorIntent.putExtra("statusTag", Constants.JOIN_CAMPAIGN_INTENT);
                 startActivity(campaignEditorIntent);
                 break;
         }
@@ -140,8 +140,6 @@ public class TitleActivity extends BaseGameActivity implements GoogleApiClient.C
 
             //Save to shared preferences
             mEditor.putString(Constants.PREFERENCES_GOOGLE_PLAYER_ID, mCurrentPlayerId);
-            mEditor.putString("userId", mCurrentPlayerId);
-            mEditor.putString("userName", userName);
             mEditor.commit();
 
             //Save user info to firebase
@@ -193,7 +191,7 @@ public class TitleActivity extends BaseGameActivity implements GoogleApiClient.C
         }
     }
 
-    //Required overrides to extend BaseGameActivity and make GoogleApiClient available throughout
+    //Required to extend BaseGameActivity and make GoogleApiClient available throughout
     @Override
     public void onSignInFailed() {}
     @Override

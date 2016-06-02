@@ -44,4 +44,6 @@ public class Constants {
     public static final String PREFERENCES_DURATION_SETTING = "duration";
     public static final String PREFERENCES_DEFAULT_DAILY_GOAL_SETTING = "difficulty";
     public static final String PREFERENCES_TEAM_SIZE_SETTING = "teamSize";
+    public static final int START_CAMPAIGN_INTENT = 22222;
+    public static final int JOIN_CAMPAIGN_INTENT = 33333;
 }
