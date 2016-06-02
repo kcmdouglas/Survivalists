@@ -199,7 +199,7 @@ public class EventDialogFragment extends android.support.v4.app.DialogFragment i
                                 String itemDescription = dataSnapshot.child("description").getValue().toString();
                                 int healthPoints = (int) dataSnapshot.child("health_points").getValue();
                                 int itemId = (int) dataSnapshot.getValue();
-                                item = new Item(itemName, itemDescription, healthPoints, effectsHealth, R.drawable.steak_inventory);
+                                item = new Item(itemName, itemDescription, healthPoints, effectsHealth);
                             }
 
                         }
@@ -342,13 +342,13 @@ public class EventDialogFragment extends android.support.v4.app.DialogFragment i
     }
 
     private void addItemToInventory(final Weapon weapon) {
-        final Firebase mFirebaseInventoryUpdate = new Firebase(Constants.FIREBASE_URL_USERS + "/" + mPlayerId + "/character/inventory/");
+        final Firebase mFirebaseInventoryUpdate = new Firebase(Constants.FIREBASE_URL_USERS + "/" + mPlayerId + "/character/weapons/");
 
         mFirebaseInventoryUpdate.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
                 int itemAmount = (int) dataSnapshot.getChildrenCount();
-                if (itemAmount < 16) {
+                if (itemAmount < 4) {
                     mFirebaseInventoryUpdate.child(weapon.getName()).setValue(weapon);
                     mCurrentCharacter.addToInventory(weapon);
                 }
@@ -362,13 +362,13 @@ public class EventDialogFragment extends android.support.v4.app.DialogFragment i
     }
 
     private void addItemToInventory(final Item item) {
-        final Firebase mFirebaseInventoryUpdate = new Firebase(Constants.FIREBASE_URL_USERS + "/" + mPlayerId + "/character/inventory/");
+        final Firebase mFirebaseInventoryUpdate = new Firebase(Constants.FIREBASE_URL_USERS + "/" + mPlayerId + "/character/items/");
 
         mFirebaseInventoryUpdate.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
                 int itemAmount = (int) dataSnapshot.getChildrenCount();
-                if (itemAmount < 16) {
+                if (itemAmount < 12) {
                     mFirebaseInventoryUpdate.child(item.getName()).setValue(item);
                     mCurrentCharacter.addToInventory(item);
                 }
