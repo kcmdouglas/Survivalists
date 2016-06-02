@@ -2,8 +2,12 @@ package com.eyecuelab.survivalists.adapters;
 
 import android.app.Activity;
 import android.content.Context;
+import android.content.Intent;
+import android.content.SharedPreferences;
 import android.net.Uri;
+import android.preference.PreferenceManager;
 import android.support.annotation.NonNull;
+import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -14,8 +18,11 @@ import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.ToggleButton;
 
+import com.eyecuelab.survivalists.Constants;
 import com.eyecuelab.survivalists.R;
+import com.eyecuelab.survivalists.ui.NewCampaignActivity;
 import com.eyecuelab.survivalists.util.MatchLoadedListener;
+import com.firebase.client.Firebase;
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.common.api.ResultCallback;
 import com.google.android.gms.common.images.ImageManager;
@@ -87,7 +94,48 @@ public class InvitationAdapter extends BaseAdapter implements AdapterView.OnItem
                 @Override
                 public void onClick(View v) {
                     Games.TurnBasedMultiplayer.acceptInvitation(mGoogleApiClient, invitation.getInvitationId());
-                    Games.TurnBasedMultiplayer.loadMatch(mGoogleApiClient, invitation.getInvitationId()).setResultCallback(new MatchLoadedListener());
+                    Games.TurnBasedMultiplayer.loadMatch(mGoogleApiClient, invitation.getInvitationId()).setResultCallback(new ResultCallback<TurnBasedMultiplayer.LoadMatchResult>() {
+                        @Override
+                        public void onResult(@NonNull TurnBasedMultiplayer.LoadMatchResult result) {
+                            String mCurrentMatchId = result.getMatch().getMatchId();
+                            String mCurrentPlayerId = Games.Players.getCurrentPlayerId(mGoogleApiClient);
+                            TurnBasedMatch match = result.getMatch();
+
+                            //Create Shared Preferences
+                            SharedPreferences mSharedPreferences = PreferenceManager.getDefaultSharedPreferences(mContext);
+                            SharedPreferences.Editor mEditor = mSharedPreferences.edit();
+
+                            mEditor.putString(Constants.PREFERENCES_MATCH_ID, mCurrentMatchId);
+                            mEditor.putInt(Constants.PREFERENCES_LAST_SAFEHOUSE_ID, 0);
+                            mEditor.putInt(Constants.PREFERENCES_NEXT_SAFEHOUSE_ID, 1);
+                            mEditor.apply();
+
+
+                            byte[] turnData = new byte[1];
+
+                            ArrayList<Participant> allPlayers = match.getParticipants();
+                            int nextPlayerNumber = Integer.parseInt(match.getLastUpdaterId().substring(2));
+                            try {
+                                //Should pass invitation to the next player
+                                String nextPlayerId = allPlayers.get(nextPlayerNumber).getParticipantId();
+                                Games.TurnBasedMultiplayer.takeTurn(mGoogleApiClient, mCurrentMatchId, turnData, nextPlayerId);
+
+                                //Grab the next player in case the previous above didn't work
+                                nextPlayerId = allPlayers.get(nextPlayerNumber + 1).getParticipantId();
+                                Games.TurnBasedMultiplayer.takeTurn(mGoogleApiClient, mCurrentMatchId, turnData, nextPlayerId);
+                            } catch (IndexOutOfBoundsException indexOutOfBonds) {
+                                Games.TurnBasedMultiplayer.takeTurn(mGoogleApiClient, mCurrentMatchId, turnData, match.getPendingParticipantId());
+                            }
+
+                            //Update firebase to show player joined
+                            Firebase mUserFirebaseRef = new Firebase(Constants.FIREBASE_URL_USERS + "/" + mCurrentPlayerId + "/");
+                            mUserFirebaseRef.child("teamId").setValue(mCurrentMatchId);
+                            mUserFirebaseRef.child("joinedMatch").setValue(true);
+
+                            notifyUi();
+
+                        }
+                    });
                 }
             });
 
@@ -105,6 +153,13 @@ public class InvitationAdapter extends BaseAdapter implements AdapterView.OnItem
     @Override
     public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
 
+    }
+
+    public void notifyUi() {
+        boolean matchMakingComplete = true;
+        Intent broadcastIntent = new Intent(NewCampaignActivity.RECEIVE_UPDATE);
+        broadcastIntent.putExtra(Constants.INVITATION_INTENT_EXTRA, matchMakingComplete);
+        LocalBroadcastManager.getInstance(mContext).sendBroadcast(broadcastIntent);
     }
 
     static class RecordHolder {

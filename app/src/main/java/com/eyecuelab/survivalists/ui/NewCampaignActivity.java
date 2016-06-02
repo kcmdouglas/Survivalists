@@ -2,13 +2,17 @@ package com.eyecuelab.survivalists.ui;
 
 import android.app.AlarmManager;
 import android.app.PendingIntent;
+import android.content.BroadcastReceiver;
+import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.net.Uri;
 import android.preference.PreferenceManager;
 import android.support.annotation.NonNull;
 import android.support.percent.PercentRelativeLayout;
 import android.os.Bundle;
+import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
 import android.view.View;
 import android.widget.AdapterView;
@@ -82,6 +86,7 @@ public class NewCampaignActivity extends BaseGameActivity implements View.OnClic
     private TurnBasedMatch mCurrentMatch;
     private byte[] turnData;
     final int WAITING_ROOM_TAG = 1;
+    public static final String RECEIVE_UPDATE = "com.eyecuelab.survivalists.ui.RECEIVE_UPDATE";
     private ArrayList<Weapon> allWeapons;
     private ArrayList<Item> allFood;
     private ArrayList<Item> allMedicine;
@@ -193,6 +198,11 @@ public class NewCampaignActivity extends BaseGameActivity implements View.OnClic
 
             }
         });
+
+        LocalBroadcastManager broadcastManager = LocalBroadcastManager.getInstance(this);
+        IntentFilter intentFilter = new IntentFilter();
+        intentFilter.addAction(RECEIVE_UPDATE);
+        broadcastManager.registerReceiver(broadcastReceiver, intentFilter);
     }
 
     @Override
@@ -391,7 +401,6 @@ public class NewCampaignActivity extends BaseGameActivity implements View.OnClic
                     Participant inviter = invitation.getInviter();
                     invitationParticipants.add(inviter);
                 }
-
                 invitePlayerListView.setAdapter(new InvitationAdapter(NewCampaignActivity.this, invitationParticipants, invitationArrayList, R.layout.invitation_list_item, mGoogleApiClient));
             }
         });
@@ -624,4 +633,17 @@ public class NewCampaignActivity extends BaseGameActivity implements View.OnClic
 
     @Override
     public void onSignInSucceeded() {}
+
+    private BroadcastReceiver broadcastReceiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            if(intent.getAction().equals(RECEIVE_UPDATE)) {
+                boolean matchMakingDone = intent.getBooleanExtra(Constants.INVITATION_INTENT_EXTRA, false);
+                if (matchMakingDone) {
+                    Intent updateIntent = new Intent(NewCampaignActivity.this, MainActivity.class);
+                    startActivity(updateIntent);
+                }
+            }
+        }
+    };
 }
