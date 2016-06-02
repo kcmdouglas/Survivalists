@@ -16,11 +16,18 @@ import android.widget.Toast;
 
 import com.eyecuelab.survivalists.Constants;
 import com.eyecuelab.survivalists.R;
+import com.eyecuelab.survivalists.models.Item;
+import com.eyecuelab.survivalists.models.Weapon;
+import com.firebase.client.DataSnapshot;
 import com.firebase.client.Firebase;
+import com.firebase.client.FirebaseError;
+import com.firebase.client.ValueEventListener;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.games.Games;
 import com.google.android.gms.games.multiplayer.turnbased.TurnBasedMatch;
+
+import java.util.ArrayList;
 
 import butterknife.Bind;
 import butterknife.ButterKnife;
@@ -38,6 +45,8 @@ public class TitleActivity extends AppCompatActivity implements GoogleApiClient.
     private String mCurrentPlayerId;
     private String mCurrentMatchId;
     private int mStackLevel;
+    private ArrayList<Weapon> allWeapons;
+    private ArrayList<Item> allItems;
 
     @Bind(R.id.currentCampaignButton) Button currentCampaignButton;
     @Bind(R.id.startCampaignButton) Button startCampaignButton;
@@ -49,6 +58,8 @@ public class TitleActivity extends AppCompatActivity implements GoogleApiClient.
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         Firebase.setAndroidContext(this);
+        allWeapons = new ArrayList<>();
+        allItems = new ArrayList<>();
 
         //Remove notification and navigation bars
         View decorView = getWindow().getDecorView();

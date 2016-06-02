@@ -79,57 +79,7 @@ public class MerchantDialogFragment extends android.support.v4.app.DialogFragmen
         userItemInventory = new ArrayList<>();
         userWeaponInventory = new ArrayList<>();
 
-
-        Firebase itemRef = new Firebase(Constants.FIREBASE_URL_ITEMS +"/");
-
-        itemRef.child("weapons").addListenerForSingleValueEvent(new ValueEventListener() {
-            @Override
-            public void onDataChange(DataSnapshot dataSnapshot) {
-                for(DataSnapshot child: dataSnapshot.getChildren()) {
-                    Weapon weapon = child.getValue(Weapon.class);
-                    Log.d("Weapon:", weapon + "");
-                    Log.d("Name:", weapon.getName());
-                    allWeapons.add(weapon);
-                }
-            }
-
-            @Override
-            public void onCancelled(FirebaseError firebaseError) {
-
-            }
-        });
-
-        itemRef.child("food").addListenerForSingleValueEvent(new ValueEventListener() {
-            @Override
-            public void onDataChange(DataSnapshot dataSnapshot) {
-                for(DataSnapshot child: dataSnapshot.getChildren()) {
-                    Item item = child.getValue(Item.class);
-                    allItems.add(item);
-                }
-            }
-
-            @Override
-            public void onCancelled(FirebaseError firebaseError) {
-
-            }
-        });
-
-        itemRef.child("medicine").addListenerForSingleValueEvent(new ValueEventListener() {
-            @Override
-            public void onDataChange(DataSnapshot dataSnapshot) {
-                for(DataSnapshot child: dataSnapshot.getChildren()) {
-                    Item item = child.getValue(Item.class);
-                    allItems.add(item);
-                }
-            }
-
-            @Override
-            public void onCancelled(FirebaseError firebaseError) {
-
-            }
-        });
-
-
+        instantiateAllItems();
     }
 
     @Override
@@ -138,42 +88,8 @@ public class MerchantDialogFragment extends android.support.v4.app.DialogFragmen
         View view = inflater.inflate(R.layout.fragment_merchant_dialog, container, false);
         super.onViewCreated(view, savedInstanceState);
         ButterKnife.bind(this, view);
-        Firebase userRef = new Firebase(Constants.FIREBASE_URL_USERS + "/" + playerId + "/");
 
-        userRef.child("items").addListenerForSingleValueEvent(new ValueEventListener() {
-            @Override
-            public void onDataChange(DataSnapshot dataSnapshot) {
-                for(DataSnapshot child : dataSnapshot.getChildren()) {
-                    Item item = new Item(child.getValue(Item.class));
-                    Log.d("Inventory", item.getName());
-                    userItemInventory.add(item);
-                    Log.d("Item Inventory", userItemInventory.size() + "");
-                }
-            }
-
-            @Override
-            public void onCancelled(FirebaseError firebaseError) {
-
-            }
-        });
-
-        userRef.child("weapons").addListenerForSingleValueEvent(new ValueEventListener() {
-            @Override
-            public void onDataChange(DataSnapshot dataSnapshot) {
-                for(DataSnapshot child: dataSnapshot.getChildren()) {
-                    Weapon weapon = new Weapon(child.getValue(Weapon.class));
-                    Log.d("Inventory", weapon.getName());
-                    userWeaponInventory.add(weapon);
-                    Log.d("Weapon Inventory", userWeaponInventory.size() + "");
-                }
-                randomizeItems();
-            }
-
-            @Override
-            public void onCancelled(FirebaseError firebaseError) {
-
-            }
-        });
+        instantiateInventory();
 
         acceptButton.setOnClickListener(this);
         merchantCloseButton.setOnClickListener(this);
@@ -234,13 +150,7 @@ public class MerchantDialogFragment extends android.support.v4.app.DialogFragmen
         inventoryRef.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
-                for (DataSnapshot child : dataSnapshot.getChildren()) {
-                    String key = child.getKey();
-                    if (child.getValue(Weapon.class).equals(weapon))  {
-                        inventoryRef.child(key).removeValue();
-                        break;
-                    }
-                }
+                inventoryRef.child(weapon.getPushId()).removeValue();
             }
 
             @Override
@@ -255,12 +165,7 @@ public class MerchantDialogFragment extends android.support.v4.app.DialogFragmen
         inventoryRef.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
-                for (DataSnapshot indvItem : dataSnapshot.getChildren()) {
-                    if (indvItem.getValue(Item.class).equals(item))  {
-                        inventoryRef.child(indvItem.getKey()).removeValue();
-                        break;
-                    }
-                }
+                inventoryRef.child(item.getPushId()).removeValue();
             }
 
             @Override
@@ -271,18 +176,23 @@ public class MerchantDialogFragment extends android.support.v4.app.DialogFragmen
     }
 
     public void randomizeItems() {
+
+
+    }
+
+    public void createDialog() {
         //0 is weapon, 1 is item
-        selectedItemChooser = (int) (Math.random() +.5);
+        selectedItemChooser = (int) (Math.random() + .5);
         offerRandomizer = (int) (Math.random() * 2);
         Collections.shuffle(allItems);
         Collections.shuffle(allWeapons);
 
-        if(userItemInventory.size() > 0) {
+        if (userItemInventory.size() > 0) {
             Collections.shuffle(userItemInventory);
             selectedInventoryItem = userItemInventory.get(0);
         }
 
-        if(userWeaponInventory.size() > 0) {
+        if (userWeaponInventory.size() > 0) {
             Collections.shuffle(userWeaponInventory);
             selectedInventoryWeapon = userWeaponInventory.get(0);
         }
@@ -335,7 +245,7 @@ public class MerchantDialogFragment extends android.support.v4.app.DialogFragmen
                     merchantOffer.setText(String.format("I see you have a nice %s, would you trade for these: %s, %s?", selectedInventoryWeapon.getName(), itemTwo.getName(), itemOne.getName()));
                 }
             }
-//        } else {
+        } else {
 //            acceptButton.setEnabled(false);
 //            merchantOffer.setText("Seems like you have nothing to barter...");
         }
@@ -373,10 +283,104 @@ public class MerchantDialogFragment extends android.support.v4.app.DialogFragmen
                 int itemAmount = (int) dataSnapshot.getChildrenCount();
                 if (itemAmount < 12) {
                     Firebase newItemRef = itemUpdate.push();
-                    String itemPushId
-                    mFirebaseInventoryUpdate.push().setValue(item);
+                    String itemPushId = newItemRef.getKey();
+                    item.setPushId(itemPushId);
+                    newItemRef.setValue(item);
                 } else {
                 }
+            }
+
+            @Override
+            public void onCancelled(FirebaseError firebaseError) {
+
+            }
+        });
+    }
+
+    public void instantiateAllItems() {
+
+        Firebase itemRef = new Firebase(Constants.FIREBASE_URL_ITEMS +"/");
+
+        itemRef.child("weapons").addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                for(DataSnapshot child: dataSnapshot.getChildren()) {
+                    Weapon weapon = child.getValue(Weapon.class);
+                    Log.d("Weapon:", weapon + "");
+                    Log.d("Name:", weapon.getName());
+                    allWeapons.add(weapon);
+                }
+            }
+
+            @Override
+            public void onCancelled(FirebaseError firebaseError) {
+
+            }
+        });
+
+        itemRef.child("food").addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                for(DataSnapshot child: dataSnapshot.getChildren()) {
+                    Item item = child.getValue(Item.class);
+                    allItems.add(item);
+                }
+            }
+
+            @Override
+            public void onCancelled(FirebaseError firebaseError) {
+
+            }
+        });
+
+        itemRef.child("medicine").addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                for(DataSnapshot child: dataSnapshot.getChildren()) {
+                    Item item = child.getValue(Item.class);
+                    allItems.add(item);
+                }
+            }
+
+            @Override
+            public void onCancelled(FirebaseError firebaseError) {
+
+            }
+        });
+
+    }
+
+    public void instantiateInventory() {
+
+        Firebase userRef = new Firebase(Constants.FIREBASE_URL_USERS + "/" + playerId + "/");
+
+        userRef.child("items").addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                for(DataSnapshot iterateItem : dataSnapshot.getChildren()) {
+                    Item item = new Item(iterateItem.getValue(Item.class));
+                    item.setPushId(iterateItem.child("pushId").getValue().toString());
+                    userItemInventory.add(item);
+                    Log.d("Item Inventory", userItemInventory.size() + "");
+                }
+            }
+
+            @Override
+            public void onCancelled(FirebaseError firebaseError) {
+
+            }
+        });
+
+        userRef.child("weapons").addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                for(DataSnapshot iterateWeapon: dataSnapshot.getChildren()) {
+                    Weapon weapon = new Weapon(iterateWeapon.getValue(Weapon.class));
+                    weapon.setPushId(iterateWeapon.child("pushId").getValue().toString());
+                    userWeaponInventory.add(weapon);
+                    Log.d("Weapon Inventory", userWeaponInventory.size() + "");
+                }
+                createDialog();
             }
 
             @Override
