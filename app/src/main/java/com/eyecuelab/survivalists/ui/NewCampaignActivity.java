@@ -4,10 +4,10 @@ import android.app.AlarmManager;
 import android.app.PendingIntent;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.net.Uri;
 import android.preference.PreferenceManager;
 import android.support.annotation.NonNull;
 import android.support.percent.PercentRelativeLayout;
-import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
@@ -21,10 +21,12 @@ import android.widget.Toast;
 
 import com.eyecuelab.survivalists.Constants;
 import com.eyecuelab.survivalists.R;
+import com.eyecuelab.survivalists.adapters.PlayerAdapter;
 import com.eyecuelab.survivalists.models.Character;
 import com.eyecuelab.survivalists.models.Item;
 import com.eyecuelab.survivalists.models.SafeHouse;
 import com.eyecuelab.survivalists.models.Weapon;
+import com.eyecuelab.survivalists.models.User;
 import com.eyecuelab.survivalists.util.CampaignEndAlarmReceiver;
 import com.eyecuelab.survivalists.util.MatchUpdateListener;
 import com.firebase.client.DataSnapshot;
@@ -38,6 +40,7 @@ import com.google.android.gms.games.multiplayer.Participant;
 import com.google.android.gms.games.multiplayer.turnbased.TurnBasedMatch;
 import com.google.android.gms.games.multiplayer.turnbased.TurnBasedMatchConfig;
 import com.google.android.gms.games.multiplayer.turnbased.TurnBasedMultiplayer;
+import com.google.example.games.basegameutils.BaseGameActivity;
 import com.google.gson.Gson;
 
 import java.util.ArrayList;
@@ -48,7 +51,7 @@ import java.util.HashMap;
 import butterknife.Bind;
 import butterknife.ButterKnife;
 
-public class NewCampaignActivity extends AppCompatActivity implements View.OnClickListener {
+public class NewCampaignActivity extends BaseGameActivity implements View.OnClickListener {
     private int mDifficultyLevel;
     private int mCampaignLength;
     private int mPartySize = 1;
@@ -102,14 +105,7 @@ public class NewCampaignActivity extends AppCompatActivity implements View.OnCli
         allMedicine = new ArrayList<>();
         allFood = new ArrayList<>();
 
-        //Remove notification and navigation bars
-        View decorView = getWindow().getDecorView();
-        decorView.setSystemUiVisibility(View.SYSTEM_UI_FLAG_LAYOUT_STABLE
-                | View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
-                | View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
-                | View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
-                | View.SYSTEM_UI_FLAG_FULLSCREEN
-                | View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY);
+        setFullScreen();
 
         //set content view AFTER ABOVE sequence (to avoid crash)
         setContentView(R.layout.activity_new_campaign);
@@ -133,9 +129,7 @@ public class NewCampaignActivity extends AppCompatActivity implements View.OnCli
         initiateSeekBars();
 
         //TODO: Move login;
-        mGoogleApiClient = new GoogleApiClient.Builder(this)
-                .addApi(Games.API)
-                .build();
+        mGoogleApiClient = getApiClient();
 
         ArrayAdapter<String> infoAdapter = new ArrayAdapter<>(NewCampaignActivity.this, R.layout.info_list_item, getResources().getStringArray(R.array.difficultyDescriptions));
         infoListView.setAdapter(infoAdapter);
@@ -203,20 +197,35 @@ public class NewCampaignActivity extends AppCompatActivity implements View.OnCli
     }
 
     @Override
+    protected void onResume() {
+        super.onResume();
+        setFullScreen();
+    }
+
+    @Override
     public void onClick(View view) {
         switch (view.getId()) {
             case R.id.confirmationButton:
-                if (mConfirmingSettings == true) {
+                if (mConfirmingSettings) {
                     saveCampaignSettings();
                     loadAvailablePlayers();
                 } else if (mPartySize == invitedPlayers.size()){
                     Toast.makeText(NewCampaignActivity.this, "Invitations sent", Toast.LENGTH_LONG).show();
                 } else {
-                    int remainingInvites = mPartySize - invitedPlayers.size();
-                    Toast.makeText(NewCampaignActivity.this, "You need to select " + remainingInvites + " more players.", Toast.LENGTH_LONG).show();
+                    Toast.makeText(NewCampaignActivity.this, "Waiting for " + mPartySize + " players to join.", Toast.LENGTH_LONG).show();
                 }
                 break;
         }
+    }
+
+    public void setFullScreen() {
+        View decorView = getWindow().getDecorView();
+        decorView.setSystemUiVisibility(View.SYSTEM_UI_FLAG_LAYOUT_STABLE
+                | View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
+                | View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
+                | View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
+                | View.SYSTEM_UI_FLAG_FULLSCREEN
+                | View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY);
     }
 
     public void loadAvailablePlayers() {
@@ -225,6 +234,7 @@ public class NewCampaignActivity extends AppCompatActivity implements View.OnCli
         final int MIN_OPPONENTS = 1;
         Intent intent = Games.TurnBasedMultiplayer.getSelectOpponentsIntent(mGoogleApiClient, MIN_OPPONENTS, mPartySize, false);
         startActivityForResult(intent, WAITING_ROOM_TAG);
+
         settingsLayout.setVisibility(View.GONE);
         settingConfirmationLayout.setVisibility(View.VISIBLE);
         generalInfoLayout.setVisibility(View.GONE);
@@ -299,14 +309,7 @@ public class NewCampaignActivity extends AppCompatActivity implements View.OnCli
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
 
-        //Remove notification and navigation bars
-        View decorView = getWindow().getDecorView();
-        decorView.setSystemUiVisibility(View.SYSTEM_UI_FLAG_LAYOUT_STABLE
-                | View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
-                | View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
-                | View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
-                | View.SYSTEM_UI_FLAG_FULLSCREEN
-                | View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY);
+        setFullScreen();
 
         //Back from inviting players
         if (requestCode == WAITING_ROOM_TAG) {
@@ -320,11 +323,11 @@ public class NewCampaignActivity extends AppCompatActivity implements View.OnCli
                     .setResultCallback(new ResultCallback<TurnBasedMultiplayer.InitiateMatchResult>() {
                         @Override
                         public void onResult(@NonNull TurnBasedMultiplayer.InitiateMatchResult result) {
+                            mCurrentMatch = result.getMatch();
                             loadMatch(result.getMatch().getMatchId());
+                            initializeWaitingRoomUi();
                         }
                     });
-
-            initializeWaitingRoomUi();
         }
     }
 
@@ -334,19 +337,35 @@ public class NewCampaignActivity extends AppCompatActivity implements View.OnCli
         generalInfoLayout.setVisibility(View.GONE);
         playerInvitationLayout.setVisibility(View.VISIBLE);
 
-        //TODO: Need to pull these parameters from firebase
+        //TODO: Need to pull these parameters from firebase or shared preferences
 //        difficultyConfirmedTextView.setText("Difficulty: " + difficultyDescriptions.get(mDifficultyLevel));
 //        lengthConfirmedTextView.setText("Length: " + lengths.get(mCampaignLength) + " Days");
         confirmationButton.setText("Waiting for players to join...");
 
-        ArrayAdapter<String> adapter = new ArrayAdapter<>(this, R.layout.player_list_item, R.id.playerNameTextView, invitedPlayers);
+        if (mCurrentMatch != null) {
+            ArrayList<String> playerIds = mCurrentMatch.getParticipantIds();
+            ArrayList<User> matchUsers = new ArrayList<>();
 
+            for (int i = 1; i < playerIds.size(); i++) {
+                String playerId = playerIds.get(i);
+                Participant participant = mCurrentMatch.getParticipant(playerId);
 
-        invitePlayerListView.setAdapter(adapter);
-        invitePlayerListView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-            @Override
-            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {}
-        });
+                String UID = participant.getParticipantId();
+                String displayName = participant.getDisplayName();
+                Uri imageUri = participant.getIconImageUri();
+
+                User currentUser = new User(UID, displayName, mCurrentMatchId, imageUri);
+                matchUsers.add(currentUser);
+
+            }
+
+            invitePlayerListView.setAdapter(new PlayerAdapter(this, matchUsers, R.layout.player_list_item));
+            invitePlayerListView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+                @Override
+                public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                }
+            });
+        }
     }
 
     public void loadMatch(String matchId) {
@@ -360,6 +379,8 @@ public class NewCampaignActivity extends AppCompatActivity implements View.OnCli
             public void onResult(@NonNull TurnBasedMultiplayer.LoadMatchResult result) {
                 mCurrentMatch = result.getMatch();
                 takeTurn();
+                mEditor.putString(Constants.PREFERENCES_MATCH_ID, mCurrentMatchId);
+                mEditor.commit();
             }
         });
     }
@@ -566,5 +587,15 @@ public class NewCampaignActivity extends AppCompatActivity implements View.OnCli
         mEditor.putInt(Constants.PREFERENCES_DURATION_SETTING, mCampaignLength);
         mEditor.putInt(Constants.PREFERENCES_DEFAULT_DAILY_GOAL_SETTING, mDifficultyLevel);
         mEditor.commit();
+    }
+
+    @Override
+    public void onSignInFailed() {
+
+    }
+
+    @Override
+    public void onSignInSucceeded() {
+
     }
 }

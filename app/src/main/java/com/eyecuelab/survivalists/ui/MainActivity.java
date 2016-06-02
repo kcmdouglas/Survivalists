@@ -1,10 +1,7 @@
 package com.eyecuelab.survivalists.ui;
 
-import android.app.Activity;
 import android.app.ActivityManager;
 import android.app.AlarmManager;
-import android.app.AlertDialog;
-import android.content.DialogInterface;
 import android.support.v4.app.DialogFragment;
 import android.app.PendingIntent;
 import android.content.Context;
@@ -34,28 +31,12 @@ import com.eyecuelab.survivalists.models.Item;
 import com.eyecuelab.survivalists.models.SafeHouse;
 import com.eyecuelab.survivalists.models.Weapon;
 import com.eyecuelab.survivalists.services.BackgroundStepService;
-import com.eyecuelab.survivalists.util.CampaignEndAlarmReceiver;
-import com.eyecuelab.survivalists.util.InvitationListener;
-import com.eyecuelab.survivalists.util.MatchInitiatedListener;
-import com.eyecuelab.survivalists.util.MatchUpdateListener;
 import com.eyecuelab.survivalists.util.StepResetAlarmReceiver;
 import com.firebase.client.DataSnapshot;
 import com.firebase.client.Firebase;
 import com.firebase.client.FirebaseError;
 import com.firebase.client.ValueEventListener;
-import com.google.android.gms.common.ConnectionResult;
-import com.google.android.gms.common.api.GoogleApiClient;
-import com.google.android.gms.common.api.ResultCallback;
-import com.google.android.gms.games.Games;
 
-import com.google.android.gms.games.multiplayer.Invitation;
-import com.google.android.gms.games.multiplayer.Multiplayer;
-import com.google.android.gms.games.multiplayer.Participant;
-import com.google.android.gms.games.multiplayer.realtime.RoomConfig;
-import com.google.android.gms.games.multiplayer.turnbased.TurnBasedMatch;
-import com.google.android.gms.games.multiplayer.turnbased.TurnBasedMatchConfig;
-import com.google.android.gms.games.multiplayer.turnbased.TurnBasedMultiplayer;
-import com.google.example.games.basegameutils.BaseGameUtils;
 import com.google.gson.Gson;
 
 
@@ -63,9 +44,6 @@ import org.parceler.Parcels;
 
 import java.util.ArrayList;
 import java.util.Calendar;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Map;
 
 import butterknife.Bind;
 import butterknife.ButterKnife;
@@ -90,8 +68,6 @@ public class MainActivity extends FragmentActivity
     private byte[] turnData;
     private SharedPreferences mSharedPreferences;
     private SharedPreferences.Editor mEditor;
-    private GoogleApiClient mGoogleApiClient;
-    private TurnBasedMatch mCurrentMatch;
     private String mCurrentPlayerId;
     private SafeHouse mReachedSafehouse;
     private Character mCurrentCharacter;
@@ -127,14 +103,7 @@ public class MainActivity extends FragmentActivity
         super.onCreate(savedInstanceState);
         Firebase.setAndroidContext(this);
 
-        //Remove notification and navigation bars
-        View decorView = getWindow().getDecorView();
-        decorView.setSystemUiVisibility(View.SYSTEM_UI_FLAG_LAYOUT_STABLE
-                | View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
-                | View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
-                | View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
-                | View.SYSTEM_UI_FLAG_FULLSCREEN
-                | View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY);
+        setFullScreen();
 
         //set content view AFTER ABOVE sequence (to avoid crash)
         setContentView(R.layout.activity_notebook);
@@ -151,7 +120,7 @@ public class MainActivity extends FragmentActivity
         leftInteractionButton.setOnClickListener(this);
         rightInteractionButton.setOnClickListener(this);
 
-        mCurrentMatchId = mSharedPreferences.getString("matchId", null);
+        mCurrentMatchId = mSharedPreferences.getString(Constants.PREFERENCES_MATCH_ID, null);
 
         //Set counter text based on current shared preferences--these are updated in the shared preferences onChange listener
         dailySteps = mSharedPreferences.getInt(Constants.PREFERENCES_DAILY_STEPS, 0);
@@ -172,8 +141,7 @@ public class MainActivity extends FragmentActivity
         //Initialize BackgroundStepService to run database injections and constant step updates
         mBackgroundStepService = new BackgroundStepService(mContext);
         mBackgroundStepServiceIntent = new Intent(mContext, mBackgroundStepService.getClass());
-        if(!isBackgroundStepServiceRunning(mBackgroundStepService.getClass()))
-        {
+        if(!isBackgroundStepServiceRunning(mBackgroundStepService.getClass())) {
             startService(mBackgroundStepServiceIntent);
         }
 
@@ -182,7 +150,7 @@ public class MainActivity extends FragmentActivity
         mReachedSafehouse = gson.fromJson(safehouseJson, SafeHouse.class);
 
         String playerIDsString = mSharedPreferences.getString(Constants.PREFERENCES_TEAM_IDs, null);
-//        String [] playerIDArray = TextUtils.split(",", playerIDsString);
+        String [] playerIDArray = TextUtils.split(",", playerIDsString);
 
 //        for(int i = 0; i < playerIDArray.length; i++ ) {
 //            mPlayerIDs.add(playerIDArray[i]);
@@ -195,13 +163,14 @@ public class MainActivity extends FragmentActivity
     @Override
     protected void onResume() {
         super.onResume();
+        setFullScreen();
         mSharedPreferences.registerOnSharedPreferenceChangeListener(this);
         if(mPlayerIDs == null) {
            // characterButton.setEnabled(false);
         } else {
             //characterButton.setEnabled(true);
         }
-        if(mCurrentMatch != null && mPlayerIDs == null) {
+        if(mCurrentMatchId != null && mPlayerIDs == null) {
             instantiatePlayerIDs();
         }
     }
@@ -219,6 +188,17 @@ public class MainActivity extends FragmentActivity
         super.onDestroy();
     }
 
+    public void setFullScreen() {
+        //Remove notification and navigation bars
+        View decorView = getWindow().getDecorView();
+        decorView.setSystemUiVisibility(View.SYSTEM_UI_FLAG_LAYOUT_STABLE
+                | View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
+                | View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
+                | View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
+                | View.SYSTEM_UI_FLAG_FULLSCREEN
+                | View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY);
+    }
+
     //Checks if background step service is running
     private boolean isBackgroundStepServiceRunning(Class<?> serviceClass) {
         ActivityManager manager = (ActivityManager) getSystemService(Context.ACTIVITY_SERVICE);
@@ -234,10 +214,14 @@ public class MainActivity extends FragmentActivity
     public void onClick(View view) {
         switch (view.getId()) {
             case R.id.tabCampaignButton:
-                Intent intent  = new Intent(mContext, CharacterDetailActivity.class);
-                intent.putExtra("position", 0);
-                intent.putExtra("playerIDs", Parcels.wrap(mPlayerIDs));
-                mContext.startActivity(intent);
+                if (mPlayerIDs != null) {
+                    Intent intent = new Intent(mContext, CharacterDetailActivity.class);
+                    intent.putExtra("position", 0);
+                    intent.putExtra("playerIDs", Parcels.wrap(mPlayerIDs));
+                    mContext.startActivity(intent);
+                } else {
+                    Toast.makeText(this, "Players have not yet joined.", Toast.LENGTH_SHORT).show();
+                }
                 break;
             case R.id.mapTabButton:
                 Toast.makeText(this, "Inflate map here", Toast.LENGTH_SHORT).show();
@@ -324,7 +308,7 @@ public class MainActivity extends FragmentActivity
 
     @Override
     public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String key) {
-        if(key.equals(Constants.PREFERENCES_STEPS_IN_SENSOR_KEY) && (mCurrentMatch != null)) {
+        if(key.equals(Constants.PREFERENCES_STEPS_IN_SENSOR_KEY) && (mCurrentMatchId != null)) {
             dailySteps = mSharedPreferences.getInt(Constants.PREFERENCES_DAILY_STEPS, 0);
             dailyGoal = mSharedPreferences.getInt(Constants.PREFERENCES_DAILY_GOAL, 5000);
             if (dailyGoal < dailySteps && !reachedDailySafehouse) {
@@ -512,7 +496,7 @@ public class MainActivity extends FragmentActivity
     }
 
     public void loadCharacter() {
-        if(mCurrentMatchId != null) {
+        if(mCurrentMatchId != null && mUserFirebaseRef != null) {
             mUserFirebaseRef.child("character").addListenerForSingleValueEvent(new ValueEventListener() {
                 @Override
                 public void onDataChange(DataSnapshot dataSnapshot) {
