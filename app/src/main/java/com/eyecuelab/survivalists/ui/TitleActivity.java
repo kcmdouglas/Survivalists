@@ -55,7 +55,6 @@ public class TitleActivity extends BaseGameActivity implements GoogleApiClient.C
     @Bind(R.id.startCampaignButton) Button startCampaignButton;
     @Bind(R.id.loginButton) Button loginButton;
     @Bind(R.id.joinCampaignButton) Button joinCampaignButton;
-    @Bind(R.id.merchantTest) Button merchantTest;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {

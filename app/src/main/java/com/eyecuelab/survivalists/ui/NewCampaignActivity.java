@@ -123,7 +123,7 @@ public class NewCampaignActivity extends BaseGameActivity implements View.OnClic
         difficultyDescriptions.add("Walk the talk");
 
         mCampaignLength = campaignDuration[0];
-        mDifficultyLevel = 0;
+        mDifficultyLevel = defaultDailyGoal[0];
         mDifficultyDescription = difficultyDescriptions.get(0);
 
         initiateSeekBars();
