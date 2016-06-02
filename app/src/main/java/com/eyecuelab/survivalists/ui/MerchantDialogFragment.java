@@ -1,6 +1,11 @@
 package com.eyecuelab.survivalists.ui;
 
+import android.content.Context;
 import android.content.SharedPreferences;
+import android.hardware.Sensor;
+import android.hardware.SensorEvent;
+import android.hardware.SensorEventListener;
+import android.hardware.SensorManager;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.text.TextUtils;
@@ -35,7 +40,8 @@ import butterknife.ButterKnife;
 /**
  * Created by eyecuelab on 5/31/16.
  */
-public class MerchantDialogFragment extends android.support.v4.app.DialogFragment implements View.OnClickListener{
+public class MerchantDialogFragment extends android.support.v4.app.DialogFragment implements View.OnClickListener, SensorEventListener{
+
 
     SharedPreferences mSharedPreferences;
     SharedPreferences.Editor mEditor;
@@ -59,6 +65,11 @@ public class MerchantDialogFragment extends android.support.v4.app.DialogFragmen
 
     //empty constructor required for dialog fragments
     public MerchantDialogFragment() {};
+
+    public void init(Context context) {
+        SensorManager sensorManager = (SensorManager) context.getSystemService(Context.SENSOR_SERVICE);
+        Sensor shakeSensor = sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
+    }
 
     public static android.support.v4.app.DialogFragment newInstance(int number) {
         MerchantDialogFragment frag = new MerchantDialogFragment();
@@ -390,4 +401,13 @@ public class MerchantDialogFragment extends android.support.v4.app.DialogFragmen
         });
     }
 
+    @Override
+    public void onSensorChanged(SensorEvent event) {
+
+    }
+
+    @Override
+    public void onAccuracyChanged(Sensor sensor, int accuracy) {
+
+    }
 }
