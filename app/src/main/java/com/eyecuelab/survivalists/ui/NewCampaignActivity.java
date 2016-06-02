@@ -449,6 +449,7 @@ public class NewCampaignActivity extends BaseGameActivity implements View.OnClic
         }
 
         Games.TurnBasedMultiplayer.registerMatchUpdateListener(mGoogleApiClient, new MatchUpdateListener());
+        saveCampaignSettingsFromFirebase();
 
     }
 
@@ -584,6 +585,28 @@ public class NewCampaignActivity extends BaseGameActivity implements View.OnClic
     }
 
     public void saveCampaignSettings() {
+        mEditor.putInt(Constants.PREFERENCES_DURATION_SETTING, mCampaignLength);
+        mEditor.putInt(Constants.PREFERENCES_DEFAULT_DAILY_GOAL_SETTING, mDifficultyLevel);
+        mEditor.commit();
+    }
+
+    public void saveCampaignSettingsFromFirebase() {
+
+        Firebase teamFirebase = new Firebase(Constants.FIREBASE_URL_TEAM + "/" + mCurrentMatchId);
+
+        teamFirebase.addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                mCampaignLength = (int) dataSnapshot.child("matchDuration").getValue();
+                mDifficultyLevel = (int) dataSnapshot.child("difficultyLevel").getValue();
+            }
+
+            @Override
+            public void onCancelled(FirebaseError firebaseError) {
+
+            }
+        });
+
         mEditor.putInt(Constants.PREFERENCES_DURATION_SETTING, mCampaignLength);
         mEditor.putInt(Constants.PREFERENCES_DEFAULT_DAILY_GOAL_SETTING, mDifficultyLevel);
         mEditor.commit();
