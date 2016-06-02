@@ -23,7 +23,9 @@ import com.eyecuelab.survivalists.Constants;
 import com.eyecuelab.survivalists.R;
 import com.eyecuelab.survivalists.adapters.PlayerAdapter;
 import com.eyecuelab.survivalists.models.Character;
+import com.eyecuelab.survivalists.models.Item;
 import com.eyecuelab.survivalists.models.SafeHouse;
+import com.eyecuelab.survivalists.models.Weapon;
 import com.eyecuelab.survivalists.models.User;
 import com.eyecuelab.survivalists.util.CampaignEndAlarmReceiver;
 import com.eyecuelab.survivalists.util.MatchUpdateListener;
@@ -44,6 +46,7 @@ import com.google.gson.Gson;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Collections;
+import java.util.HashMap;
 
 import butterknife.Bind;
 import butterknife.ButterKnife;
@@ -73,6 +76,10 @@ public class NewCampaignActivity extends BaseGameActivity implements View.OnClic
     private TurnBasedMatch mCurrentMatch;
     private byte[] turnData;
     final int WAITING_ROOM_TAG = 1;
+    private ArrayList<Weapon> allWeapons;
+    private ArrayList<Item> allFood;
+    private ArrayList<Item> allMedicine;
+
 
     @Bind(R.id.difficultySeekBar) SeekBar difficultySeekBar;
     @Bind(R.id.campaignLengthSeekBar) SeekBar lengthSeekBar;
@@ -94,6 +101,9 @@ public class NewCampaignActivity extends BaseGameActivity implements View.OnClic
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         Firebase.setAndroidContext(this);
+        allWeapons = new ArrayList<>();
+        allMedicine = new ArrayList<>();
+        allFood = new ArrayList<>();
 
         setFullScreen();
 
@@ -132,6 +142,52 @@ public class NewCampaignActivity extends BaseGameActivity implements View.OnClic
         if (navigationFlag == 2) {
             initializeWaitingRoomUi();
         }
+        Firebase itemRef = new Firebase(Constants.FIREBASE_URL_ITEMS);
+
+        itemRef.child("weapons").addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                for(DataSnapshot child: dataSnapshot.getChildren()) {
+                    Weapon weapon = child.getValue(Weapon.class);
+                    allWeapons.add(weapon);
+                }
+            }
+
+            @Override
+            public void onCancelled(FirebaseError firebaseError) {
+
+            }
+        });
+
+        itemRef.child("food").addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                for(DataSnapshot child: dataSnapshot.getChildren()) {
+                    Item item = child.getValue(Item.class);
+                    allFood.add(item);
+                }
+            }
+
+            @Override
+            public void onCancelled(FirebaseError firebaseError) {
+
+            }
+        });
+
+        itemRef.child("medicine").addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                for(DataSnapshot child: dataSnapshot.getChildren()) {
+                    Item item = child.getValue(Item.class);
+                    allMedicine.add(item);
+                }
+            }
+
+            @Override
+            public void onCancelled(FirebaseError firebaseError) {
+
+            }
+        });
     }
 
     @Override
@@ -373,7 +429,7 @@ public class NewCampaignActivity extends BaseGameActivity implements View.OnClic
                 String nextPlayer = mCurrentMatch.getParticipantIds().get(i);
                 Games.TurnBasedMultiplayer.takeTurn(mGoogleApiClient, mCurrentMatchId, turnData, nextPlayer);
             }
-
+            assignStarterInventory();
             assignRandomCharacters();
         }
         turnData = new byte[1];
@@ -483,6 +539,47 @@ public class NewCampaignActivity extends BaseGameActivity implements View.OnClic
 
             }
         });
+    }
+    private void assignStarterInventory() {
+        for (int i = 0; i < invitedPlayers.size(); i++) {
+            try {
+                Collections.shuffle(allWeapons);
+                Collections.shuffle(allMedicine);
+                Collections.shuffle(allFood);
+                ArrayList<Item> itemsToPush = new ArrayList<>();
+                Weapon freebieWeapon = allWeapons.get(0);
+                Item freebieFoodOne = allFood.get(0);
+                itemsToPush.add(freebieFoodOne);
+                Item freebieFoodTwo = allFood.get(1);
+                itemsToPush.add(freebieFoodTwo);
+                Item freebieMedicineOne = allMedicine.get(0);
+                itemsToPush.add(freebieMedicineOne);
+                Item freebieMedicineTwo = allMedicine.get(1);
+                itemsToPush.add(freebieMedicineTwo);
+
+                String playerBeingAssignId = invitedPlayers.get(i);
+
+                for(int j = 0; j < itemsToPush.size(); j++) {
+                    Item item = itemsToPush.get(j);
+                    Firebase itemRef = new Firebase (Constants.FIREBASE_URL_USERS + "/" + playerBeingAssignId + "/items");
+                    Firebase newItemRef = itemRef.push();
+                    String itemPushId = newItemRef.getKey();
+                    item.setPushId(itemPushId);
+                    newItemRef.setValue(item);
+                }
+
+
+                Firebase weaponRef = new Firebase (Constants.FIREBASE_URL_USERS + "/" + playerBeingAssignId + "/weapons");
+                Firebase newWeaponRef = weaponRef.push();
+                String weaponPushId = newWeaponRef.getKey();
+
+                freebieWeapon.setPushId(weaponPushId);
+                newWeaponRef.setValue(freebieWeapon);
+
+            } catch (IndexOutOfBoundsException indexOutOfBounds) {
+                indexOutOfBounds.getStackTrace();
+            }
+        }
 
     }
 

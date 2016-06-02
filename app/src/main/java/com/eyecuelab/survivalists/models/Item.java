@@ -13,15 +13,22 @@ public class Item {
     int healthPoints;
     boolean effectsHealth;
     int imageId;
+    String pushId;
 
     public Item () {}
 
-    public Item(String name, String description, int healthPoints, boolean effectsHealth, int imageId) {
+    public Item(Item otherItem) {
+        this.name=otherItem.name;
+        this.description = otherItem.description;
+        this.healthPoints = otherItem.healthPoints;
+        this.effectsHealth = otherItem.effectsHealth;
+    }
+
+    public Item(String name, String description, int healthPoints, boolean effectsHealth) {
         this.name=name;
         this.description = description;
         this.healthPoints = healthPoints;
         this.effectsHealth = effectsHealth;
-        this.imageId = imageId;
     }
 
     public void useItem(Character character) {
@@ -62,11 +69,11 @@ public class Item {
     }
 
     public String getName() {
-        return null;
+        return name;
     }
 
     public String getDescription() {
-        return null;
+        return description;
     }
 
     public int getHealthPoints() {
@@ -79,5 +86,30 @@ public class Item {
 
     public void setHealthPoints(int healthPoints) {
         this.healthPoints = healthPoints;
+    }
+
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public void setDescription(String description) {
+        this.description = description;
+    }
+
+    public void setEffectsHealth(boolean effectsHealth) {
+        this.effectsHealth = effectsHealth;
+    }
+
+    public void setImageId(int imageId) {
+        this.imageId = imageId;
+    }
+
+    public String getPushId() {
+        return pushId;
+    }
+
+    public void setPushId(String pushId) {
+        this.pushId = pushId;
     }
 }
