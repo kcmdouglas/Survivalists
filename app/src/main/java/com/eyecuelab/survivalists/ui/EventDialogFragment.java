@@ -28,6 +28,7 @@ import com.google.gson.Gson;
 import org.w3c.dom.Text;
 
 import java.util.ArrayList;
+import java.util.Collections;
 
 import butterknife.Bind;
 import butterknife.ButterKnife;
@@ -64,6 +65,7 @@ public class EventDialogFragment extends android.support.v4.app.DialogFragment i
     private SharedPreferences mSharedPreferences;
     private SharedPreferences.Editor mEditor;
     private Character mCurrentCharacter;
+    private ArrayList<Weapon> inventoryWeapons;
 
 
     //Empty constructor required for DialogFragments
@@ -82,6 +84,24 @@ public class EventDialogFragment extends android.support.v4.app.DialogFragment i
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        inventoryWeapons = new ArrayList<>();
+
+        final Firebase inventoryWeaponFirebase = new Firebase(Constants.FIREBASE_URL_USERS + "/" + mPlayerId + "/weapons");
+        inventoryWeaponFirebase.addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                for (DataSnapshot child : dataSnapshot.getChildren()) {
+                    Weapon userWeapon = new Weapon(child.getValue(Weapon.class));
+                    inventoryWeapons.add(userWeapon);
+                }
+            }
+
+            @Override
+            public void onCancelled(FirebaseError firebaseError) {
+
+            }
+        });
+
     }
 
     @Override
@@ -251,12 +271,10 @@ public class EventDialogFragment extends android.support.v4.app.DialogFragment i
             int remainderHealth = 0;
             Weapon weapon = null;
 
-            for (int i = 0; i < mCurrentCharacter.getInventory().size(); i++) {
-                    Object currentItem = mCurrentCharacter.getInventory().get(i);
-                    if(currentItem instanceof Weapon) {
-                        weapon = (Weapon) currentItem;
-                    }
-                }
+            if (inventoryWeapons.size() > 0) {
+                Collections.shuffle(inventoryWeapons);
+                weapon = inventoryWeapons.get(0);
+            }
 
             if (weapon == null) {
                 remainderHealth = characterHealth- penaltyHP;
@@ -342,15 +360,18 @@ public class EventDialogFragment extends android.support.v4.app.DialogFragment i
     }
 
     private void addItemToInventory(final Weapon weapon) {
-        final Firebase mFirebaseInventoryUpdate = new Firebase(Constants.FIREBASE_URL_USERS + "/" + mPlayerId + "/character/weapons/");
+        final Firebase weaponUpdate = new Firebase(Constants.FIREBASE_URL_USERS + "/" + mPlayerId + "/weapons/");
 
-        mFirebaseInventoryUpdate.addListenerForSingleValueEvent(new ValueEventListener() {
+        weaponUpdate.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
                 int itemAmount = (int) dataSnapshot.getChildrenCount();
                 if (itemAmount < 4) {
-                    mFirebaseInventoryUpdate.child(weapon.getName()).setValue(weapon);
-                    mCurrentCharacter.addToInventory(weapon);
+                    Firebase newWeaponRef = weaponUpdate.push();
+                    String weaponPushId = newWeaponRef.getKey();
+                    weapon.setPushId(weaponPushId);
+                    newWeaponRef.setValue(weapon);
+                } else {
                 }
             }
 
@@ -362,15 +383,18 @@ public class EventDialogFragment extends android.support.v4.app.DialogFragment i
     }
 
     private void addItemToInventory(final Item item) {
-        final Firebase mFirebaseInventoryUpdate = new Firebase(Constants.FIREBASE_URL_USERS + "/" + mPlayerId + "/character/items/");
+        final Firebase itemUpdate = new Firebase(Constants.FIREBASE_URL_USERS + "/" + mPlayerId + "/items/");
 
-        mFirebaseInventoryUpdate.addListenerForSingleValueEvent(new ValueEventListener() {
+        itemUpdate.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
                 int itemAmount = (int) dataSnapshot.getChildrenCount();
                 if (itemAmount < 12) {
-                    mFirebaseInventoryUpdate.child(item.getName()).setValue(item);
-                    mCurrentCharacter.addToInventory(item);
+                    Firebase newItemRef = itemUpdate.push();
+                    String itemPushId = newItemRef.getKey();
+                    item.setPushId(itemPushId);
+                    newItemRef.setValue(item);
+                } else {
                 }
             }
 
