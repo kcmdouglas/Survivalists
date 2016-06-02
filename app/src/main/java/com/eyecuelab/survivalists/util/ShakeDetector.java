@@ -9,8 +9,8 @@ import android.hardware.SensorEventListener;
  */
 public class ShakeDetector implements SensorEventListener {
     private static final int MIN_SHAKE_ACCELERATION = 5;
-    private static final int MIN_MOVEMENTS = 2;
-    private static final int MAX_SHAKE_DURATION = 500;
+    private static final int MIN_MOVEMENTS = 5;
+    private static final int MAX_SHAKE_DURATION = 700;
 
     //Store gravity and linear acceleration values
     private float[] mGravity = {0.0f,0.0f,0.0f};
