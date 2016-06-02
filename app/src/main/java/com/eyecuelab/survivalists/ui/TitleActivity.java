@@ -87,7 +87,6 @@ public class TitleActivity extends AppCompatActivity implements GoogleApiClient.
         startCampaignButton.setOnClickListener(this);
         loginButton.setOnClickListener(this);
         joinCampaignButton.setOnClickListener(this);
-        merchantTest.setOnClickListener(this);
     }
 
     @Override
@@ -125,19 +124,6 @@ public class TitleActivity extends AppCompatActivity implements GoogleApiClient.
             case R.id.joinCampaignButton:
                 campaignEditorIntent.putExtra("statusTag", 2);
                 startActivity(campaignEditorIntent);
-                break;
-            case R.id.merchantTest:
-                mStackLevel++;
-
-                FragmentTransaction ft = getSupportFragmentManager().beginTransaction();
-                Fragment prev = getSupportFragmentManager().findFragmentByTag("merchant");
-                if(prev != null) {
-                    ft.remove(prev);
-                }
-
-                ft.addToBackStack(null);
-                DialogFragment frag = MerchantDialogFragment.newInstance(mStackLevel);
-                frag.show(ft, "fragment_merchant_dialog");
                 break;
         }
     }
