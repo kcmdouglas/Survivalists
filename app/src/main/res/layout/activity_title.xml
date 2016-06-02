@@ -33,20 +33,23 @@
             android:textColor="@android:color/white"
             android:textAllCaps="true"
             android:textStyle="bold"
-            android:textSize="18sp"/>
+            android:textSize="22sp"
+            android:fontFamily="sans-serif-condensed"/>
 
         <Button
             android:id="@+id/startCampaignButton"
             android:layout_width="270dp"
             android:layout_height="70dp"
             android:layout_marginTop="20dp"
-            android:layout_below="@+id/currentCampaignButton"            android:layout_centerHorizontal="true"
+            android:layout_below="@+id/currentCampaignButton"
+            android:layout_centerHorizontal="true"
             android:background="@drawable/blank_red_btn"
             android:text="Start new campaign"
             android:textColor="@android:color/white"
             android:textAllCaps="true"
             android:textStyle="bold"
-            android:textSize="18sp"/>
+            android:textSize="22sp"
+            android:fontFamily="sans-serif-condensed"/>
 
         <Button
             android:id="@+id/joinCampaignButton"
@@ -60,7 +63,8 @@
             android:textColor="@android:color/white"
             android:textAllCaps="true"
             android:textStyle="bold"
-            android:textSize="18sp"/>
+            android:textSize="22sp"
+            android:fontFamily="sans-serif-condensed"/>
 
     </RelativeLayout>
 </RelativeLayout>

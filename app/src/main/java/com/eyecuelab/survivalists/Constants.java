@@ -21,6 +21,7 @@ public class Constants {
     public static final String FIREBASE_URL_CHARACTERS = FIREBASE_URL + "/" + FIREBASE_CHARACTERS;
     public static final String PREFERENCES_PREVIOUS_STEPS_KEY = "previousSteps";
     public static final String PREFERENCES_GOOGLE_PLAYER_ID = "playerId";
+    public static final String PREFERENCES_MATCH_ID = "matchId";
     public static final String PREFERENCES_STEPS_IN_SENSOR_KEY = "stepsInSensor";
     public static final String PREFERENCES_DAILY_STEPS = "dailySteps";
     public static final String PREFERENCES_EVENT_1_STEPS = "eventOneSteps";

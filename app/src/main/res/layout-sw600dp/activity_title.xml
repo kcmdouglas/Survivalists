@@ -33,7 +33,8 @@
             android:textColor="@android:color/white"
             android:textAllCaps="true"
             android:textStyle="bold"
-            android:textSize="18sp"/>
+            android:textSize="20sp"
+            android:fontFamily="sans-serif-condensed"/>
 
         <Button
             android:id="@+id/startCampaignButton"
@@ -47,7 +48,8 @@
             android:textColor="@android:color/white"
             android:textAllCaps="true"
             android:textStyle="bold"
-            android:textSize="18sp"/>
+            android:textSize="20sp"
+            android:fontFamily="sans-serif-condensed"/>
 
         <Button
             android:id="@+id/joinCampaignButton"
@@ -61,7 +63,8 @@
             android:textColor="@android:color/white"
             android:textAllCaps="true"
             android:textStyle="bold"
-            android:textSize="18sp"/>
+            android:textSize="20sp"
+            android:fontFamily="sans-serif-condensed"/>
 
     </RelativeLayout>
 </RelativeLayout>

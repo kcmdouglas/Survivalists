@@ -8,7 +8,6 @@ import android.net.Uri;
 import android.preference.PreferenceManager;
 import android.support.annotation.NonNull;
 import android.support.percent.PercentRelativeLayout;
-import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
@@ -39,6 +38,7 @@ import com.google.android.gms.games.multiplayer.Participant;
 import com.google.android.gms.games.multiplayer.turnbased.TurnBasedMatch;
 import com.google.android.gms.games.multiplayer.turnbased.TurnBasedMatchConfig;
 import com.google.android.gms.games.multiplayer.turnbased.TurnBasedMultiplayer;
+import com.google.example.games.basegameutils.BaseGameActivity;
 import com.google.gson.Gson;
 
 import java.util.ArrayList;
@@ -48,7 +48,7 @@ import java.util.Collections;
 import butterknife.Bind;
 import butterknife.ButterKnife;
 
-public class NewCampaignActivity extends AppCompatActivity implements View.OnClickListener {
+public class NewCampaignActivity extends BaseGameActivity implements View.OnClickListener {
     private int mDifficultyLevel;
     private int mCampaignLength;
     private int mPartySize = 1;
@@ -95,7 +95,7 @@ public class NewCampaignActivity extends AppCompatActivity implements View.OnCli
         super.onCreate(savedInstanceState);
         Firebase.setAndroidContext(this);
 
-        removeAndroidBars();
+        setFullScreen();
 
         //set content view AFTER ABOVE sequence (to avoid crash)
         setContentView(R.layout.activity_new_campaign);
@@ -119,9 +119,7 @@ public class NewCampaignActivity extends AppCompatActivity implements View.OnCli
         initiateSeekBars();
 
         //TODO: Move login;
-        mGoogleApiClient = new GoogleApiClient.Builder(this)
-                .addApi(Games.API)
-                .build();
+        mGoogleApiClient = getApiClient();
 
         ArrayAdapter<String> infoAdapter = new ArrayAdapter<>(NewCampaignActivity.this, R.layout.info_list_item, getResources().getStringArray(R.array.difficultyDescriptions));
         infoListView.setAdapter(infoAdapter);
@@ -145,14 +143,14 @@ public class NewCampaignActivity extends AppCompatActivity implements View.OnCli
     @Override
     protected void onResume() {
         super.onResume();
-        removeAndroidBars();
+        setFullScreen();
     }
 
     @Override
     public void onClick(View view) {
         switch (view.getId()) {
             case R.id.confirmationButton:
-                if (mConfirmingSettings == true) {
+                if (mConfirmingSettings) {
                     saveCampaignSettings();
                     loadAvailablePlayers();
                 } else if (mPartySize == invitedPlayers.size()){
@@ -164,7 +162,7 @@ public class NewCampaignActivity extends AppCompatActivity implements View.OnCli
         }
     }
 
-    public void removeAndroidBars() {
+    public void setFullScreen() {
         View decorView = getWindow().getDecorView();
         decorView.setSystemUiVisibility(View.SYSTEM_UI_FLAG_LAYOUT_STABLE
                 | View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
@@ -255,7 +253,7 @@ public class NewCampaignActivity extends AppCompatActivity implements View.OnCli
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
 
-        removeAndroidBars();
+        setFullScreen();
 
         //Back from inviting players
         if (requestCode == WAITING_ROOM_TAG) {
@@ -283,32 +281,35 @@ public class NewCampaignActivity extends AppCompatActivity implements View.OnCli
         generalInfoLayout.setVisibility(View.GONE);
         playerInvitationLayout.setVisibility(View.VISIBLE);
 
-        //TODO: Need to pull these parameters from firebase
+        //TODO: Need to pull these parameters from firebase or shared preferences
 //        difficultyConfirmedTextView.setText("Difficulty: " + difficultyDescriptions.get(mDifficultyLevel));
 //        lengthConfirmedTextView.setText("Length: " + lengths.get(mCampaignLength) + " Days");
         confirmationButton.setText("Waiting for players to join...");
 
-        ArrayList<String> playerIds = mCurrentMatch.getParticipantIds();
-        ArrayList<User> matchUsers = new ArrayList<>();
+        if (mCurrentMatch != null) {
+            ArrayList<String> playerIds = mCurrentMatch.getParticipantIds();
+            ArrayList<User> matchUsers = new ArrayList<>();
 
-        for (int i = 1; i < playerIds.size(); i++) {
-            String playerId = playerIds.get(i);
-            Participant participant = mCurrentMatch.getParticipant(playerId);
+            for (int i = 1; i < playerIds.size(); i++) {
+                String playerId = playerIds.get(i);
+                Participant participant = mCurrentMatch.getParticipant(playerId);
 
-            String UID = participant.getParticipantId();
-            String displayName = participant.getDisplayName();
-            Uri imageUri = participant.getIconImageUri();
+                String UID = participant.getParticipantId();
+                String displayName = participant.getDisplayName();
+                Uri imageUri = participant.getIconImageUri();
 
-            User currentUser = new User(UID, displayName, mCurrentMatchId, imageUri);
-            matchUsers.add(currentUser);
+                User currentUser = new User(UID, displayName, mCurrentMatchId, imageUri);
+                matchUsers.add(currentUser);
 
+            }
+
+            invitePlayerListView.setAdapter(new PlayerAdapter(this, matchUsers, R.layout.player_list_item));
+            invitePlayerListView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+                @Override
+                public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                }
+            });
         }
-
-        invitePlayerListView.setAdapter(new PlayerAdapter(this, matchUsers, R.layout.player_list_item));
-        invitePlayerListView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-            @Override
-            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {}
-        });
     }
 
     public void loadMatch(String matchId) {
@@ -322,6 +323,8 @@ public class NewCampaignActivity extends AppCompatActivity implements View.OnCli
             public void onResult(@NonNull TurnBasedMultiplayer.LoadMatchResult result) {
                 mCurrentMatch = result.getMatch();
                 takeTurn();
+                mEditor.putString(Constants.PREFERENCES_MATCH_ID, mCurrentMatchId);
+                mEditor.commit();
             }
         });
     }
@@ -487,5 +490,15 @@ public class NewCampaignActivity extends AppCompatActivity implements View.OnCli
         mEditor.putInt(Constants.PREFERENCES_DURATION_SETTING, mCampaignLength);
         mEditor.putInt(Constants.PREFERENCES_DEFAULT_DAILY_GOAL_SETTING, mDifficultyLevel);
         mEditor.commit();
+    }
+
+    @Override
+    public void onSignInFailed() {
+
+    }
+
+    @Override
+    public void onSignInSucceeded() {
+
     }
 }
