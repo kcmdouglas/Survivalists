@@ -5,7 +5,6 @@ import android.content.IntentSender;
 import android.content.SharedPreferences;
 import android.preference.PreferenceManager;
 import android.support.annotation.NonNull;
-import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
@@ -16,10 +15,7 @@ import com.eyecuelab.survivalists.Constants;
 import com.eyecuelab.survivalists.R;
 import com.eyecuelab.survivalists.models.Item;
 import com.eyecuelab.survivalists.models.Weapon;
-import com.firebase.client.DataSnapshot;
 import com.firebase.client.Firebase;
-import com.firebase.client.FirebaseError;
-import com.firebase.client.ValueEventListener;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.common.api.ResultCallback;
@@ -27,7 +23,6 @@ import com.google.android.gms.games.Games;
 import com.google.android.gms.games.multiplayer.turnbased.TurnBasedMatch;
 import com.google.android.gms.games.multiplayer.turnbased.TurnBasedMultiplayer;
 import com.google.example.games.basegameutils.BaseGameActivity;
-import com.google.gson.Gson;
 
 import java.util.ArrayList;
 
@@ -55,7 +50,6 @@ public class TitleActivity extends BaseGameActivity implements GoogleApiClient.C
     @Bind(R.id.startCampaignButton) Button startCampaignButton;
     @Bind(R.id.loginButton) Button loginButton;
     @Bind(R.id.joinCampaignButton) Button joinCampaignButton;
-    @Bind(R.id.merchantTest) Button merchantTest;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {

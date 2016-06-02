@@ -21,6 +21,7 @@ import android.widget.Toast;
 
 import com.eyecuelab.survivalists.Constants;
 import com.eyecuelab.survivalists.R;
+import com.eyecuelab.survivalists.adapters.InvitationAdapter;
 import com.eyecuelab.survivalists.adapters.PlayerAdapter;
 import com.eyecuelab.survivalists.models.Character;
 import com.eyecuelab.survivalists.models.Item;
@@ -133,7 +134,6 @@ public class NewCampaignActivity extends BaseGameActivity implements View.OnClic
 
         initiateSeekBars();
 
-        //TODO: Move login;
         mGoogleApiClient = getApiClient();
 
         ArrayAdapter<String> infoAdapter = new ArrayAdapter<>(NewCampaignActivity.this, R.layout.info_list_item, getResources().getStringArray(R.array.difficultyDescriptions));
@@ -365,11 +365,11 @@ public class NewCampaignActivity extends BaseGameActivity implements View.OnClic
             }
 
             invitePlayerListView.setAdapter(new PlayerAdapter(this, matchUsers, R.layout.player_list_item));
-            invitePlayerListView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-                @Override
-                public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                }
-            });
+//            invitePlayerListView.setOnItemClickListener(PlayerAdapter.OnItemClickListener() {
+//                @Override
+//                public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+//                }
+//            });
         }
     }
 
@@ -388,13 +388,16 @@ public class NewCampaignActivity extends BaseGameActivity implements View.OnClic
             @Override
             public void onResult(@NonNull Invitations.LoadInvitationsResult loadInvitationsResult) {
                 InvitationBuffer invitationBuffer = loadInvitationsResult.getInvitations();
+                ArrayList<Participant> invitationParticipants = new ArrayList<>();
+                ArrayList<Invitation> invitationArrayList = new ArrayList<>();
                 for (int i = 0; i < invitationBuffer.getCount(); i++) {
                     Invitation invitation = invitationBuffer.get(i);
+                    invitationArrayList.add(invitation);
                     Participant inviter = invitation.getInviter();
-
-                    String userName = inviter.getDisplayName();
-                    Log.v("TAG", userName);
+                    invitationParticipants.add(inviter);
                 }
+
+                invitePlayerListView.setAdapter(new InvitationAdapter(NewCampaignActivity.this, invitationParticipants, invitationArrayList, R.layout.invitation_list_item, mGoogleApiClient));
             }
         });
 
