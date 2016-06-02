@@ -15,6 +15,7 @@ import android.widget.TextView;
 import android.widget.ToggleButton;
 
 import com.eyecuelab.survivalists.R;
+import com.eyecuelab.survivalists.util.MatchLoadedListener;
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.common.api.ResultCallback;
 import com.google.android.gms.common.images.ImageManager;
@@ -86,31 +87,7 @@ public class InvitationAdapter extends BaseAdapter implements AdapterView.OnItem
                 @Override
                 public void onClick(View v) {
                     Games.TurnBasedMultiplayer.acceptInvitation(mGoogleApiClient, invitation.getInvitationId());
-                    final byte[] gameData = new byte[1];
-                    Games.TurnBasedMultiplayer.loadMatch(mGoogleApiClient, invitation.getInvitationId()).setResultCallback(new ResultCallback<TurnBasedMultiplayer.LoadMatchResult>() {
-                        @Override
-                        public void onResult(@NonNull TurnBasedMultiplayer.LoadMatchResult result) {
-                            TurnBasedMatch match = result.getMatch();
-                            String nextPlayer = match.getPendingParticipantId();
-                            String lastUpdated = match.getLastUpdaterId();
-                            int nextPlayerNumber = Integer.parseInt(match.getLastUpdaterId().substring(2));
-                            ArrayList<Participant> allPlayers = match.getParticipants();
-
-                            Log.v(TAG,  "Pending player " + nextPlayer + " Last updated " + lastUpdated);
-
-                            try {
-                                //Should pass invitation to the next player
-                                String nextPlayerId = allPlayers.get(nextPlayerNumber).getParticipantId();
-                                Games.TurnBasedMultiplayer.takeTurn(mGoogleApiClient, match.getMatchId(), gameData, nextPlayerId);
-
-                                //Grab the next player in case the previous above didn't work
-                                nextPlayerId = allPlayers.get(nextPlayerNumber + 1).getParticipantId();
-                                Games.TurnBasedMultiplayer.takeTurn(mGoogleApiClient, match.getMatchId(), gameData, nextPlayerId);
-                            } catch (IndexOutOfBoundsException indexOutOfBonds) {
-                                Games.TurnBasedMultiplayer.takeTurn(mGoogleApiClient, match.getMatchId(), gameData, match.getPendingParticipantId());
-                            }
-                        }
-                    });
+                    Games.TurnBasedMultiplayer.loadMatch(mGoogleApiClient, invitation.getInvitationId()).setResultCallback(new MatchLoadedListener());
                 }
             });
 

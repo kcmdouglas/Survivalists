@@ -365,11 +365,6 @@ public class NewCampaignActivity extends BaseGameActivity implements View.OnClic
             }
 
             invitePlayerListView.setAdapter(new PlayerAdapter(this, matchUsers, R.layout.player_list_item));
-//            invitePlayerListView.setOnItemClickListener(PlayerAdapter.OnItemClickListener() {
-//                @Override
-//                public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-//                }
-//            });
         }
     }
 
@@ -400,30 +395,6 @@ public class NewCampaignActivity extends BaseGameActivity implements View.OnClic
                 invitePlayerListView.setAdapter(new InvitationAdapter(NewCampaignActivity.this, invitationParticipants, invitationArrayList, R.layout.invitation_list_item, mGoogleApiClient));
             }
         });
-
-//        ArrayList<String> playerIds =
-//            ArrayList<User> matchUsers = new ArrayList<>();
-//
-//            for (int i = 1; i < playerIds.size(); i++) {
-//                String playerId = playerIds.get(i);
-//                Participant participant = mCurrentMatch.getParticipant(playerId);
-//
-//                String UID = participant.getParticipantId();
-//                String displayName = participant.getDisplayName();
-//                Uri imageUri = participant.getIconImageUri();
-//
-//                User currentUser = new User(UID, displayName, mCurrentMatchId, imageUri);
-//                matchUsers.add(currentUser);
-//
-//            }
-//
-//            invitePlayerListView.setAdapter(new PlayerAdapter(this, matchUsers, R.layout.player_list_item));
-//            invitePlayerListView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-//                @Override
-//                public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-//                }
-//            });
-//        }
     }
 
     public void loadMatch(String matchId) {
@@ -455,9 +426,9 @@ public class NewCampaignActivity extends BaseGameActivity implements View.OnClic
                 wholeParty.add(mCurrentPlayerId);
             }
 
-            mEditor.putString("matchId", mCurrentMatchId);
-            mEditor.putInt("lastSafehouseId", 0);
-            mEditor.putInt("nextSafehouseId", 1);
+            mEditor.putString(Constants.PREFERENCES_MATCH_ID, mCurrentMatchId);
+            mEditor.putInt(Constants.PREFERENCES_LAST_SAFEHOUSE_ID, 0);
+            mEditor.putInt(Constants.PREFERENCES_NEXT_SAFEHOUSE_ID, 1);
             mEditor.commit();
 
             Firebase teamFirebaseRef = new Firebase(Constants.FIREBASE_URL_TEAM + "/" + "").child(mCurrentMatchId);
@@ -478,6 +449,7 @@ public class NewCampaignActivity extends BaseGameActivity implements View.OnClic
 
             Firebase mUserFirebaseRef = new Firebase(Constants.FIREBASE_URL_USERS + "/" + mCurrentPlayerId + "/");
             mUserFirebaseRef.child("teamId").setValue(mCurrentMatchId);
+            mUserFirebaseRef.child("joinedMatch").setValue(true);
             createCampaign(mCampaignLength);
             saveSafehouse();
             turnData = new byte[1];
@@ -648,12 +620,8 @@ public class NewCampaignActivity extends BaseGameActivity implements View.OnClic
     }
 
     @Override
-    public void onSignInFailed() {
-
-    }
+    public void onSignInFailed() {}
 
     @Override
-    public void onSignInSucceeded() {
-
-    }
+    public void onSignInSucceeded() {}
 }
