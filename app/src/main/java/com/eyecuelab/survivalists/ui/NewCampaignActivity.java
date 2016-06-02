@@ -47,6 +47,7 @@ import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.Map;
 
 import butterknife.Bind;
 import butterknife.ButterKnife;
@@ -63,13 +64,12 @@ public class NewCampaignActivity extends BaseGameActivity implements View.OnClic
     private String mCurrentPlayerId;
     private ArrayList<String> difficultyDescriptions = new ArrayList<>();
     private ArrayList<String> invitedPlayers = new ArrayList<>();
-    Integer[] campaignDuration = {15, 30, 45};
+    Integer[] campaignDuration = {5, 10, 15};
     Integer[] defaultDailyGoal = {5000, 7000, 10000};
 
     private ListView mInvitePlayersListView;
     private SharedPreferences mSharedPreferences;
     private SharedPreferences.Editor mEditor;
-    private SafeHouse mPriorSafehouse;
     private SafeHouse mNextSafehouse;
 
     private GoogleApiClient mGoogleApiClient;
@@ -371,9 +371,6 @@ public class NewCampaignActivity extends BaseGameActivity implements View.OnClic
     public void loadMatch(String matchId) {
         mCurrentMatchId = matchId;
 
-        mNextSafeHouseId = mSharedPreferences.getInt(Constants.PREFERENCES_NEXT_SAFEHOUSE_ID, 1);
-        mLastSafeHouseId = mSharedPreferences.getInt(Constants.PREFERENCES_LAST_SAFEHOUSE_ID, 0);
-
         Games.TurnBasedMultiplayer.loadMatch(mGoogleApiClient, mCurrentMatchId).setResultCallback(new ResultCallback<TurnBasedMultiplayer.LoadMatchResult>() {
             @Override
             public void onResult(@NonNull TurnBasedMultiplayer.LoadMatchResult result) {
@@ -396,6 +393,7 @@ public class NewCampaignActivity extends BaseGameActivity implements View.OnClic
             if (wholeParty != null) {
                 wholeParty.add(mCurrentPlayerId);
             }
+            removeOldInventory();
 
             mEditor.putString("matchId", mCurrentMatchId);
             mEditor.putInt("lastSafehouseId", 0);
@@ -406,8 +404,7 @@ public class NewCampaignActivity extends BaseGameActivity implements View.OnClic
             teamFirebaseRef.child("matchStart").setValue(mCurrentMatch.getCreationTimestamp());
             teamFirebaseRef.child("matchDuration").setValue(mCampaignLength);
             teamFirebaseRef.child("difficultyLevel").setValue(mDifficultyLevel);
-            teamFirebaseRef.child("lastSafehouseId").setValue(0);
-            teamFirebaseRef.child("nextSafehouseId").setValue(1);
+
 
             Firebase playerFirebase = teamFirebaseRef.child("players");
             if (wholeParty != null) {
@@ -429,8 +426,9 @@ public class NewCampaignActivity extends BaseGameActivity implements View.OnClic
                 String nextPlayer = mCurrentMatch.getParticipantIds().get(i);
                 Games.TurnBasedMultiplayer.takeTurn(mGoogleApiClient, mCurrentMatchId, turnData, nextPlayer);
             }
-            assignStarterInventory();
             assignRandomCharacters();
+          //  assignStarterInventory();
+
         }
         turnData = new byte[1];
 
@@ -465,27 +463,65 @@ public class NewCampaignActivity extends BaseGameActivity implements View.OnClic
     }
 
     public void saveSafehouse() {
-        Firebase safehouseFirebaseRef = new Firebase(Constants.FIREBASE_URL_SAFEHOUSES + "/" + mNextSafeHouseId + "/");
-        safehouseFirebaseRef.addListenerForSingleValueEvent(new ValueEventListener() {
+        final Firebase safehouseFirebaseRef = new Firebase(Constants.FIREBASE_URL_SAFEHOUSES + "/");
+        final ArrayList<Integer> safehouseIDs = new ArrayList<>();
+        final Map<String, Object> dailySafehouseMap = new HashMap<>();
+
+        Firebase safehouseFirebase = new Firebase(Constants.FIREBASE_URL_SAFEHOUSES);
+
+        safehouseFirebase.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
-                String houseName = dataSnapshot.child("houseName").getValue().toString();
-                String description = dataSnapshot.child("description").getValue().toString();
-                int stepsRequired = Integer.parseInt(dataSnapshot.child("stepsRequired").getValue().toString());
+                for(DataSnapshot safehouse : dataSnapshot.getChildren()) {
+                    int safehouseId = Integer.valueOf(safehouse.getKey());
+                    safehouseIDs.add(safehouseId);
+                }
 
-                // Build the next safehouse object and save it to shared preferences
-                SafeHouse nextSafeHouse = new SafeHouse(mNextSafeHouseId, houseName, description);
-                Gson gson = new Gson();
-                String nextSafehouseJson = gson.toJson(nextSafeHouse);
-                mEditor.putString("nextSafehouse", nextSafehouseJson);
-                mEditor.commit();
-                String safehouseJson = mSharedPreferences.getString("nextSafehouse", null);
-                Gson safehouseGson = new Gson();
-                mNextSafehouse = safehouseGson.fromJson(safehouseJson, SafeHouse.class);
+                Collections.shuffle(safehouseIDs);
+
+                for(int i = 0; i < mCampaignLength; i++) {
+                    dailySafehouseMap.put(Integer.toString(i), safehouseIDs.get(i));
+                }
+
+                Firebase teamFirebaseRef = new Firebase(Constants.FIREBASE_URL_TEAM + "/" + mCurrentMatchId);
+
+                teamFirebaseRef.child("lastSafehouseId").setValue(-1);
+                teamFirebaseRef.child("nextSafehouseId").setValue(0);
+                teamFirebaseRef.child("nextSafehouseNodeId").setValue(safehouseIDs.get(0));
+                teamFirebaseRef.child("safehouseIdMap").setValue(dailySafehouseMap);
+                mNextSafeHouseId = safehouseIDs.get(0);
+
+                safehouseFirebaseRef.child(String.valueOf(mNextSafeHouseId)).addListenerForSingleValueEvent(new ValueEventListener() {
+                    @Override
+                    public void onDataChange(DataSnapshot dataSnapshot) {
+                        String houseName = dataSnapshot.child("houseName").getValue().toString();
+                        String description = dataSnapshot.child("description").getValue().toString();
+
+                        // Build the next safehouse object and save it to shared preferences
+                        SafeHouse nextSafeHouse = new SafeHouse(mNextSafeHouseId, houseName, description);
+                        SafeHouse fakeSafeHouse = new SafeHouse(-1, "Not a real house", "This is your starting point!");
+                        Gson gson = new Gson();
+                        String nextSafehouseJson = gson.toJson(nextSafeHouse);
+                        Gson gson2 = new Gson();
+                        String reachedSafehouseJson = gson2.toJson(fakeSafeHouse);
+                        mEditor.putString("nextSafehouse", nextSafehouseJson);
+                        mEditor.putString(Constants.PREFERENCES_CURRENT_SAFEHOUSE, reachedSafehouseJson);
+                        mEditor.putBoolean(Constants.PREFERENCES_REACHED_SAFEHOUSE_BOOLEAN, false);
+                        mEditor.commit();
+                        String safehouseJson = mSharedPreferences.getString("nextSafehouse", null);
+                        Gson safehouseGson = new Gson();
+                        mNextSafehouse = safehouseGson.fromJson(safehouseJson, SafeHouse.class);
+                    }
+
+                    @Override
+                    public void onCancelled(FirebaseError firebaseError) {}
+                });
             }
 
             @Override
-            public void onCancelled(FirebaseError firebaseError) {}
+            public void onCancelled(FirebaseError firebaseError) {
+
+            }
         });
     }
 
@@ -541,9 +577,65 @@ public class NewCampaignActivity extends BaseGameActivity implements View.OnClic
             }
         });
     }
+
+    private void removeOldInventory() {
+        for (int i = 0; i < invitedPlayers.size(); i++) {
+            final String playerBeingAssignId = invitedPlayers.get(i);
+
+            Collections.shuffle(allWeapons);
+            Collections.shuffle(allMedicine);
+            Collections.shuffle(allFood);
+            final ArrayList<Item> itemsToPush = new ArrayList<>();
+            final Weapon freebieWeapon = allWeapons.get(0);
+            Item freebieFoodOne = allFood.get(0);
+            itemsToPush.add(freebieFoodOne);
+            Item freebieFoodTwo = allFood.get(1);
+            itemsToPush.add(freebieFoodTwo);
+            Item freebieMedicineOne = allMedicine.get(0);
+            itemsToPush.add(freebieMedicineOne);
+            Item freebieMedicineTwo = allMedicine.get(1);
+            itemsToPush.add(freebieMedicineTwo);
+
+
+            Firebase playerRef = new Firebase(Constants.FIREBASE_URL_USERS + "/" + playerBeingAssignId);
+            playerRef.addListenerForSingleValueEvent(new ValueEventListener() {
+                @Override
+                public void onDataChange(DataSnapshot dataSnapshot) {
+                    dataSnapshot.child("items").getRef().removeValue();
+                    dataSnapshot.child("weapons").getRef().removeValue();
+
+                    for(int j = 0; j < itemsToPush.size(); j++) {
+                        Item item = itemsToPush.get(j);
+                        Firebase itemRef = new Firebase (Constants.FIREBASE_URL_USERS + "/" + playerBeingAssignId + "/items");
+                        Firebase newItemRef = itemRef.push();
+                        String itemPushId = newItemRef.getKey();
+                        item.setPushId(itemPushId);
+                        newItemRef.setValue(item);
+                    }
+
+
+                    Firebase weaponRef = new Firebase (Constants.FIREBASE_URL_USERS + "/" + playerBeingAssignId + "/weapons");
+                    Firebase newWeaponRef = weaponRef.push();
+                    String weaponPushId = newWeaponRef.getKey();
+
+                    freebieWeapon.setPushId(weaponPushId);
+                    newWeaponRef.setValue(freebieWeapon);
+                }
+
+                @Override
+                public void onCancelled(FirebaseError firebaseError) {
+
+                }
+            });
+        }
+    }
+
     private void assignStarterInventory() {
         for (int i = 0; i < invitedPlayers.size(); i++) {
+
             try {
+                String playerBeingAssignId = invitedPlayers.get(i);
+
                 Collections.shuffle(allWeapons);
                 Collections.shuffle(allMedicine);
                 Collections.shuffle(allFood);
@@ -558,7 +650,6 @@ public class NewCampaignActivity extends BaseGameActivity implements View.OnClic
                 Item freebieMedicineTwo = allMedicine.get(1);
                 itemsToPush.add(freebieMedicineTwo);
 
-                String playerBeingAssignId = invitedPlayers.get(i);
 
                 for(int j = 0; j < itemsToPush.size(); j++) {
                     Item item = itemsToPush.get(j);
@@ -597,8 +688,10 @@ public class NewCampaignActivity extends BaseGameActivity implements View.OnClic
         teamFirebase.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
-                mCampaignLength = (int) dataSnapshot.child("matchDuration").getValue();
-                mDifficultyLevel = (int) dataSnapshot.child("difficultyLevel").getValue();
+                long campaignLength = (long) dataSnapshot.child("matchDuration").getValue();
+                long difficulty = (long) dataSnapshot.child("difficultyLevel").getValue();
+                mCampaignLength = (int) campaignLength;
+                mDifficultyLevel = (int) difficulty;
             }
 
             @Override

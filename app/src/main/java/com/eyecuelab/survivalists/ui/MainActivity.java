@@ -130,7 +130,7 @@ public class MainActivity extends FragmentActivity
         eventThreeInitiated = mSharedPreferences.getBoolean(Constants.PREFERENCES_INITIATE_EVENT_3, false);
         eventFourInitiated = mSharedPreferences.getBoolean(Constants.PREFERENCES_INITIATE_EVENT_4, false);
         eventFiveInitiated = mSharedPreferences.getBoolean(Constants.PREFERENCES_INITIATE_EVENT_5, false);
-        reachedDailySafehouse = mSharedPreferences.getBoolean(Constants.PREFERENCES_REACHED_SAFEHOUSE, false);
+        reachedDailySafehouse = mSharedPreferences.getBoolean(Constants.PREFERENCES_REACHED_SAFEHOUSE_BOOLEAN, false);
 
         //Set recurring alarm
         if(!isRecurringAlarmSet) {
@@ -145,12 +145,18 @@ public class MainActivity extends FragmentActivity
             startService(mBackgroundStepServiceIntent);
         }
 
-        String safehouseJson = mSharedPreferences.getString(Constants.PREFERENCES_REACHED_SAFEHOUSE, null);
+        String safehouseJson = mSharedPreferences.getString(Constants.PREFERENCES_CURRENT_SAFEHOUSE, null);
         Gson gson = new Gson();
         mReachedSafehouse = gson.fromJson(safehouseJson, SafeHouse.class);
 
         String playerIDsString = mSharedPreferences.getString(Constants.PREFERENCES_TEAM_IDs, null);
-        String [] playerIDArray = TextUtils.split(",", playerIDsString);
+        if (playerIDsString != null) {
+            String [] playerIDArray = TextUtils.split(",", playerIDsString);
+        }
+
+        if(mCurrentMatchId != null && mPlayerIDs == null) {
+            instantiatePlayerIDs();
+        }
 
 //        for(int i = 0; i < playerIDArray.length; i++ ) {
 //            mPlayerIDs.add(playerIDArray[i]);
@@ -317,8 +323,8 @@ public class MainActivity extends FragmentActivity
             initializeEventDialogFragments();
 
         }
-        if(key.equals(Constants.PREFERENCES_REACHED_SAFEHOUSE)) {
-            reachedDailySafehouse = mSharedPreferences.getBoolean(Constants.PREFERENCES_REACHED_SAFEHOUSE, true);
+        if(key.equals(Constants.PREFERENCES_REACHED_SAFEHOUSE_BOOLEAN)) {
+            reachedDailySafehouse = mSharedPreferences.getBoolean(Constants.PREFERENCES_REACHED_SAFEHOUSE_BOOLEAN, true);
         }
 
         //TODO: Add listener for isCampaignEnded boolean to trigger end of game screen
@@ -370,9 +376,9 @@ public class MainActivity extends FragmentActivity
                 SafeHouse nextSafeHouse = new SafeHouse(mReachedSafeHouseId, houseName, description);
                 Gson gson = new Gson();
                 String nextSafehouseJson = gson.toJson(nextSafeHouse);
-                mEditor.putString(Constants.PREFERENCES_REACHED_SAFEHOUSE, nextSafehouseJson);
+                mEditor.putString(Constants.PREFERENCES_REACHED_SAFEHOUSE_BOOLEAN, nextSafehouseJson);
                 mEditor.commit();
-                String safehouseJson = mSharedPreferences.getString(Constants.PREFERENCES_REACHED_SAFEHOUSE, null);
+                String safehouseJson = mSharedPreferences.getString(Constants.PREFERENCES_REACHED_SAFEHOUSE_BOOLEAN, null);
                 Gson safehouseGson = new Gson();
                 mReachedSafehouse = safehouseGson.fromJson(safehouseJson, SafeHouse.class);
             }
@@ -382,7 +388,7 @@ public class MainActivity extends FragmentActivity
         });
 
         //Sets boolean for reaching the safehouse so the dialog is only triggered once per day
-        mEditor.putBoolean(Constants.PREFERENCES_REACHED_SAFEHOUSE, true).apply();
+        mEditor.putBoolean(Constants.PREFERENCES_REACHED_SAFEHOUSE_BOOLEAN, true).apply();
 
 
         //Checks if the rest of the team has made it to the safehouse
