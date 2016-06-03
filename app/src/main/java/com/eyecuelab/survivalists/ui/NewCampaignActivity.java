@@ -73,8 +73,8 @@ public class NewCampaignActivity extends BaseGameActivity implements View.OnClic
     private String mCurrentPlayerId;
     private ArrayList<String> difficultyDescriptions = new ArrayList<>();
     private ArrayList<String> invitedPlayers = new ArrayList<>();
-    Integer[] campaignDuration = {5, 10, 15};
-    Integer[] defaultDailyGoal = {5000, 7000, 10000};
+    Integer[] campaignDuration = {3, 10, 15};
+    Integer[] defaultDailyGoal = {50, 7000, 10000};
 
     private Context mContext;
     private ListView mInvitePlayersListView;
@@ -491,8 +491,7 @@ public class NewCampaignActivity extends BaseGameActivity implements View.OnClic
 
     public void createCampaign(int campaignLength) {
         Calendar campaignCalendar = Calendar.getInstance();
-        campaignCalendar.set(Calendar.HOUR, 18);
-        campaignCalendar.add(Calendar.DATE, campaignLength);
+        campaignCalendar.add(Calendar.MINUTE, 120);
         Intent intent = new Intent(this, CampaignEndAlarmReceiver.class);
         PendingIntent pendingIntent = PendingIntent.getBroadcast(this, CampaignEndAlarmReceiver.REQUEST_CODE, intent, 0);
         AlarmManager am = (AlarmManager) getApplicationContext().getSystemService(ALARM_SERVICE);

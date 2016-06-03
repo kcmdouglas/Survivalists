@@ -52,11 +52,19 @@ public class StepResetIntentService extends IntentService implements SharedPrefe
 
     public void resetEventCounts(int events) {
 
-        int eventOneSteps = (int) (Math.random() * 500 + 1);
-        int eventTwoSteps = (int) (Math.random() * (1000 + 500) +500);
-        int eventThreeSteps = (int) (Math.random() * (1500 + 1000) + 1000);
-        int eventFourSteps = (int) (Math.random() * (2000 + 1500) + 1500);
-        int eventFiveSteps = (int) (Math.random() * (3000 + 2000) + 2000);
+//        int eventOneSteps = (int) (Math.random() * 500 + 1);
+//        int eventTwoSteps = (int) (Math.random() * (1000 + 500) +500);
+//        int eventThreeSteps = (int) (Math.random() * (1500 + 1000) + 1000);
+//        int eventFourSteps = (int) (Math.random() * (2000 + 1500) + 1500);
+//        int eventFiveSteps = (int) (Math.random() * (3000 + 2000) + 2000);
+
+        int eventOneSteps = (int) (Math.random() * 10 + 1);
+        int eventTwoSteps = (int) (Math.random() *  20 + 11);
+        int eventThreeSteps = (int) (Math.random() * 30 + 21);
+        int eventFourSteps = (int) (Math.random() * 40 + 31);
+        int eventFiveSteps = (int) (Math.random() * 50 + 41);
+
+
 
         switch(events) {
             case 1:

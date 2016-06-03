@@ -172,29 +172,24 @@
         android:layout_toEndOf="@+id/sideTabs">
 
         <Button
-            android:id="@+id/leftInteractionButton"
-            app:layout_widthPercent="40%"
-            app:layout_heightPercent="50%"
-            app:layout_marginLeftPercent="5%"
-            app:layout_marginTopPercent="15%"
-            android:background="@drawable/blank_notebook_interaction_btn"
-            android:text="Give Item"
-            android:textColor="@android:color/white"
-            android:textAllCaps="true"
-            android:textStyle="bold"/>
-
-        <Button
             android:id="@+id/rightInteractionBUtton"
             app:layout_widthPercent="40%"
             app:layout_heightPercent="50%"
             app:layout_marginLeftPercent="5%"
             app:layout_marginTopPercent="15%"
-            android:layout_toRightOf="@+id/leftInteractionButton"
+            android:layout_toRightOf="@+id/stepEditText"
             android:background="@drawable/blank_notebook_interaction_btn"
-            android:text="Encourage"
+            android:text="Set Steps"
             android:textColor="@android:color/white"
             android:textAllCaps="true"
             android:textStyle="bold"/>
+
+        <EditText
+            app:layout_widthPercent="40%"
+            app:layout_heightPercent="50%"
+            app:layout_marginLeftPercent="5%"
+            app:layout_marginTopPercent="15%"
+            android:id="@+id/stepEditText"/>
 
     </android.support.percent.PercentRelativeLayout>
 

@@ -19,6 +19,7 @@ import android.view.MotionEvent;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.Button;
+import android.widget.EditText;
 import android.widget.GridView;
 import android.widget.Toast;
 
@@ -56,7 +57,8 @@ public class MainActivity extends FragmentActivity
     @Bind(R.id.tabCampaignButton) Button campaignButton;
     @Bind(R.id.mapTabButton) Button mapButton;
     @Bind(R.id.rightInteractionBUtton) Button rightInteractionButton;
-    @Bind(R.id.leftInteractionButton) Button leftInteractionButton;
+//    @Bind(R.id.leftInteractionButton) Button leftInteractionButton;
+//    @Bind(R.id.stepEditText) EditText stepEditText;
 
     private int dailySteps;
     private String mCurrentMatchId;
@@ -116,7 +118,7 @@ public class MainActivity extends FragmentActivity
 
         campaignButton.setOnClickListener(this);
         mapButton.setOnClickListener(this);
-        leftInteractionButton.setOnClickListener(this);
+//        leftInteractionButton.setOnClickListener(this);
         rightInteractionButton.setOnClickListener(this);
 
         mCurrentMatchId = mSharedPreferences.getString(Constants.PREFERENCES_MATCH_ID, null);
@@ -233,6 +235,10 @@ public class MainActivity extends FragmentActivity
                 break;
             case R.id.rightInteractionBUtton:
                 Toast.makeText(this, "Are you encouraged?", Toast.LENGTH_SHORT).show();
+//                String inputtedSteps = stepEditText.getText().toString();
+//                int steps = Integer.getInteger(inputtedSteps);
+//                dailySteps = steps;
+//                mEditor.putInt(Constants.PREFERENCES_DAILY_STEPS, dailySteps).commit();
                 break;
             case R.id.leftInteractionButton:
                 Toast.makeText(this, "Item given!", Toast.LENGTH_SHORT).show();
@@ -322,6 +328,13 @@ public class MainActivity extends FragmentActivity
             initializeEventDialogFragments();
 
         }
+        if(key.equals(Constants.PREFERENCES_DAILY_STEPS)) {
+            if (dailyGoal < dailySteps && !reachedDailySafehouse) {
+                saveSafehouse();
+            }
+            initializeEventDialogFragments();
+        }
+
         if(key.equals(Constants.PREFERENCES_REACHED_SAFEHOUSE_BOOLEAN)) {
             reachedDailySafehouse = mSharedPreferences.getBoolean(Constants.PREFERENCES_REACHED_SAFEHOUSE_BOOLEAN, true);
         }
@@ -331,8 +344,8 @@ public class MainActivity extends FragmentActivity
 
     public void saveSafehouse() {
         //Sets the user's own atSafehouse node
-        Firebase firebaseAtSafeHouseRef = new Firebase(Constants.FIREBASE_URL_USERS + "/" + mCurrentPlayerId +"/atSafeHouse");
-        firebaseAtSafeHouseRef.setValue(true);
+        Firebase firebaseAtSafeHouseRef = new Firebase(Constants.FIREBASE_URL_USERS + "/" + mCurrentPlayerId);
+        firebaseAtSafeHouseRef.child("atSafeHouse").setValue(true);
 
         //Gets the pseudo ID of the next safehouse
         final Firebase nextTeamSafehouse = new Firebase (Constants.FIREBASE_URL_TEAM+"/"+ mCurrentMatchId +"/");
@@ -429,13 +442,14 @@ public class MainActivity extends FragmentActivity
         Intent intent = new Intent(this, StepResetAlarmReceiver.class);
         //Sets a recurring alarm just before midnight daily to trigger BroadcastReceiver
         Calendar calendar = Calendar.getInstance();
-        calendar.set(Calendar.HOUR_OF_DAY, 23);
-        calendar.set(Calendar.MINUTE, 59);
-        calendar.set(Calendar.SECOND, 0);
-        calendar.set(Calendar.MILLISECOND, 0);
+//        calendar.set(Calendar.HOUR_OF_DAY, 23);
+//        calendar.set(Calendar.MINUTE, 59);
+//        calendar.set(Calendar.SECOND, 0);
+//        calendar.set(Calendar.MILLISECOND, 0);
+//        calendar.add(Calendar.MINUTE, 30);
         PendingIntent pi = PendingIntent.getBroadcast(this, StepResetAlarmReceiver.REQUEST_CODE, intent, PendingIntent.FLAG_UPDATE_CURRENT);
         AlarmManager am = (AlarmManager) getApplicationContext().getSystemService(Context.ALARM_SERVICE);
-        am.setRepeating(AlarmManager.RTC_WAKEUP, calendar.getTimeInMillis(), AlarmManager.INTERVAL_DAY, pi);
+        am.setRepeating(AlarmManager.RTC_WAKEUP, calendar.getTimeInMillis(), AlarmManager.INTERVAL_HALF_HOUR, pi);
     }
 
     public void instantiatePlayerIDs() {
