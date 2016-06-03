@@ -5,6 +5,7 @@ import android.app.DialogFragment;
 import android.content.SharedPreferences;
 import android.content.res.Resources;
 import android.os.Bundle;
+import android.preference.PreferenceManager;
 import android.support.annotation.Nullable;
 import android.support.v4.app.FragmentManager;
 import android.view.LayoutInflater;
@@ -37,12 +38,12 @@ import butterknife.ButterKnife;
  * Created by eyecuelab on 5/13/16.
  */
 public class EventDialogFragment extends android.support.v4.app.DialogFragment implements View.OnClickListener {
-    private TextView dialogDescription;
-    private TextView dialogConsequence;
-    private TextView dialogTitle;
-    private Button affirmativeButton;
-    private Button negativeButton;
-    private Button closeButton;
+    @Bind(R.id.dialogDescription) TextView dialogDescription;
+    @Bind(R.id.dialogConsequence) TextView dialogConsequence;
+    @Bind(R.id.dialogTitle) TextView dialogTitle;
+    @Bind(R.id.affirmativeButton) Button affirmativeButton;
+    @Bind(R.id.negativeButton) Button negativeButton;
+    @Bind(R.id.closeButton) Button closeButton;
     private int dialogChooser;
     private String[] dialogOptions;
     private Resources res;
@@ -84,7 +85,12 @@ public class EventDialogFragment extends android.support.v4.app.DialogFragment i
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        //Create Shared Preferences
+        mSharedPreferences = PreferenceManager.getDefaultSharedPreferences(getActivity().getApplicationContext());
+        mEditor = mSharedPreferences.edit();
         inventoryWeapons = new ArrayList<>();
+        mPlayerId = mSharedPreferences.getString(Constants.PREFERENCES_GOOGLE_PLAYER_ID, null);
+
 
         final Firebase inventoryWeaponFirebase = new Firebase(Constants.FIREBASE_URL_USERS + "/" + mPlayerId + "/weapons");
         inventoryWeaponFirebase.addListenerForSingleValueEvent(new ValueEventListener() {
@@ -109,7 +115,7 @@ public class EventDialogFragment extends android.support.v4.app.DialogFragment i
                              Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_event_dialog, container, false);
         super.onViewCreated(view, savedInstanceState);
-        mPlayerId = mSharedPreferences.getString(Constants.PREFERENCES_GOOGLE_PLAYER_ID, null);
+        ButterKnife.bind(this, view);
         String characterJson = mSharedPreferences.getString(Constants.PREFERENCES_CHARACTER, null);
         Gson gson = new Gson();
         mCurrentCharacter = gson.fromJson(characterJson, Character.class);
@@ -139,8 +145,10 @@ public class EventDialogFragment extends android.support.v4.app.DialogFragment i
                             outcomeA = dataSnapshot.child("description").getValue().toString();
                             outcomeB = dataSnapshot.child("description").getValue().toString();
                             title = dataSnapshot.child("description").getValue().toString();
-                            penaltyHP = (int) dataSnapshot.child("penalty_hp").getValue();
-                            stepsRequired = (int) dataSnapshot.child("steps_required").getValue();
+                            long penaltyHPLong = (long) dataSnapshot.child("penalty_hp").getValue();
+                            penaltyHP = (int) penaltyHPLong;
+                            long stepsRequiredLong = (long)dataSnapshot.child("steps_required").getValue();
+                            stepsRequired = (int) stepsRequiredLong;
                         }
 
                         @Override
@@ -163,8 +171,10 @@ public class EventDialogFragment extends android.support.v4.app.DialogFragment i
                             outcomeA = dataSnapshot.child("description").getValue().toString();
                             outcomeB = dataSnapshot.child("description").getValue().toString();
                             title = dataSnapshot.child("description").getValue().toString();
-                            penaltyHP = (int) dataSnapshot.child("penalty_hp").getValue();
-                            stepsRequired = (int) dataSnapshot.child("steps_required").getValue();
+                            long penaltyHPLong = (long) dataSnapshot.child("penalty_hp").getValue();
+                            penaltyHP = (int) penaltyHPLong;
+                            long stepsRequiredLong = (long)dataSnapshot.child("steps_required").getValue();
+                            stepsRequired = (int) stepsRequiredLong;
                             getItemOnFlee = (boolean) dataSnapshot.child("get_item_on_flee").getValue();
                             getItemOnInspect = (boolean) dataSnapshot.child("get_item_on_flee").getValue();
                         }
@@ -212,12 +222,14 @@ public class EventDialogFragment extends android.support.v4.app.DialogFragment i
                             if (weapon != null) {
                                 String weaponName = dataSnapshot.child("name").getValue().toString();
                                 String weaponDescription = dataSnapshot.child("description").getValue().toString();
-                                int hitPoints = (int) dataSnapshot.child("hit_points").getValue();
+                                long hitPointsLong = (long) dataSnapshot.child("hitPoints").getValue();
+                                int hitPoints = (int) hitPointsLong;
                                 weapon = new Weapon(weaponName, weaponDescription, hitPoints);
                             } else {
                                 String itemName = dataSnapshot.child("name").getValue().toString();
                                 String itemDescription = dataSnapshot.child("description").getValue().toString();
-                                int healthPoints = (int) dataSnapshot.child("health_points").getValue();
+                                long healthPointsLong = (long) dataSnapshot.child("healthPoints").getValue();
+                                int healthPoints = (int) healthPointsLong;
                                 int itemId = (int) dataSnapshot.getValue();
                                 item = new Item(itemName, itemDescription, healthPoints, effectsHealth);
                             }

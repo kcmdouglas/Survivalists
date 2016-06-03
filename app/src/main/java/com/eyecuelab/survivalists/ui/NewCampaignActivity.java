@@ -73,8 +73,8 @@ public class NewCampaignActivity extends BaseGameActivity implements View.OnClic
     private String mCurrentPlayerId;
     private ArrayList<String> difficultyDescriptions = new ArrayList<>();
     private ArrayList<String> invitedPlayers = new ArrayList<>();
-    Integer[] campaignDuration = {5, 10, 15};
-    Integer[] defaultDailyGoal = {5000, 7000, 10000};
+    Integer[] campaignDuration = {3, 10, 15};
+    Integer[] defaultDailyGoal = {50, 7000, 10000};
 
     private Context mContext;
     private ListView mInvitePlayersListView;
@@ -142,6 +142,7 @@ public class NewCampaignActivity extends BaseGameActivity implements View.OnClic
         initiateSeekBars();
 
         mGoogleApiClient = getApiClient();
+        mGoogleApiClient.connect();
 
         ArrayAdapter<String> infoAdapter = new ArrayAdapter<>(NewCampaignActivity.this, R.layout.info_list_item, getResources().getStringArray(R.array.difficultyDescriptions));
         infoListView.setAdapter(infoAdapter);
@@ -205,6 +206,8 @@ public class NewCampaignActivity extends BaseGameActivity implements View.OnClic
         IntentFilter intentFilter = new IntentFilter();
         intentFilter.addAction(RECEIVE_UPDATE_FROM_INVITATION);
         broadcastManager.registerReceiver(broadcastReceiver, intentFilter);
+
+        mCurrentPlayerId = mSharedPreferences.getString(Constants.PREFERENCES_GOOGLE_PLAYER_ID, null);
     }
 
     @Override
@@ -424,7 +427,7 @@ public class NewCampaignActivity extends BaseGameActivity implements View.OnClic
 
     public void takeTurn() {
         turnData = mCurrentMatch.getData();
-        mCurrentPlayerId = Games.Players.getCurrentPlayerId(mGoogleApiClient);
+        mEditor.putInt(Constants.PREFERENCES_PREVIOUS_STEPS_KEY, 0).commit();
 
         //First turn
         if (turnData == null) {
@@ -467,8 +470,7 @@ public class NewCampaignActivity extends BaseGameActivity implements View.OnClic
                 String nextPlayer = mCurrentMatch.getParticipantIds().get(i);
                 Games.TurnBasedMultiplayer.takeTurn(mGoogleApiClient, mCurrentMatchId, turnData, nextPlayer);
             }
-            assignRandomCharacters();
-          //  assignStarterInventory();
+            instantiateUserInformation();
 
         }
         turnData = new byte[1];
@@ -492,8 +494,7 @@ public class NewCampaignActivity extends BaseGameActivity implements View.OnClic
 
     public void createCampaign(int campaignLength) {
         Calendar campaignCalendar = Calendar.getInstance();
-        campaignCalendar.set(Calendar.HOUR, 18);
-        campaignCalendar.add(Calendar.DATE, campaignLength);
+        campaignCalendar.add(Calendar.MINUTE, 120);
         Intent intent = new Intent(this, CampaignEndAlarmReceiver.class);
         PendingIntent pendingIntent = PendingIntent.getBroadcast(this, CampaignEndAlarmReceiver.REQUEST_CODE, intent, 0);
         AlarmManager am = (AlarmManager) getApplicationContext().getSystemService(ALARM_SERVICE);
@@ -564,7 +565,7 @@ public class NewCampaignActivity extends BaseGameActivity implements View.OnClic
         });
     }
 
-    private void assignRandomCharacters() {
+    private void instantiateUserInformation() {
         final Firebase characterSkeletonRef = new Firebase(Constants.FIREBASE_URL+ "/");
         final ArrayList<Character> selectionList = new ArrayList<>();
 
@@ -615,6 +616,13 @@ public class NewCampaignActivity extends BaseGameActivity implements View.OnClic
 
             }
         });
+
+        //Set the first day Daily Goal to the team default difficulty level
+        for (int i = 0; i < invitedPlayers.size(); i++) {
+            Firebase userRef = new Firebase(Constants.FIREBASE_URL_USERS + "/" + invitedPlayers.get(i));
+            userRef.child("dailyGoal").setValue(mDifficultyLevel);
+        }
+
     }
 
     private void removeOldInventory() {
@@ -667,51 +675,6 @@ public class NewCampaignActivity extends BaseGameActivity implements View.OnClic
                 }
             });
         }
-    }
-
-    private void assignStarterInventory() {
-        for (int i = 0; i < invitedPlayers.size(); i++) {
-
-            try {
-                String playerBeingAssignId = invitedPlayers.get(i);
-
-                Collections.shuffle(allWeapons);
-                Collections.shuffle(allMedicine);
-                Collections.shuffle(allFood);
-                ArrayList<Item> itemsToPush = new ArrayList<>();
-                Weapon freebieWeapon = allWeapons.get(0);
-                Item freebieFoodOne = allFood.get(0);
-                itemsToPush.add(freebieFoodOne);
-                Item freebieFoodTwo = allFood.get(1);
-                itemsToPush.add(freebieFoodTwo);
-                Item freebieMedicineOne = allMedicine.get(0);
-                itemsToPush.add(freebieMedicineOne);
-                Item freebieMedicineTwo = allMedicine.get(1);
-                itemsToPush.add(freebieMedicineTwo);
-
-
-                for(int j = 0; j < itemsToPush.size(); j++) {
-                    Item item = itemsToPush.get(j);
-                    Firebase itemRef = new Firebase (Constants.FIREBASE_URL_USERS + "/" + playerBeingAssignId + "/items");
-                    Firebase newItemRef = itemRef.push();
-                    String itemPushId = newItemRef.getKey();
-                    item.setPushId(itemPushId);
-                    newItemRef.setValue(item);
-                }
-
-
-                Firebase weaponRef = new Firebase (Constants.FIREBASE_URL_USERS + "/" + playerBeingAssignId + "/weapons");
-                Firebase newWeaponRef = weaponRef.push();
-                String weaponPushId = newWeaponRef.getKey();
-
-                freebieWeapon.setPushId(weaponPushId);
-                newWeaponRef.setValue(freebieWeapon);
-
-            } catch (IndexOutOfBoundsException indexOutOfBounds) {
-                indexOutOfBounds.getStackTrace();
-            }
-        }
-
     }
 
     public void saveCampaignSettings() {
@@ -783,6 +746,7 @@ public class NewCampaignActivity extends BaseGameActivity implements View.OnClic
                 boolean uiIsntYetUpdated = true;
 
                 if (gameStatus == gameStarted) {
+                    Log.e("NEW CAMPAIGN", turnBasedMatch.getParticipant(turnBasedMatch.getLastUpdaterId()).getDisplayName() + "");
                     Toast.makeText(NewCampaignActivity.this, turnBasedMatch.getParticipant(turnBasedMatch.getLastUpdaterId()).getDisplayName() + " accepted invite", Toast.LENGTH_LONG).show();
                     tallyOfPlayersJoined.add(turnBasedMatch.getLastUpdaterId());
 
