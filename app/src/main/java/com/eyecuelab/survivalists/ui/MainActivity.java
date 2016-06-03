@@ -250,9 +250,6 @@ public class MainActivity extends FragmentActivity
                     firebaseStepsRef.child("dailySteps").setValue(steps);
                 }
                 break;
-            case R.id.leftInteractionButton:
-                Toast.makeText(this, "Item given!", Toast.LENGTH_SHORT).show();
-                break;
         }
     }
 
