@@ -123,6 +123,8 @@ public class MainActivity extends FragmentActivity
 
         mCurrentMatchId = mSharedPreferences.getString(Constants.PREFERENCES_MATCH_ID, null);
 
+        mCurrentPlayerId = mSharedPreferences.getString(Constants.PREFERENCES_GOOGLE_PLAYER_ID, null);
+
         //Set counter text based on current shared preferences--these are updated in the shared preferences onChange listener
         dailySteps = mSharedPreferences.getInt(Constants.PREFERENCES_DAILY_STEPS, 0);
 

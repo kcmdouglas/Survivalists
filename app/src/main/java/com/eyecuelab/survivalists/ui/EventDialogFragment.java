@@ -5,6 +5,7 @@ import android.app.DialogFragment;
 import android.content.SharedPreferences;
 import android.content.res.Resources;
 import android.os.Bundle;
+import android.preference.PreferenceManager;
 import android.support.annotation.Nullable;
 import android.support.v4.app.FragmentManager;
 import android.view.LayoutInflater;
@@ -37,12 +38,12 @@ import butterknife.ButterKnife;
  * Created by eyecuelab on 5/13/16.
  */
 public class EventDialogFragment extends android.support.v4.app.DialogFragment implements View.OnClickListener {
-    private TextView dialogDescription;
-    private TextView dialogConsequence;
-    private TextView dialogTitle;
-    private Button affirmativeButton;
-    private Button negativeButton;
-    private Button closeButton;
+    @Bind(R.id.dialogDescription) TextView dialogDescription;
+    @Bind(R.id.dialogConsequence) TextView dialogConsequence;
+    @Bind(R.id.dialogTitle) TextView dialogTitle;
+    @Bind(R.id.affirmativeButton) Button affirmativeButton;
+    @Bind(R.id.negativeButton) Button negativeButton;
+    @Bind(R.id.closeButton) Button closeButton;
     private int dialogChooser;
     private String[] dialogOptions;
     private Resources res;
@@ -84,7 +85,12 @@ public class EventDialogFragment extends android.support.v4.app.DialogFragment i
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        //Create Shared Preferences
+        mSharedPreferences = PreferenceManager.getDefaultSharedPreferences(getActivity().getApplicationContext());
+        mEditor = mSharedPreferences.edit();
         inventoryWeapons = new ArrayList<>();
+        mPlayerId = mSharedPreferences.getString(Constants.PREFERENCES_GOOGLE_PLAYER_ID, null);
+
 
         final Firebase inventoryWeaponFirebase = new Firebase(Constants.FIREBASE_URL_USERS + "/" + mPlayerId + "/weapons");
         inventoryWeaponFirebase.addListenerForSingleValueEvent(new ValueEventListener() {
@@ -109,7 +115,7 @@ public class EventDialogFragment extends android.support.v4.app.DialogFragment i
                              Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_event_dialog, container, false);
         super.onViewCreated(view, savedInstanceState);
-        mPlayerId = mSharedPreferences.getString(Constants.PREFERENCES_GOOGLE_PLAYER_ID, null);
+        ButterKnife.bind(this, view);
         String characterJson = mSharedPreferences.getString(Constants.PREFERENCES_CHARACTER, null);
         Gson gson = new Gson();
         mCurrentCharacter = gson.fromJson(characterJson, Character.class);

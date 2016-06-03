@@ -425,6 +425,8 @@ public class NewCampaignActivity extends BaseGameActivity implements View.OnClic
     public void takeTurn() {
         turnData = mCurrentMatch.getData();
         mCurrentPlayerId = Games.Players.getCurrentPlayerId(mGoogleApiClient);
+        mEditor.putString(Constants.PREFERENCES_GOOGLE_PLAYER_ID, mCurrentPlayerId).commit();
+        mEditor.putInt(Constants.PREFERENCES_PREVIOUS_STEPS_KEY, 0).commit();
 
         //First turn
         if (turnData == null) {
