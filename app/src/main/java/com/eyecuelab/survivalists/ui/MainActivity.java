@@ -595,6 +595,10 @@ public class MainActivity extends FragmentActivity
                         currentItem.setPushId(pushId);
                         userItems.add(currentItem);
                         Log.v(TAG, userItems.size() + "");
+                        currentItem.setImageId(imageId);
+                        currentItem.setPushId(pushId);
+                        userItems.add(currentItem);
+                        Log.v(TAG, userItems.size() + "");
                     }
                 }
 
@@ -624,13 +628,14 @@ public class MainActivity extends FragmentActivity
             });
 
         }
-
         GridView inventoryGridView = (GridView) findViewById(R.id.backpackGridView);
         inventoryGridView.setAdapter(new InventoryAdapter(this, userItems, userWeapons, R.layout.inventory_row_grid));
         inventoryGridView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                Toast.makeText(MainActivity.this, "" + position, Toast.LENGTH_SHORT).show();
+                FragmentTransaction ft = getSupportFragmentManager().beginTransaction();
+                DialogFragment frag = InventoryDetailFragment.newInstance(userItems.get(position), mCurrentCharacter, mCurrentPlayerId);
+                frag.show(ft, "fragment_safehouse_dialog");
             }
         });
         //This stops the grid from being scrolled.

@@ -64,7 +64,7 @@ public class InventoryAdapter extends BaseAdapter {
         }
 
         try {
-            Item item = mItems.get(position);
+            final Item item = mItems.get(position);
             holder.txtTitle.setText(item.getName() + "");
             holder.imageItem.setImageResource(item.getImageId());
         } catch (IndexOutOfBoundsException outOfBounds) {

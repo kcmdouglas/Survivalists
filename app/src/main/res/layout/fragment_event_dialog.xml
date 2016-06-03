@@ -2,8 +2,9 @@
 <android.support.percent.PercentRelativeLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:background="@android:color/transparent"
     android:layout_width="match_parent"
-    android:layout_height="match_parent">
+    android:layout_height="wrap_content">
 
     <android.support.percent.PercentRelativeLayout
         app:layout_heightPercent="50%"
@@ -25,7 +26,6 @@
             app:layout_marginTopPercent="18%"
             app:layout_marginLeftPercent="42%"
             android:textAppearance="?android:attr/textAppearanceLarge"
-            android:text="On your trek..."
             android:rotation="-3"
             android:textColor="@android:color/black"/>
 
@@ -51,7 +51,6 @@
             android:layout_below="@+id/dialogTitle"
             android:rotation="-3"
             android:textAppearance="?android:attr/textAppearanceMedium"
-            android:text="text text text..."
             android:textColor="@android:color/black"/>
 
         <TextView
@@ -65,14 +64,13 @@
             android:layout_alignParentRight="true"
             android:layout_below="@+id/dialogDescription"
             android:rotation="-3"
-            android:text="text text text..."
             android:textColor="@android:color/black"/>
 
     </android.support.percent.PercentRelativeLayout>
 
     <android.support.percent.PercentRelativeLayout
-        app:layout_heightPercent="25%"
-        app:layout_widthPercent="100%"
+        android:layout_height="wrap_content"
+        android:layout_width="match_parent"
         android:layout_below="@+id/eventCardWrapper"
         android:layout_centerInParent="true"
         android:id="@+id/eventInteractionButtons">
@@ -82,21 +80,21 @@
             android:id="@+id/negativeButton"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_centerHorizontal="true"
-            android:background="@drawable/blank_notebook_interaction_btn"
-            android:text="GTFO"/>
+            android:background="@drawable/blank_notebook_interaction_btn"/>
 
         <Button
             android:id="@+id/affirmativeButton"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_below="@+id/negativeButton"
-            android:layout_centerHorizontal="true"
             app:layout_marginTopPercent="20%"
+            app:layout_marginLeftPercent="20%"
             android:background="@drawable/blank_notebook_interaction_btn"
-            android:text="Inspect"/>
-
+            android:layout_alignParentBottom="true"
+            android:layout_alignParentRight="true"
+            android:layout_alignParentEnd="true"
+            android:layout_alignBaseline="@+id/negativeButton"/>
 
     </android.support.percent.PercentRelativeLayout>
+
 
 </android.support.percent.PercentRelativeLayout>

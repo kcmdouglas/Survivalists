@@ -142,6 +142,7 @@ public class NewCampaignActivity extends BaseGameActivity implements View.OnClic
         initiateSeekBars();
 
         mGoogleApiClient = getApiClient();
+        mGoogleApiClient.connect();
 
         ArrayAdapter<String> infoAdapter = new ArrayAdapter<>(NewCampaignActivity.this, R.layout.info_list_item, getResources().getStringArray(R.array.difficultyDescriptions));
         infoListView.setAdapter(infoAdapter);
@@ -426,8 +427,6 @@ public class NewCampaignActivity extends BaseGameActivity implements View.OnClic
 
     public void takeTurn() {
         turnData = mCurrentMatch.getData();
-        mCurrentPlayerId = Games.Players.getCurrentPlayerId(mGoogleApiClient);
-        mEditor.putString(Constants.PREFERENCES_GOOGLE_PLAYER_ID, mCurrentPlayerId).commit();
         mEditor.putInt(Constants.PREFERENCES_PREVIOUS_STEPS_KEY, 0).commit();
 
 

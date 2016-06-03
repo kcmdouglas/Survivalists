@@ -82,7 +82,6 @@ public class TitleActivity extends BaseGameActivity implements GoogleApiClient.C
         //Create Shared Preferences
         mSharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
         mEditor = mSharedPreferences.edit();
-        mCurrentPlayerId = mSharedPreferences.getString(Constants.PREFERENCES_GOOGLE_PLAYER_ID, null);
 
         instantiateInventory();
 
@@ -175,6 +174,7 @@ public class TitleActivity extends BaseGameActivity implements GoogleApiClient.C
     public void onConnected(Bundle connectionHint) {
         Log.v(TAG, "Connected to Google Api Client.");
         mCurrentPlayerId = Games.Players.getCurrentPlayerId(mGoogleApiClient);
+        mEditor.putString(Constants.PREFERENCES_GOOGLE_PLAYER_ID, mCurrentPlayerId).apply();
 
         if (mCurrentMatchId == null) {
             String userName = Games.Players.getCurrentPlayer(mGoogleApiClient).getDisplayName();
