@@ -28,6 +28,7 @@ import com.eyecuelab.survivalists.R;
 
 import com.eyecuelab.survivalists.adapters.InventoryAdapter;
 import com.eyecuelab.survivalists.models.Character;
+import com.eyecuelab.survivalists.models.Event;
 import com.eyecuelab.survivalists.models.Item;
 import com.eyecuelab.survivalists.models.SafeHouse;
 import com.eyecuelab.survivalists.models.Weapon;
@@ -97,6 +98,7 @@ public class MainActivity extends FragmentActivity
     private boolean eventFourInitiated;
     private boolean eventFiveInitiated;
     private boolean reachedDailySafehouse;
+    private Event event;
     ArrayList<Weapon> allWeapons;
     ArrayList<Item> allItems;
     ArrayList<Weapon> userWeapons;
@@ -134,6 +136,7 @@ public class MainActivity extends FragmentActivity
         mCurrentMatchId = mSharedPreferences.getString(Constants.PREFERENCES_MATCH_ID, null);
         mCurrentPlayerId = mSharedPreferences.getString(Constants.PREFERENCES_GOOGLE_PLAYER_ID, null);
         mUserFirebaseRef = new Firebase (Constants.FIREBASE_URL_USERS + "/" + mCurrentPlayerId);
+        setupBackpackContent();
 
         //Set counter text based on current shared preferences--these are updated in the shared preferences onChange listener
         dailySteps = mSharedPreferences.getInt(Constants.PREFERENCES_DAILY_STEPS, 0);
@@ -174,11 +177,7 @@ public class MainActivity extends FragmentActivity
         }
 
         instantiateAllItems();
-
-        setupBackpackContent();
         loadCharacter();
-
-        mCurrentPlayerId = mSharedPreferences.getString(Constants.PREFERENCES_GOOGLE_PLAYER_ID, null);
     }
 
     @Override
@@ -312,20 +311,83 @@ public class MainActivity extends FragmentActivity
         mStackLevel++;
         if (type==1) {
             pickEventItems();
-            FragmentTransaction ft = getSupportFragmentManager().beginTransaction();
-            Fragment prev = getSupportFragmentManager().findFragmentByTag("event");
-            if(prev != null) {
-                ft.remove(prev);
-            }
-            Bundle bundle = new Bundle();
-            bundle.putParcelable("weapon", eventWeapon);
-            bundle.putParcelable("item", eventItem);
-            bundle.putParcelableArrayList("userWeapons", userWeapons);
 
-            ft.addToBackStack(null);
-            DialogFragment frag = EventDialogFragment.newInstance(mStackLevel, userWeapons);
-            frag.setArguments(bundle);
-            frag.show(ft, "fragment_event_dialog");
+            int eventNumber = (int) Math.floor(Math.random() * 10 + 1);
+
+            //0 is an attack event, 1 is an inspect event
+            final int attackOrInspect = (int) (Math.random() +0.5);
+            Firebase mFirebaseEventRef = new Firebase(Constants.FIREBASE_URL_EVENTS);
+
+            if(attackOrInspect == 0) {
+                mFirebaseEventRef.child("attack").child(Integer.toString(eventNumber)).addListenerForSingleValueEvent(
+                        new ValueEventListener() {
+                            @Override
+                            public void onDataChange(DataSnapshot dataSnapshot) {
+                               event = new Event(dataSnapshot.getValue(Event.class));
+
+                                FragmentTransaction ft = getSupportFragmentManager().beginTransaction();
+                                Fragment prev = getSupportFragmentManager().findFragmentByTag("event");
+                                if(prev != null) {
+                                    ft.remove(prev);
+                                }
+                                Bundle bundle = new Bundle();
+                                bundle.putParcelable("weapon", eventWeapon);
+                                bundle.putParcelable("item", eventItem);
+                                bundle.putParcelableArrayList("userWeapons", userWeapons);
+                                bundle.putParcelable("event", event);
+                                bundle.putInt("attackOrInspect", attackOrInspect);
+
+
+                                ft.addToBackStack(null);
+                                DialogFragment frag = EventDialogFragment.newInstance(mStackLevel, userWeapons);
+                                frag.setArguments(bundle);
+                                frag.show(ft, "fragment_event_dialog");
+                            }
+
+                            @Override
+                            public void onCancelled(FirebaseError firebaseError) {
+
+                            }
+                        });
+            } else {
+                mFirebaseEventRef.child("inspect").child(Integer.toString(eventNumber)).addListenerForSingleValueEvent(
+                        new ValueEventListener() {
+                            @Override
+                            public void onDataChange(DataSnapshot dataSnapshot) {
+                                event = new Event(dataSnapshot.getValue(Event.class));
+                                event.setGetItemOnFlee((boolean) dataSnapshot.child("getItemOnFlee").getValue());
+                                event.setGetItemOnInspect((boolean) dataSnapshot.child("getItemOnInspect").getValue());
+
+                                FragmentTransaction ft = getSupportFragmentManager().beginTransaction();
+                                Fragment prev = getSupportFragmentManager().findFragmentByTag("event");
+                                if(prev != null) {
+                                    ft.remove(prev);
+                                }
+                                Bundle bundle = new Bundle();
+                                bundle.putParcelable("weapon", eventWeapon);
+                                bundle.putParcelable("item", eventItem);
+                                bundle.putParcelableArrayList("userWeapons", userWeapons);
+                                bundle.putParcelable("event", event);
+                                bundle.putInt("attackOrInspect", attackOrInspect);
+
+
+                                ft.addToBackStack(null);
+                                DialogFragment frag = EventDialogFragment.newInstance(mStackLevel, userWeapons);
+                                frag.setArguments(bundle);
+                                frag.show(ft, "fragment_event_dialog");
+                            }
+
+                            @Override
+                            public void onCancelled(FirebaseError firebaseError) {
+
+                            }
+                        }
+                );
+            }
+
+
+
+
         } else if (type==2) {
             FragmentTransaction ft = getSupportFragmentManager().beginTransaction();
             Fragment prev = getSupportFragmentManager().findFragmentByTag("safehouse");

@@ -20,6 +20,7 @@ import android.widget.TextView;
 import com.eyecuelab.survivalists.Constants;
 import com.eyecuelab.survivalists.R;
 import com.eyecuelab.survivalists.models.Character;
+import com.eyecuelab.survivalists.models.Event;
 import com.eyecuelab.survivalists.models.Item;
 import com.eyecuelab.survivalists.models.Weapon;
 import com.firebase.client.DataSnapshot;
@@ -70,6 +71,7 @@ public class EventDialogFragment extends android.support.v4.app.DialogFragment i
     private SharedPreferences.Editor mEditor;
     private Character mCurrentCharacter;
     private ArrayList<Weapon> inventoryWeapons;
+    private Event event;
 
 
     //Empty constructor required for DialogFragments
@@ -100,56 +102,17 @@ public class EventDialogFragment extends android.support.v4.app.DialogFragment i
         weapon = bundle.getParcelable("weapon");
         item = bundle.getParcelable("item");
         inventoryWeapons = bundle.getParcelableArrayList("userWeapons");
-        int eventNumber = (int) Math.floor(Math.random() * 10 + 1);
-
-        //0 is an attack event, 1 is an inspect event
-        attackOrInspect = (int) (Math.random() +0.5);
-
-        if(attackOrInspect == 0) {
-            mFirebaseEventRef = new Firebase(Constants.FIREBASE_URL_EVENTS + "/attack/");
-            mFirebaseEventRef.child(Integer.toString(eventNumber)).addListenerForSingleValueEvent(
-                    new ValueEventListener() {
-                        @Override
-                        public void onDataChange(DataSnapshot dataSnapshot) {
-                            description = dataSnapshot.child("description").getValue().toString();
-                            outcomeA = dataSnapshot.child("outcome_a").getValue().toString();
-                            outcomeB = dataSnapshot.child("outcome_b").getValue().toString();
-                            title = dataSnapshot.child("title").getValue().toString();
-                            long penaltyHPLong = (long) dataSnapshot.child("penalty_hp").getValue();
-                            penaltyHP = (int) penaltyHPLong;
-                            long stepsRequiredLong = (long)dataSnapshot.child("steps_required").getValue();
-                            stepsRequired = (int) stepsRequiredLong;
-                        }
-
-                        @Override
-                        public void onCancelled(FirebaseError firebaseError) {
-
-                        }
-                    });
-        } else {
-            mFirebaseEventRef = new Firebase(Constants.FIREBASE_URL_EVENTS + "/inspect/");
-            mFirebaseEventRef.child(Integer.toString(eventNumber)).addListenerForSingleValueEvent(
-                    new ValueEventListener() {
-                        @Override
-                        public void onDataChange(DataSnapshot dataSnapshot) {
-                            description = dataSnapshot.child("description").getValue().toString();
-                            outcomeA = dataSnapshot.child("description").getValue().toString();
-                            outcomeB = dataSnapshot.child("description").getValue().toString();
-                            title = dataSnapshot.child("description").getValue().toString();
-                            long penaltyHPLong = (long) dataSnapshot.child("penalty_hp").getValue();
-                            penaltyHP = (int) penaltyHPLong;
-                            long stepsRequiredLong = (long)dataSnapshot.child("steps_required").getValue();
-                            stepsRequired = (int) stepsRequiredLong;
-                            getItemOnFlee = (boolean) dataSnapshot.child("get_item_on_flee").getValue();
-                            getItemOnInspect = (boolean) dataSnapshot.child("get_item_on_flee").getValue();
-                        }
-
-                        @Override
-                        public void onCancelled(FirebaseError firebaseError) {
-
-                        }
-                    }
-            );
+        event = bundle.getParcelable("event");
+        attackOrInspect = bundle.getInt("attackOrInspect");
+        description = event.getDescription();
+        title = event.getTitle();
+        outcomeA = event.getOutcomeA();
+        outcomeB = event.getOutcomeB();
+        penaltyHP = event.getPenaltyHP();
+        stepsRequired = event.getStepsRequired();
+        if (attackOrInspect == 1) {
+            getItemOnFlee = event.isGetItemOnFlee();
+            getItemOnInspect = event.isGetItemOnInspect();
         }
 
 
