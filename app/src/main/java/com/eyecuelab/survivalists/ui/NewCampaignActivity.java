@@ -426,8 +426,7 @@ public class NewCampaignActivity extends BaseGameActivity implements View.OnClic
                 String nextPlayer = mCurrentMatch.getParticipantIds().get(i);
                 Games.TurnBasedMultiplayer.takeTurn(mGoogleApiClient, mCurrentMatchId, turnData, nextPlayer);
             }
-            assignRandomCharacters();
-          //  assignStarterInventory();
+            instantiateUserInformation();
 
         }
         turnData = new byte[1];
@@ -525,7 +524,7 @@ public class NewCampaignActivity extends BaseGameActivity implements View.OnClic
         });
     }
 
-    private void assignRandomCharacters() {
+    private void instantiateUserInformation() {
         final Firebase characterSkeletonRef = new Firebase(Constants.FIREBASE_URL+ "/");
         final ArrayList<Character> selectionList = new ArrayList<>();
 
@@ -576,6 +575,13 @@ public class NewCampaignActivity extends BaseGameActivity implements View.OnClic
 
             }
         });
+
+        //Set the first day Daily Goal to the team default difficulty level
+        for (int i = 0; i < invitedPlayers.size(); i++) {
+            Firebase userRef = new Firebase(Constants.FIREBASE_URL_USERS + "/" + invitedPlayers.get(i));
+            userRef.child("dailyGoal").setValue(mDifficultyLevel);
+        }
+
     }
 
     private void removeOldInventory() {
@@ -628,51 +634,6 @@ public class NewCampaignActivity extends BaseGameActivity implements View.OnClic
                 }
             });
         }
-    }
-
-    private void assignStarterInventory() {
-        for (int i = 0; i < invitedPlayers.size(); i++) {
-
-            try {
-                String playerBeingAssignId = invitedPlayers.get(i);
-
-                Collections.shuffle(allWeapons);
-                Collections.shuffle(allMedicine);
-                Collections.shuffle(allFood);
-                ArrayList<Item> itemsToPush = new ArrayList<>();
-                Weapon freebieWeapon = allWeapons.get(0);
-                Item freebieFoodOne = allFood.get(0);
-                itemsToPush.add(freebieFoodOne);
-                Item freebieFoodTwo = allFood.get(1);
-                itemsToPush.add(freebieFoodTwo);
-                Item freebieMedicineOne = allMedicine.get(0);
-                itemsToPush.add(freebieMedicineOne);
-                Item freebieMedicineTwo = allMedicine.get(1);
-                itemsToPush.add(freebieMedicineTwo);
-
-
-                for(int j = 0; j < itemsToPush.size(); j++) {
-                    Item item = itemsToPush.get(j);
-                    Firebase itemRef = new Firebase (Constants.FIREBASE_URL_USERS + "/" + playerBeingAssignId + "/items");
-                    Firebase newItemRef = itemRef.push();
-                    String itemPushId = newItemRef.getKey();
-                    item.setPushId(itemPushId);
-                    newItemRef.setValue(item);
-                }
-
-
-                Firebase weaponRef = new Firebase (Constants.FIREBASE_URL_USERS + "/" + playerBeingAssignId + "/weapons");
-                Firebase newWeaponRef = weaponRef.push();
-                String weaponPushId = newWeaponRef.getKey();
-
-                freebieWeapon.setPushId(weaponPushId);
-                newWeaponRef.setValue(freebieWeapon);
-
-            } catch (IndexOutOfBoundsException indexOutOfBounds) {
-                indexOutOfBounds.getStackTrace();
-            }
-        }
-
     }
 
     public void saveCampaignSettings() {
