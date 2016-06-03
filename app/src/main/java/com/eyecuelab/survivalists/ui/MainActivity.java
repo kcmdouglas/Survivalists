@@ -19,6 +19,7 @@ import android.view.MotionEvent;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.Button;
+import android.widget.EditText;
 import android.widget.GridView;
 import android.widget.Toast;
 
@@ -44,6 +45,8 @@ import org.parceler.Parcels;
 
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.HashMap;
+import java.util.Map;
 
 import butterknife.Bind;
 import butterknife.ButterKnife;
@@ -56,7 +59,7 @@ public class MainActivity extends FragmentActivity
     @Bind(R.id.tabCampaignButton) Button campaignButton;
     @Bind(R.id.mapTabButton) Button mapButton;
     @Bind(R.id.rightInteractionBUtton) Button rightInteractionButton;
-    @Bind(R.id.leftInteractionButton) Button leftInteractionButton;
+    @Bind(R.id.stepEditText) EditText stepEditText;
 
     private int dailySteps;
     private String mCurrentMatchId;
@@ -116,7 +119,6 @@ public class MainActivity extends FragmentActivity
 
         campaignButton.setOnClickListener(this);
         mapButton.setOnClickListener(this);
-        leftInteractionButton.setOnClickListener(this);
         rightInteractionButton.setOnClickListener(this);
 
         mCurrentMatchId = mSharedPreferences.getString(Constants.PREFERENCES_MATCH_ID, null);
@@ -163,6 +165,8 @@ public class MainActivity extends FragmentActivity
 
         setupBackpackContent();
         loadCharacter();
+
+        mCurrentPlayerId = mSharedPreferences.getString(Constants.PREFERENCES_GOOGLE_PLAYER_ID, null);
     }
 
     @Override
@@ -232,7 +236,17 @@ public class MainActivity extends FragmentActivity
                 Toast.makeText(this, "Inflate map here", Toast.LENGTH_SHORT).show();
                 break;
             case R.id.rightInteractionBUtton:
-                Toast.makeText(this, "Are you encouraged?", Toast.LENGTH_SHORT).show();
+                String inputtedSteps = stepEditText.getText().toString();
+                int steps = Integer.parseInt(inputtedSteps);
+                dailySteps = steps;
+                mEditor.putInt(Constants.PREFERENCES_DAILY_STEPS, dailySteps).commit();
+
+                if((mCurrentPlayerId != null) && (steps % 10 < 1)) {
+                    Log.v(TAG, "Should be saving!");
+                    Firebase firebaseStepsRef = new Firebase(Constants.FIREBASE_URL_USERS + "/" + mCurrentPlayerId + "/");
+                    firebaseStepsRef.child("dailySteps").setValue(steps);
+                }
+
                 break;
             case R.id.leftInteractionButton:
                 Toast.makeText(this, "Item given!", Toast.LENGTH_SHORT).show();
@@ -313,6 +327,12 @@ public class MainActivity extends FragmentActivity
 
     @Override
     public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String key) {
+        if(key.equals(Constants.PREFERENCES_DAILY_STEPS)) {
+            if (dailyGoal < dailySteps && !reachedDailySafehouse) {
+                saveSafehouse();
+            }
+            initializeEventDialogFragments();
+        }
         if(key.equals(Constants.PREFERENCES_STEPS_IN_SENSOR_KEY) && (mCurrentMatchId != null)) {
             dailySteps = mSharedPreferences.getInt(Constants.PREFERENCES_DAILY_STEPS, 0);
             dailyGoal = mSharedPreferences.getInt(Constants.PREFERENCES_DAILY_GOAL, 5000);
@@ -435,7 +455,7 @@ public class MainActivity extends FragmentActivity
         calendar.set(Calendar.MILLISECOND, 0);
         PendingIntent pi = PendingIntent.getBroadcast(this, StepResetAlarmReceiver.REQUEST_CODE, intent, PendingIntent.FLAG_UPDATE_CURRENT);
         AlarmManager am = (AlarmManager) getApplicationContext().getSystemService(Context.ALARM_SERVICE);
-        am.setRepeating(AlarmManager.RTC_WAKEUP, calendar.getTimeInMillis(), AlarmManager.INTERVAL_DAY, pi);
+        am.setRepeating(AlarmManager.RTC_WAKEUP, calendar.getTimeInMillis(), AlarmManager.INTERVAL_HALF_HOUR, pi);
     }
 
     public void instantiatePlayerIDs() {

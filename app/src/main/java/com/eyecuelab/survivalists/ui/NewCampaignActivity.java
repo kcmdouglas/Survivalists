@@ -744,6 +744,7 @@ public class NewCampaignActivity extends BaseGameActivity implements View.OnClic
                 boolean uiIsntYetUpdated = true;
 
                 if (gameStatus == gameStarted) {
+                    Log.e("NEW CAMPAIGN", turnBasedMatch.getParticipant(turnBasedMatch.getLastUpdaterId()).getDisplayName() + "");
                     Toast.makeText(NewCampaignActivity.this, turnBasedMatch.getParticipant(turnBasedMatch.getLastUpdaterId()).getDisplayName() + " accepted invite", Toast.LENGTH_LONG).show();
                     tallyOfPlayersJoined.add(turnBasedMatch.getLastUpdaterId());
 
