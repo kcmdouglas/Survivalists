@@ -10,9 +10,11 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.AdapterView;
 import android.widget.BaseAdapter;
 import android.widget.ImageView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.eyecuelab.survivalists.R;
 import com.eyecuelab.survivalists.models.Item;
@@ -27,7 +29,7 @@ import java.util.ArrayList;
 /**
  * Created by eyecue on 5/31/16.
  */
-public class PlayerAdapter extends BaseAdapter {
+public class PlayerAdapter extends BaseAdapter implements AdapterView.OnItemClickListener {
     private static final String TAG = "PlayerAdapter";
 
     private Context mContext;
@@ -81,6 +83,11 @@ public class PlayerAdapter extends BaseAdapter {
         }
 
         return convertView;
+    }
+
+    @Override
+    public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+        Log.v(TAG, position + "");
     }
 
     static class RecordHolder {

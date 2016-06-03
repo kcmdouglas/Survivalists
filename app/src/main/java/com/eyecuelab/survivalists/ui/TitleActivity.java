@@ -8,7 +8,6 @@ import android.support.annotation.NonNull;
 import android.support.v4.app.DialogFragment;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentTransaction;
-import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
@@ -30,9 +29,7 @@ import com.google.android.gms.games.Games;
 import com.google.android.gms.games.multiplayer.turnbased.TurnBasedMatch;
 import com.google.android.gms.games.multiplayer.turnbased.TurnBasedMultiplayer;
 import com.google.example.games.basegameutils.BaseGameActivity;
-import com.google.gson.Gson;
 
-import java.lang.reflect.Array;
 import java.util.ArrayList;
 
 import butterknife.Bind;
@@ -61,7 +58,6 @@ public class TitleActivity extends BaseGameActivity implements GoogleApiClient.C
     @Bind(R.id.startCampaignButton) Button startCampaignButton;
     @Bind(R.id.loginButton) Button loginButton;
     @Bind(R.id.joinCampaignButton) Button joinCampaignButton;
-    @Bind(R.id.merchantTest) Button merchantTest;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -97,7 +93,7 @@ public class TitleActivity extends BaseGameActivity implements GoogleApiClient.C
         startCampaignButton.setOnClickListener(this);
         loginButton.setOnClickListener(this);
         joinCampaignButton.setOnClickListener(this);
-        merchantTest.setOnClickListener(this);
+//        merchantTest.setOnClickListener(this);
     }
 
     @Override
@@ -124,14 +120,14 @@ public class TitleActivity extends BaseGameActivity implements GoogleApiClient.C
                 startActivity(currentCampaignIntent);
                 break;
             case R.id.startCampaignButton:
-                campaignEditorIntent.putExtra("statusTag", 1);
+                campaignEditorIntent.putExtra("statusTag", Constants.START_CAMPAIGN_INTENT);
                 startActivity(campaignEditorIntent);
                 break;
             case R.id.loginButton:
                 googleButtonHandler();
                 break;
             case R.id.joinCampaignButton:
-                campaignEditorIntent.putExtra("statusTag", 2);
+                campaignEditorIntent.putExtra("statusTag", Constants.JOIN_CAMPAIGN_INTENT);
                 startActivity(campaignEditorIntent);
                 break;
             case R.id.merchantTest:
@@ -186,8 +182,6 @@ public class TitleActivity extends BaseGameActivity implements GoogleApiClient.C
 
             //Save to shared preferences
             mEditor.putString(Constants.PREFERENCES_GOOGLE_PLAYER_ID, mCurrentPlayerId);
-            mEditor.putString("userId", mCurrentPlayerId);
-            mEditor.putString("userName", userName);
             mEditor.commit();
 
             //Save user info to firebase
@@ -239,7 +233,7 @@ public class TitleActivity extends BaseGameActivity implements GoogleApiClient.C
         }
     }
 
-    //Required overrides to extend BaseGameActivity and make GoogleApiClient available throughout
+    //Required to extend BaseGameActivity and make GoogleApiClient available throughout
     @Override
     public void onSignInFailed() {}
     @Override
