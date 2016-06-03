@@ -145,8 +145,10 @@ public class EventDialogFragment extends android.support.v4.app.DialogFragment i
                             outcomeA = dataSnapshot.child("description").getValue().toString();
                             outcomeB = dataSnapshot.child("description").getValue().toString();
                             title = dataSnapshot.child("description").getValue().toString();
-                            penaltyHP = (int) dataSnapshot.child("penalty_hp").getValue();
-                            stepsRequired = (int) dataSnapshot.child("steps_required").getValue();
+                            long penaltyHPLong = (long) dataSnapshot.child("penalty_hp").getValue();
+                            penaltyHP = (int) penaltyHPLong;
+                            long stepsRequiredLong = (long)dataSnapshot.child("steps_required").getValue();
+                            stepsRequired = (int) stepsRequiredLong;
                         }
 
                         @Override
@@ -169,8 +171,10 @@ public class EventDialogFragment extends android.support.v4.app.DialogFragment i
                             outcomeA = dataSnapshot.child("description").getValue().toString();
                             outcomeB = dataSnapshot.child("description").getValue().toString();
                             title = dataSnapshot.child("description").getValue().toString();
-                            penaltyHP = (int) dataSnapshot.child("penalty_hp").getValue();
-                            stepsRequired = (int) dataSnapshot.child("steps_required").getValue();
+                            long penaltyHPLong = (long) dataSnapshot.child("penalty_hp").getValue();
+                            penaltyHP = (int) penaltyHPLong;
+                            long stepsRequiredLong = (long)dataSnapshot.child("steps_required").getValue();
+                            stepsRequired = (int) stepsRequiredLong;
                             getItemOnFlee = (boolean) dataSnapshot.child("get_item_on_flee").getValue();
                             getItemOnInspect = (boolean) dataSnapshot.child("get_item_on_flee").getValue();
                         }
@@ -218,12 +222,14 @@ public class EventDialogFragment extends android.support.v4.app.DialogFragment i
                             if (weapon != null) {
                                 String weaponName = dataSnapshot.child("name").getValue().toString();
                                 String weaponDescription = dataSnapshot.child("description").getValue().toString();
-                                int hitPoints = (int) dataSnapshot.child("hit_points").getValue();
+                                long hitPointsLong = (long) dataSnapshot.child("hitPoints").getValue();
+                                int hitPoints = (int) hitPointsLong;
                                 weapon = new Weapon(weaponName, weaponDescription, hitPoints);
                             } else {
                                 String itemName = dataSnapshot.child("name").getValue().toString();
                                 String itemDescription = dataSnapshot.child("description").getValue().toString();
-                                int healthPoints = (int) dataSnapshot.child("health_points").getValue();
+                                long healthPointsLong = (long) dataSnapshot.child("healthPoints").getValue();
+                                int healthPoints = (int) healthPointsLong;
                                 int itemId = (int) dataSnapshot.getValue();
                                 item = new Item(itemName, itemDescription, healthPoints, effectsHealth);
                             }
