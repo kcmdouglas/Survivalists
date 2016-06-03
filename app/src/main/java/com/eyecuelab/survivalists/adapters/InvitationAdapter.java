@@ -21,10 +21,11 @@ import android.widget.ToggleButton;
 import com.eyecuelab.survivalists.Constants;
 import com.eyecuelab.survivalists.R;
 import com.eyecuelab.survivalists.ui.NewCampaignActivity;
-import com.eyecuelab.survivalists.util.MatchLoadedListener;
 import com.firebase.client.Firebase;
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.common.api.ResultCallback;
+import com.google.android.gms.common.api.ResultCallbacks;
+import com.google.android.gms.common.api.Status;
 import com.google.android.gms.common.images.ImageManager;
 import com.google.android.gms.games.Games;
 import com.google.android.gms.games.multiplayer.Invitation;
@@ -110,22 +111,16 @@ public class InvitationAdapter extends BaseAdapter implements AdapterView.OnItem
                             mEditor.putInt(Constants.PREFERENCES_NEXT_SAFEHOUSE_ID, 1);
                             mEditor.apply();
 
-
-                            byte[] turnData = new byte[1];
-
-                            ArrayList<Participant> allPlayers = match.getParticipants();
-                            int nextPlayerNumber = Integer.parseInt(match.getLastUpdaterId().substring(2));
-                            try {
-                                //Should pass invitation to the next player
-                                String nextPlayerId = allPlayers.get(nextPlayerNumber).getParticipantId();
-                                Games.TurnBasedMultiplayer.takeTurn(mGoogleApiClient, mCurrentMatchId, turnData, nextPlayerId);
-
-                                //Grab the next player in case the previous above didn't work
-                                nextPlayerId = allPlayers.get(nextPlayerNumber + 1).getParticipantId();
-                                Games.TurnBasedMultiplayer.takeTurn(mGoogleApiClient, mCurrentMatchId, turnData, nextPlayerId);
-                            } catch (IndexOutOfBoundsException indexOutOfBonds) {
-                                Games.TurnBasedMultiplayer.takeTurn(mGoogleApiClient, mCurrentMatchId, turnData, match.getPendingParticipantId());
-                            }
+                            Games.TurnBasedMultiplayer.takeTurn(mGoogleApiClient, mCurrentMatchId, match.getData(), match.getPendingParticipantId()).setResultCallback(new ResultCallbacks<TurnBasedMultiplayer.UpdateMatchResult>() {
+                                @Override
+                                public void onSuccess(@NonNull TurnBasedMultiplayer.UpdateMatchResult updateMatchResult) {
+                                    Games.TurnBasedMultiplayer.takeTurn(mGoogleApiClient, updateMatchResult.getMatch().getMatchId(), updateMatchResult.getMatch().getData(), updateMatchResult.getMatch().getCreatorId());
+                                }
+                                @Override
+                                public void onFailure(@NonNull Status status) {
+                                    Log.e(TAG, status.getStatusMessage() + "");
+                                }
+                            });
 
                             //Update firebase to show player joined
                             Firebase mUserFirebaseRef = new Firebase(Constants.FIREBASE_URL_USERS + "/" + mCurrentPlayerId + "/");
@@ -157,8 +152,8 @@ public class InvitationAdapter extends BaseAdapter implements AdapterView.OnItem
 
     public void notifyUi() {
         boolean matchMakingComplete = true;
-        Intent broadcastIntent = new Intent(NewCampaignActivity.RECEIVE_UPDATE);
-        broadcastIntent.putExtra(Constants.INVITATION_INTENT_EXTRA, matchMakingComplete);
+        Intent broadcastIntent = new Intent(NewCampaignActivity.RECEIVE_UPDATE_FROM_INVITATION);
+        broadcastIntent.putExtra(Constants.INVITATION_UPDATE_INTENT_EXTRA, matchMakingComplete);
         LocalBroadcastManager.getInstance(mContext).sendBroadcast(broadcastIntent);
     }
 

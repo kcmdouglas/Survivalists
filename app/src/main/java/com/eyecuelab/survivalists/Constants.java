@@ -46,5 +46,7 @@ public class Constants {
     public static final String PREFERENCES_TEAM_SIZE_SETTING = "teamSize";
     public static final int START_CAMPAIGN_INTENT = 22222;
     public static final int JOIN_CAMPAIGN_INTENT = 33333;
-    public static final String INVITATION_INTENT_EXTRA = "extraExtra";
+    public static final String INVITATION_UPDATE_INTENT_EXTRA = "invitationUpdated";
+    public static final String MATCH_UPDATE_INTENT_EXTRA = "matchUpdated";
+    public static final String MATCH_UPDATE_INTENT_EXTRA_PLAYER = "playerWhoUpdated";
 }

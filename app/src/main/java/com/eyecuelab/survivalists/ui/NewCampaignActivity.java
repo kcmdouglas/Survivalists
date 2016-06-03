@@ -1,5 +1,6 @@
 package com.eyecuelab.survivalists.ui;
 
+import android.app.Activity;
 import android.app.AlarmManager;
 import android.app.PendingIntent;
 import android.content.BroadcastReceiver;
@@ -15,7 +16,6 @@ import android.os.Bundle;
 import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
 import android.view.View;
-import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.ListView;
@@ -39,14 +39,13 @@ import com.firebase.client.Firebase;
 import com.firebase.client.FirebaseError;
 import com.firebase.client.ValueEventListener;
 import com.google.android.gms.common.api.GoogleApiClient;
-import com.google.android.gms.common.api.ResolvingResultCallbacks;
 import com.google.android.gms.common.api.ResultCallback;
-import com.google.android.gms.common.api.Status;
 import com.google.android.gms.games.Games;
 import com.google.android.gms.games.multiplayer.Invitation;
 import com.google.android.gms.games.multiplayer.InvitationBuffer;
 import com.google.android.gms.games.multiplayer.Invitations;
 import com.google.android.gms.games.multiplayer.Participant;
+import com.google.android.gms.games.multiplayer.turnbased.OnTurnBasedMatchUpdateReceivedListener;
 import com.google.android.gms.games.multiplayer.turnbased.TurnBasedMatch;
 import com.google.android.gms.games.multiplayer.turnbased.TurnBasedMatchConfig;
 import com.google.android.gms.games.multiplayer.turnbased.TurnBasedMultiplayer;
@@ -56,7 +55,6 @@ import com.google.gson.Gson;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Collections;
-import java.util.HashMap;
 
 import butterknife.Bind;
 import butterknife.ButterKnife;
@@ -76,6 +74,7 @@ public class NewCampaignActivity extends BaseGameActivity implements View.OnClic
     Integer[] campaignDuration = {15, 30, 45};
     Integer[] defaultDailyGoal = {5000, 7000, 10000};
 
+    private Context mContext;
     private ListView mInvitePlayersListView;
     private SharedPreferences mSharedPreferences;
     private SharedPreferences.Editor mEditor;
@@ -86,7 +85,8 @@ public class NewCampaignActivity extends BaseGameActivity implements View.OnClic
     private TurnBasedMatch mCurrentMatch;
     private byte[] turnData;
     final int WAITING_ROOM_TAG = 1;
-    public static final String RECEIVE_UPDATE = "com.eyecuelab.survivalists.ui.RECEIVE_UPDATE";
+    public static final String RECEIVE_UPDATE_FROM_INVITATION = "com.eyecuelab.survivalists.ui.RECEIVE_UPDATE_FROM_INVITATION";
+    public static final String RECEIVE_UPDATE_FROM_MATCH = "com.eyecuelab.survivalists.ui.RECEIVE_UPDATE_FROM_MATCH";
     private ArrayList<Weapon> allWeapons;
     private ArrayList<Item> allFood;
     private ArrayList<Item> allMedicine;
@@ -122,6 +122,7 @@ public class NewCampaignActivity extends BaseGameActivity implements View.OnClic
         setContentView(R.layout.activity_new_campaign);
 
         ButterKnife.bind(this);
+        mContext = this;
 
         //Create Shared Preferences
         mSharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
@@ -201,7 +202,7 @@ public class NewCampaignActivity extends BaseGameActivity implements View.OnClic
 
         LocalBroadcastManager broadcastManager = LocalBroadcastManager.getInstance(this);
         IntentFilter intentFilter = new IntentFilter();
-        intentFilter.addAction(RECEIVE_UPDATE);
+        intentFilter.addAction(RECEIVE_UPDATE_FROM_INVITATION);
         broadcastManager.registerReceiver(broadcastReceiver, intentFilter);
     }
 
@@ -327,7 +328,7 @@ public class NewCampaignActivity extends BaseGameActivity implements View.OnClic
         setFullScreen();
 
         //Back from inviting players
-        if (requestCode == WAITING_ROOM_TAG) {
+        if (requestCode == WAITING_ROOM_TAG && resultCode == Activity.RESULT_OK) {
             invitedPlayers = data.getStringArrayListExtra(Games.EXTRA_PLAYER_IDS);
             TurnBasedMatchConfig turnBasedMatchConfig = TurnBasedMatchConfig.builder()
                     .addInvitedPlayers(invitedPlayers)
@@ -487,8 +488,7 @@ public class NewCampaignActivity extends BaseGameActivity implements View.OnClic
             Games.TurnBasedMultiplayer.takeTurn(mGoogleApiClient, mCurrentMatchId, turnData, mCurrentMatch.getPendingParticipantId());
         }
 
-        Games.TurnBasedMultiplayer.registerMatchUpdateListener(mGoogleApiClient, new MatchUpdateListener());
-
+        registerMatchUpdateListener();
     }
 
     public void createCampaign(int campaignLength) {
@@ -637,13 +637,56 @@ public class NewCampaignActivity extends BaseGameActivity implements View.OnClic
     private BroadcastReceiver broadcastReceiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
-            if(intent.getAction().equals(RECEIVE_UPDATE)) {
-                boolean matchMakingDone = intent.getBooleanExtra(Constants.INVITATION_INTENT_EXTRA, false);
+            Log.v("NewCampaign", intent.getAction().toString());
+            if(intent.getAction().equals(RECEIVE_UPDATE_FROM_INVITATION)) {
+                boolean matchMakingDone = intent.getBooleanExtra(Constants.INVITATION_UPDATE_INTENT_EXTRA, false);
                 if (matchMakingDone) {
                     Intent updateIntent = new Intent(NewCampaignActivity.this, MainActivity.class);
                     startActivity(updateIntent);
                 }
+
+//            } else if (intent.getAction().equals(RECEIVE_UPDATE_FROM_MATCH)) {
+//                boolean playerAcceptedInvite = intent.getBooleanExtra(Constants.MATCH_UPDATE_INTENT_EXTRA, false);
+//                if (playerAcceptedInvite) {
+//                    String playerWhoUpdated = intent.getStringExtra(Constants.MATCH_UPDATE_INTENT_EXTRA_PLAYER);
+//
+//                }
             }
         }
     };
+
+    public void registerMatchUpdateListener() {
+        Games.TurnBasedMultiplayer.registerMatchUpdateListener(mGoogleApiClient, new OnTurnBasedMatchUpdateReceivedListener() {
+            @Override
+            public void onTurnBasedMatchReceived(TurnBasedMatch turnBasedMatch) {
+                int gameStatus = turnBasedMatch.getStatus();
+                int gameStarted = TurnBasedMatch.MATCH_STATUS_ACTIVE;
+                ArrayList<String> totalParty = turnBasedMatch.getParticipantIds();
+                ArrayList<String> tallyOfPlayersJoined = new ArrayList<>();
+                tallyOfPlayersJoined.add(turnBasedMatch.getCreatorId());
+                boolean uiIsntYetUpdated = true;
+
+                if (gameStatus == gameStarted) {
+                    Toast.makeText(NewCampaignActivity.this, turnBasedMatch.getParticipant(turnBasedMatch.getLastUpdaterId()).getDisplayName() + " accepted invite", Toast.LENGTH_LONG).show();
+                    tallyOfPlayersJoined.add(turnBasedMatch.getLastUpdaterId());
+
+                    if (tallyOfPlayersJoined.size() == totalParty.size() && uiIsntYetUpdated) {
+                        Toast.makeText(NewCampaignActivity.this, "Game has started", Toast.LENGTH_LONG).show();
+                        Intent moveToMain = new Intent(NewCampaignActivity.this, MainActivity.class);
+                        startActivity(moveToMain);
+                        uiIsntYetUpdated = false;
+                        Log.v("TAG", tallyOfPlayersJoined.size() + "");
+                    }
+                }
+            }
+            @Override
+            public void onTurnBasedMatchRemoved(String s) {
+
+            }
+        });
+    }
+
+    public Context getContext() {
+        return mContext;
+    }
 }
