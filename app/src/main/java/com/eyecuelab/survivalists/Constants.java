@@ -39,11 +39,12 @@ public class Constants {
     public static final String PREFERENCES_USER = "user";
     public static final String PREFERENCES_CHARACTER = "character";
     public static final String PREFERENCES_TEAM_IDs = "teamIDs";
-    public static final String PREFERENCES_REACHED_SAFEHOUSE = "reachedSafehouse";
+    public static final String PREFERENCES_REACHED_SAFEHOUSE_BOOLEAN = "reachedSafehouseBoolean";
     public static final String PREFERENCES_DAILY_GOAL = "dailyGoal";
     public static final String PREFERENCES_DURATION_SETTING = "duration";
     public static final String PREFERENCES_DEFAULT_DAILY_GOAL_SETTING = "difficulty";
     public static final String PREFERENCES_TEAM_SIZE_SETTING = "teamSize";
+    public static final String PREFERENCES_CURRENT_SAFEHOUSE = "currentSafehouseId";
     public static final int START_CAMPAIGN_INTENT = 22222;
     public static final int JOIN_CAMPAIGN_INTENT = 33333;
     public static final String INVITATION_UPDATE_INTENT_EXTRA = "invitationUpdated";

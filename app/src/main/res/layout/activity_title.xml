@@ -66,5 +66,14 @@
             android:textSize="22sp"
             android:fontFamily="sans-serif-condensed"/>
 
+        <Button
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Merchant Test"
+            android:id="@+id/merchantTest"
+            android:layout_above="@+id/startCampaignButton"
+            android:layout_centerHorizontal="true"
+            android:layout_marginBottom="139dp" />
+
     </RelativeLayout>
 </RelativeLayout>

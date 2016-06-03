@@ -35,7 +35,7 @@ public class StepResetIntentService extends IntentService implements SharedPrefe
 
         String playerId = mSharedPreferences.getString(Constants.PREFERENCES_GOOGLE_PLAYER_ID, null);
 
-        mEditor.putBoolean(Constants.PREFERENCES_REACHED_SAFEHOUSE, false).apply();
+        mEditor.putBoolean(Constants.PREFERENCES_REACHED_SAFEHOUSE_BOOLEAN, false).apply();
 
         defaultDailyGoal = mSharedPreferences.getInt(Constants.PREFERENCES_DEFAULT_DAILY_GOAL_SETTING, 5000);
 

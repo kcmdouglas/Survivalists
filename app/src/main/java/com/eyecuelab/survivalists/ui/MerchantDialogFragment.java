@@ -1,6 +1,11 @@
 package com.eyecuelab.survivalists.ui;
 
+import android.content.Context;
 import android.content.SharedPreferences;
+import android.hardware.Sensor;
+import android.hardware.SensorEvent;
+import android.hardware.SensorEventListener;
+import android.hardware.SensorManager;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.text.TextUtils;
@@ -17,6 +22,7 @@ import com.eyecuelab.survivalists.R;
 import com.eyecuelab.survivalists.models.Item;
 import com.eyecuelab.survivalists.models.SafeHouse;
 import com.eyecuelab.survivalists.models.Weapon;
+import com.eyecuelab.survivalists.util.ShakeDetector;
 import com.firebase.client.DataSnapshot;
 import com.firebase.client.Firebase;
 import com.firebase.client.FirebaseError;
@@ -35,8 +41,11 @@ import butterknife.ButterKnife;
 /**
  * Created by eyecuelab on 5/31/16.
  */
-public class MerchantDialogFragment extends android.support.v4.app.DialogFragment implements View.OnClickListener{
+public class MerchantDialogFragment extends android.support.v4.app.DialogFragment implements View.OnClickListener, SensorEventListener{
 
+    private SensorManager mSensorManager;
+    private Sensor mAccelerometer;
+    private ShakeDetector mShakeDetector;
     SharedPreferences mSharedPreferences;
     SharedPreferences.Editor mEditor;
 
@@ -64,6 +73,7 @@ public class MerchantDialogFragment extends android.support.v4.app.DialogFragmen
         MerchantDialogFragment frag = new MerchantDialogFragment();
         Bundle args = new Bundle();
         args.putInt("number", number);
+
         frag.setArguments(args);
         return frag;
     }
@@ -73,13 +83,26 @@ public class MerchantDialogFragment extends android.support.v4.app.DialogFragmen
         super.onCreate(savedInstanceState);
         mSharedPreferences = PreferenceManager.getDefaultSharedPreferences(getContext());
         mEditor = mSharedPreferences.edit();
-        playerId = mSharedPreferences.getString(Constants.PREFERENCES_GOOGLE_PLAYER_ID, null);
-        allWeapons = new ArrayList<>();
-        allItems = new ArrayList<>();
-        userItemInventory = new ArrayList<>();
-        userWeaponInventory = new ArrayList<>();
+        Bundle bundle = getArguments();
 
-        instantiateAllItems();
+        playerId = mSharedPreferences.getString(Constants.PREFERENCES_GOOGLE_PLAYER_ID, null);
+        allItems = bundle.getParcelableArrayList("allItems");
+        allWeapons = bundle.getParcelableArrayList("allWeapons");
+        userWeaponInventory = bundle.getParcelableArrayList("userWeapons");
+        userItemInventory = bundle.getParcelableArrayList("userItems");
+
+        mSensorManager = (SensorManager) getActivity().getSystemService(Context.SENSOR_SERVICE);
+        mAccelerometer = mSensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
+        mShakeDetector = new ShakeDetector(new ShakeDetector.OnShakeListener() {
+            @Override
+            public void onShake() {
+                createDialog();
+            }
+        });
+
+        mSensorManager.registerListener(mShakeDetector, mAccelerometer,
+                SensorManager.SENSOR_DELAY_UI);
+
     }
 
     @Override
@@ -89,7 +112,16 @@ public class MerchantDialogFragment extends android.support.v4.app.DialogFragmen
         super.onViewCreated(view, savedInstanceState);
         ButterKnife.bind(this, view);
 
-        instantiateInventory();
+        if(allWeapons.size() > 0 && allItems.size() > 0) {
+            createDialog();
+        } else {
+            try {
+                Thread.sleep(500);
+                createDialog();
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }
 
         acceptButton.setOnClickListener(this);
         merchantCloseButton.setOnClickListener(this);
@@ -102,9 +134,11 @@ public class MerchantDialogFragment extends android.support.v4.app.DialogFragmen
         switch (v.getId()){
             case R.id.acceptButton:
                 addItems();
+                mSensorManager.unregisterListener(mShakeDetector);
                 dismiss();
                 break;
             case R.id.merchantCloseButton:
+                mSensorManager.unregisterListener(mShakeDetector);
                 dismiss();
                 break;
         }
@@ -175,11 +209,6 @@ public class MerchantDialogFragment extends android.support.v4.app.DialogFragmen
         });
     }
 
-    public void randomizeItems() {
-
-
-    }
-
     public void createDialog() {
         //0 is weapon, 1 is item
         selectedItemChooser = (int) (Math.random() + .5);
@@ -198,52 +227,55 @@ public class MerchantDialogFragment extends android.support.v4.app.DialogFragmen
         }
 
         if (userWeaponInventory.size() > 0 || userItemInventory.size() > 0) {
-            if (offerRandomizer == 0) {
-                weaponOne = allWeapons.get(0);
-                weaponTwo = allWeapons.get(1);
+            if (allWeapons.size() > 0 && allItems.size() > 0) {
+                if (offerRandomizer == 0) {
+                    weaponOne = allWeapons.get(0);
+                    weaponTwo = allWeapons.get(1);
 
-                if (selectedInventoryItem != null && selectedInventoryWeapon !=null) {
-                    if (selectedItemChooser == 0) {
-                        merchantOffer.setText(String.format("I see you have a nice %s, would you trade for these: %s, %s?", selectedInventoryWeapon.getName(), weaponOne.getName(), weaponTwo.getName()));
-                    } else {
+                    if (selectedInventoryItem != null && selectedInventoryWeapon != null) {
+                        if (selectedItemChooser == 0) {
+                            merchantOffer.setText(String.format("I see you have a nice %s, would you trade for these: %s, %s?", selectedInventoryWeapon.getName(), weaponOne.getName(), weaponTwo.getName()));
+                        } else {
+                            merchantOffer.setText(String.format("I see you have a nice %s, would you trade for these: %s, %s?", selectedInventoryItem.getName(), weaponOne.getName(), weaponTwo.getName()));
+                        }
+                    } else if (selectedInventoryItem != null) {
                         merchantOffer.setText(String.format("I see you have a nice %s, would you trade for these: %s, %s?", selectedInventoryItem.getName(), weaponOne.getName(), weaponTwo.getName()));
+                    } else if (selectedInventoryWeapon != null) {
+                        merchantOffer.setText(String.format("I see you have a nice %s, would you trade for these: %s, %s?", selectedInventoryWeapon.getName(), weaponOne.getName(), weaponTwo.getName()));
                     }
-                } else if (selectedInventoryItem != null){
-                    merchantOffer.setText(String.format("I see you have a nice %s, would you trade for these: %s, %s?", selectedInventoryItem.getName(), weaponOne.getName(), weaponTwo.getName()));
-                } else if (selectedInventoryWeapon != null) {
-                    merchantOffer.setText(String.format("I see you have a nice %s, would you trade for these: %s, %s?", selectedInventoryWeapon.getName(), weaponOne.getName(), weaponTwo.getName()));
-                }
-            } else if (offerRandomizer == 1) {
-                weaponOne = allWeapons.get(0);
-                itemOne = allItems.get(0);
+                } else if (offerRandomizer == 1) {
+                    weaponOne = allWeapons.get(0);
+                    itemOne = allItems.get(0);
 
-                if (selectedInventoryItem != null && selectedInventoryWeapon !=null) {
-                    if (selectedItemChooser == 0) {
-                        merchantOffer.setText(String.format("I see you have a nice %s, would you trade for these: %s, %s?", selectedInventoryWeapon.getName(), weaponOne.getName(), itemOne.getName()));
-                    } else {
+                    if (selectedInventoryItem != null && selectedInventoryWeapon != null) {
+                        if (selectedItemChooser == 0) {
+                            merchantOffer.setText(String.format("I see you have a nice %s, would you trade for these: %s, %s?", selectedInventoryWeapon.getName(), weaponOne.getName(), itemOne.getName()));
+                        } else {
+                            merchantOffer.setText(String.format("I see you have a nice %s, would you trade for these: %s, %s?", selectedInventoryItem.getName(), weaponOne.getName(), itemOne.getName()));
+                        }
+                    } else if (selectedInventoryItem != null) {
                         merchantOffer.setText(String.format("I see you have a nice %s, would you trade for these: %s, %s?", selectedInventoryItem.getName(), weaponOne.getName(), itemOne.getName()));
+                    } else if (selectedInventoryWeapon != null) {
+                        merchantOffer.setText(String.format("I see you have a nice %s, would you trade for these: %s, %s?", selectedInventoryWeapon.getName(), weaponOne.getName(), itemOne.getName()));
                     }
-                } else if (selectedInventoryItem != null){
-                    merchantOffer.setText(String.format("I see you have a nice %s, would you trade for these: %s, %s?", selectedInventoryItem.getName(), weaponOne.getName(), itemOne.getName()));
-                } else if (selectedInventoryWeapon != null) {
-                    merchantOffer.setText(String.format("I see you have a nice %s, would you trade for these: %s, %s?", selectedInventoryWeapon.getName(), weaponOne.getName(), itemOne.getName()));
-                }
 
-            } else if (offerRandomizer == 2) {
-                itemOne = allItems.get(0);
-                itemTwo = allItems.get(1);
+                } else if (offerRandomizer == 2) {
+                    itemOne = allItems.get(0);
+                    itemTwo = allItems.get(1);
 
-                if (selectedInventoryItem != null && selectedInventoryWeapon !=null) {
-                    if (selectedItemChooser == 0) {
-                        merchantOffer.setText(String.format("I see you have a nice %s, would you trade for these: %s, %s?", selectedInventoryWeapon.getName(), itemTwo.getName(), itemOne.getName()));
-                    } else {
+                    if (selectedInventoryItem != null && selectedInventoryWeapon != null) {
+                        if (selectedItemChooser == 0) {
+                            merchantOffer.setText(String.format("I see you have a nice %s, would you trade for these: %s, %s?", selectedInventoryWeapon.getName(), itemTwo.getName(), itemOne.getName()));
+                        } else {
+                            merchantOffer.setText(String.format("I see you have a nice %s, would you trade for these: %s, %s?", selectedInventoryItem.getName(), itemTwo.getName(), itemOne.getName()));
+                        }
+                    } else if (selectedInventoryItem != null) {
                         merchantOffer.setText(String.format("I see you have a nice %s, would you trade for these: %s, %s?", selectedInventoryItem.getName(), itemTwo.getName(), itemOne.getName()));
+                    } else if (selectedInventoryWeapon != null) {
+                        merchantOffer.setText(String.format("I see you have a nice %s, would you trade for these: %s, %s?", selectedInventoryWeapon.getName(), itemTwo.getName(), itemOne.getName()));
                     }
-                } else if (selectedInventoryItem != null){
-                    merchantOffer.setText(String.format("I see you have a nice %s, would you trade for these: %s, %s?", selectedInventoryItem.getName(), itemTwo.getName(), itemOne.getName()));
-                } else if (selectedInventoryWeapon != null) {
-                    merchantOffer.setText(String.format("I see you have a nice %s, would you trade for these: %s, %s?", selectedInventoryWeapon.getName(), itemTwo.getName(), itemOne.getName()));
                 }
+            } else {
             }
         } else {
 //            acceptButton.setEnabled(false);
@@ -297,97 +329,15 @@ public class MerchantDialogFragment extends android.support.v4.app.DialogFragmen
         });
     }
 
-    public void instantiateAllItems() {
 
-        Firebase itemRef = new Firebase(Constants.FIREBASE_URL_ITEMS +"/");
 
-        itemRef.child("weapons").addListenerForSingleValueEvent(new ValueEventListener() {
-            @Override
-            public void onDataChange(DataSnapshot dataSnapshot) {
-                for(DataSnapshot child: dataSnapshot.getChildren()) {
-                    Weapon weapon = child.getValue(Weapon.class);
-                    Log.d("Weapon:", weapon + "");
-                    Log.d("Name:", weapon.getName());
-                    allWeapons.add(weapon);
-                }
-            }
-
-            @Override
-            public void onCancelled(FirebaseError firebaseError) {
-
-            }
-        });
-
-        itemRef.child("food").addListenerForSingleValueEvent(new ValueEventListener() {
-            @Override
-            public void onDataChange(DataSnapshot dataSnapshot) {
-                for(DataSnapshot child: dataSnapshot.getChildren()) {
-                    Item item = child.getValue(Item.class);
-                    allItems.add(item);
-                }
-            }
-
-            @Override
-            public void onCancelled(FirebaseError firebaseError) {
-
-            }
-        });
-
-        itemRef.child("medicine").addListenerForSingleValueEvent(new ValueEventListener() {
-            @Override
-            public void onDataChange(DataSnapshot dataSnapshot) {
-                for(DataSnapshot child: dataSnapshot.getChildren()) {
-                    Item item = child.getValue(Item.class);
-                    allItems.add(item);
-                }
-            }
-
-            @Override
-            public void onCancelled(FirebaseError firebaseError) {
-
-            }
-        });
+    @Override
+    public void onSensorChanged(SensorEvent event) {
 
     }
 
-    public void instantiateInventory() {
+    @Override
+    public void onAccuracyChanged(Sensor sensor, int accuracy) {
 
-        Firebase userRef = new Firebase(Constants.FIREBASE_URL_USERS + "/" + playerId + "/");
-
-        userRef.child("items").addListenerForSingleValueEvent(new ValueEventListener() {
-            @Override
-            public void onDataChange(DataSnapshot dataSnapshot) {
-                for(DataSnapshot iterateItem : dataSnapshot.getChildren()) {
-                    Item item = new Item(iterateItem.getValue(Item.class));
-                    item.setPushId(iterateItem.child("pushId").getValue().toString());
-                    userItemInventory.add(item);
-                    Log.d("Item Inventory", userItemInventory.size() + "");
-                }
-            }
-
-            @Override
-            public void onCancelled(FirebaseError firebaseError) {
-
-            }
-        });
-
-        userRef.child("weapons").addListenerForSingleValueEvent(new ValueEventListener() {
-            @Override
-            public void onDataChange(DataSnapshot dataSnapshot) {
-                for(DataSnapshot iterateWeapon: dataSnapshot.getChildren()) {
-                    Weapon weapon = new Weapon(iterateWeapon.getValue(Weapon.class));
-                    weapon.setPushId(iterateWeapon.child("pushId").getValue().toString());
-                    userWeaponInventory.add(weapon);
-                    Log.d("Weapon Inventory", userWeaponInventory.size() + "");
-                }
-                createDialog();
-            }
-
-            @Override
-            public void onCancelled(FirebaseError firebaseError) {
-
-            }
-        });
     }
-
 }
