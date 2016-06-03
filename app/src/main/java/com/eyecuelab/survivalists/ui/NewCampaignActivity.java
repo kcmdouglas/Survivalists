@@ -428,6 +428,7 @@ public class NewCampaignActivity extends BaseGameActivity implements View.OnClic
         mEditor.putString(Constants.PREFERENCES_GOOGLE_PLAYER_ID, mCurrentPlayerId).commit();
         mEditor.putInt(Constants.PREFERENCES_PREVIOUS_STEPS_KEY, 0).commit();
 
+
         //First turn
         if (turnData == null) {
             mCurrentMatchId = mCurrentMatch.getMatchId();

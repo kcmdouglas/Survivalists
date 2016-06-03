@@ -45,6 +45,7 @@ import org.parceler.Parcels;
 
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.Collections;
 
 import butterknife.Bind;
 import butterknife.ButterKnife;
@@ -74,6 +75,8 @@ public class MainActivity extends FragmentActivity
     private SafeHouse mReachedSafehouse;
     private Character mCurrentCharacter;
     private Firebase mUserFirebaseRef;
+    private Weapon eventWeapon;
+    private Item eventItem;
 
     //Flags to indicate navigation
     private final int START_CAMPAIGN_INTENT = 2;
@@ -92,6 +95,9 @@ public class MainActivity extends FragmentActivity
     private boolean eventFourInitiated;
     private boolean eventFiveInitiated;
     private boolean reachedDailySafehouse;
+    ArrayList<Weapon> allWeapons;
+    ArrayList<Item> allItems;
+    ArrayList<Weapon> weapons;
 
     private boolean isRecurringAlarmSet;
     private ArrayList<Character> mCharacters;
@@ -112,6 +118,8 @@ public class MainActivity extends FragmentActivity
         mContext = this;
         ButterKnife.bind(this);
 
+        allWeapons = new ArrayList<>();
+        allItems = new ArrayList<>();
         //Create Shared Preferences
         mSharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
         mEditor = mSharedPreferences.edit();
@@ -122,8 +130,8 @@ public class MainActivity extends FragmentActivity
         rightInteractionButton.setOnClickListener(this);
 
         mCurrentMatchId = mSharedPreferences.getString(Constants.PREFERENCES_MATCH_ID, null);
-
         mCurrentPlayerId = mSharedPreferences.getString(Constants.PREFERENCES_GOOGLE_PLAYER_ID, null);
+        mUserFirebaseRef = new Firebase (Constants.FIREBASE_URL_USERS + "/" + mCurrentPlayerId);
 
         //Set counter text based on current shared preferences--these are updated in the shared preferences onChange listener
         dailySteps = mSharedPreferences.getInt(Constants.PREFERENCES_DAILY_STEPS, 0);
@@ -136,8 +144,10 @@ public class MainActivity extends FragmentActivity
         reachedDailySafehouse = mSharedPreferences.getBoolean(Constants.PREFERENCES_REACHED_SAFEHOUSE_BOOLEAN, false);
 
         //Set recurring alarm
+        isRecurringAlarmSet = mSharedPreferences.getBoolean("recurringAlarmBoolean", false);
         if(!isRecurringAlarmSet) {
-            isRecurringAlarmSet = true;
+            mEditor.putBoolean("recurringAlarmBoolean", true).commit();
+            isRecurringAlarmSet = mSharedPreferences.getBoolean("recurringAlarmBoolean", true);
             initiateDailyCountResetService();
         }
 
@@ -161,9 +171,7 @@ public class MainActivity extends FragmentActivity
             instantiatePlayerIDs();
         }
 
-//        for(int i = 0; i < playerIDArray.length; i++ ) {
-//            mPlayerIDs.add(playerIDArray[i]);
-//        }
+        instantiateAllItems();
 
         setupBackpackContent();
         loadCharacter();
@@ -296,6 +304,7 @@ public class MainActivity extends FragmentActivity
     public void showEventDialog(int type) {
         mStackLevel++;
         if (type==1) {
+            pickEventItems();
             FragmentTransaction ft = getSupportFragmentManager().beginTransaction();
             Fragment prev = getSupportFragmentManager().findFragmentByTag("event");
             if(prev != null) {
@@ -303,7 +312,7 @@ public class MainActivity extends FragmentActivity
             }
 
             ft.addToBackStack(null);
-            DialogFragment frag = EventDialogFragment.newInstance(mStackLevel);
+            DialogFragment frag = EventDialogFragment.newInstance(mStackLevel, eventWeapon, eventItem, weapons);
             frag.show(ft, "fragment_event_dialog");
         } else if (type==2) {
             FragmentTransaction ft = getSupportFragmentManager().beginTransaction();
@@ -549,5 +558,67 @@ public class MainActivity extends FragmentActivity
             instantiatePlayerIDs();
             mUserFirebaseRef.child("joinedMatch").setValue(true);
         }
+    }
+
+    public void instantiateAllItems() {
+
+        Firebase itemRef = new Firebase(Constants.FIREBASE_URL_ITEMS +"/");
+
+        itemRef.child("weapons").addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                for(DataSnapshot child: dataSnapshot.getChildren()) {
+                    Weapon weapon = child.getValue(Weapon.class);
+                    Log.d("Weapon:", weapon + "");
+                    Log.d("Name:", weapon.getName());
+                    allWeapons.add(weapon);
+                }
+            }
+
+            @Override
+            public void onCancelled(FirebaseError firebaseError) {
+
+            }
+        });
+
+        itemRef.child("food").addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                for(DataSnapshot child: dataSnapshot.getChildren()) {
+                    Item item = child.getValue(Item.class);
+                    allItems.add(item);
+                }
+            }
+
+            @Override
+            public void onCancelled(FirebaseError firebaseError) {
+
+            }
+        });
+
+        itemRef.child("medicine").addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                for(DataSnapshot child: dataSnapshot.getChildren()) {
+                    Item item = child.getValue(Item.class);
+                    allItems.add(item);
+                }
+            }
+
+            @Override
+            public void onCancelled(FirebaseError firebaseError) {
+
+            }
+        });
+
+    }
+
+    public void pickEventItems() {
+        Collections.shuffle(allWeapons);
+        Collections.shuffle(allItems);
+
+        eventWeapon = allWeapons.get(0);
+        eventItem = allItems.get(0);
+
     }
 }

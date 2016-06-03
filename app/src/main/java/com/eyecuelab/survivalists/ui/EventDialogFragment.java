@@ -5,6 +5,7 @@ import android.app.DialogFragment;
 import android.content.SharedPreferences;
 import android.content.res.Resources;
 import android.os.Bundle;
+import android.os.Parcelable;
 import android.preference.PreferenceManager;
 import android.support.annotation.Nullable;
 import android.support.v4.app.FragmentManager;
@@ -26,6 +27,7 @@ import com.firebase.client.FirebaseError;
 import com.firebase.client.ValueEventListener;
 import com.google.gson.Gson;
 
+import org.parceler.Parcels;
 import org.w3c.dom.Text;
 
 import java.util.ArrayList;
@@ -57,8 +59,8 @@ public class EventDialogFragment extends android.support.v4.app.DialogFragment i
     private int stepsRequired;
     private boolean getItemOnFlee = false;
     private boolean getItemOnInspect = false;
-    private Weapon weapon = null;
-    private Item item = null;
+    private Weapon weapon;
+    private Item item;
     private boolean effectsHealth;
     private int attackOrInspect;
     private Firebase mFirebaseStepsRef;
@@ -72,11 +74,14 @@ public class EventDialogFragment extends android.support.v4.app.DialogFragment i
     //Empty constructor required for DialogFragments
     public EventDialogFragment(){}
 
-    public static android.support.v4.app.DialogFragment newInstance(int number) {
+    public static android.support.v4.app.DialogFragment newInstance(int number, Weapon weapon, Item item, ArrayList<Weapon> inventoryWeapons) {
         EventDialogFragment frag = new EventDialogFragment();
 
         Bundle args = new Bundle();
         args.putInt("number", number);
+        args.putParcelable("weapon", weapon);
+        args.putParcelable("item", item);
+        args.putParcelableArrayList("inventoryWeapons", inventoryWeapons);
         frag.setArguments(args);
 
         return frag;
@@ -90,50 +95,13 @@ public class EventDialogFragment extends android.support.v4.app.DialogFragment i
         mEditor = mSharedPreferences.edit();
         inventoryWeapons = new ArrayList<>();
         mPlayerId = mSharedPreferences.getString(Constants.PREFERENCES_GOOGLE_PLAYER_ID, null);
-
-
-        final Firebase inventoryWeaponFirebase = new Firebase(Constants.FIREBASE_URL_USERS + "/" + mPlayerId + "/weapons");
-        inventoryWeaponFirebase.addListenerForSingleValueEvent(new ValueEventListener() {
-            @Override
-            public void onDataChange(DataSnapshot dataSnapshot) {
-                for (DataSnapshot child : dataSnapshot.getChildren()) {
-                    Weapon userWeapon = new Weapon(child.getValue(Weapon.class));
-                    inventoryWeapons.add(userWeapon);
-                }
-            }
-
-            @Override
-            public void onCancelled(FirebaseError firebaseError) {
-
-            }
-        });
-
-    }
-
-    @Override
-    public View onCreateView(LayoutInflater inflater, ViewGroup container,
-                             Bundle savedInstanceState) {
-        View view = inflater.inflate(R.layout.fragment_event_dialog, container, false);
-        super.onViewCreated(view, savedInstanceState);
-        ButterKnife.bind(this, view);
-        String characterJson = mSharedPreferences.getString(Constants.PREFERENCES_CHARACTER, null);
-        Gson gson = new Gson();
-        mCurrentCharacter = gson.fromJson(characterJson, Character.class);
-
-
-        //TODO: change this to account for the size of the hashmap array in firebase--maybe move into an indv. listener
+        weapon = Parcels.unwrap(getArguments().getParcelable("weapon"));
+        item = Parcels.unwrap(getArguments().getParcelable("item"));
+        inventoryWeapons = Parcels.unwrap((Parcelable) getArguments().getParcelableArrayList("inventoryWeapons"));
         int eventNumber = (int) Math.floor(Math.random() * 10 + 1);
 
         //0 is an attack event, 1 is an inspect event
         attackOrInspect = (int) (Math.random() +0.5);
-
-        affirmativeButton = (Button) view.findViewById(R.id.affirmativeButton);
-        affirmativeButton.setOnClickListener(this);
-        negativeButton = (Button) view.findViewById(R.id.negativeButton);
-        negativeButton.setOnClickListener(this);
-        closeButton = (Button) view.findViewById(R.id.closeButton);
-        closeButton.setOnClickListener(this);
-        closeButton.setVisibility(View.GONE);
 
         if(attackOrInspect == 0) {
             mFirebaseEventRef = new Firebase(Constants.FIREBASE_URL_EVENTS + "/attack/");
@@ -195,54 +163,29 @@ public class EventDialogFragment extends android.support.v4.app.DialogFragment i
         }
 
 
+    }
 
-        if (getItemOnInspect || getItemOnFlee) {
-            int categoryRandomizer = (int) Math.floor(Math.random() * 3 + 1);
-            int itemRandomizer = (int) Math.floor(Math.random() * 10 + 1);
+    @Override
+    public View onCreateView(LayoutInflater inflater, ViewGroup container,
+                             Bundle savedInstanceState) {
+        View view = inflater.inflate(R.layout.fragment_event_dialog, container, false);
+        super.onViewCreated(view, savedInstanceState);
+        ButterKnife.bind(this, view);
+        String characterJson = mSharedPreferences.getString(Constants.PREFERENCES_CHARACTER, null);
+        Gson gson = new Gson();
+        mCurrentCharacter = gson.fromJson(characterJson, Character.class);
 
-            switch (categoryRandomizer) {
-                case 1:
-                    mFirebaseItemRef = new Firebase(Constants.FIREBASE_URL_ITEMS + "/food/");
-                    effectsHealth = false;
-                    break;
-                case 2:
-                    mFirebaseItemRef = new Firebase(Constants.FIREBASE_URL_ITEMS + "/medicine/");
-                    effectsHealth = true;
-                    break;
-                case 3:
-                    mFirebaseItemRef = new Firebase(Constants.FIREBASE_URL_ITEMS + "/weapons/");
-                    weapon = new Weapon("name", "description", 0);
-                    break;
-            }
 
-            mFirebaseItemRef.child(Integer.toString(itemRandomizer)).addListenerForSingleValueEvent(
-                    new ValueEventListener() {
-                        @Override
-                        public void onDataChange(DataSnapshot dataSnapshot) {
-                            if (weapon != null) {
-                                String weaponName = dataSnapshot.child("name").getValue().toString();
-                                String weaponDescription = dataSnapshot.child("description").getValue().toString();
-                                long hitPointsLong = (long) dataSnapshot.child("hitPoints").getValue();
-                                int hitPoints = (int) hitPointsLong;
-                                weapon = new Weapon(weaponName, weaponDescription, hitPoints);
-                            } else {
-                                String itemName = dataSnapshot.child("name").getValue().toString();
-                                String itemDescription = dataSnapshot.child("description").getValue().toString();
-                                long healthPointsLong = (long) dataSnapshot.child("healthPoints").getValue();
-                                int healthPoints = (int) healthPointsLong;
-                                int itemId = (int) dataSnapshot.getValue();
-                                item = new Item(itemName, itemDescription, healthPoints, effectsHealth);
-                            }
+        //TODO: change this to account for the size of the hashmap array in firebase--maybe move into an indv. listener
 
-                        }
+        affirmativeButton = (Button) view.findViewById(R.id.affirmativeButton);
+        affirmativeButton.setOnClickListener(this);
+        negativeButton = (Button) view.findViewById(R.id.negativeButton);
+        negativeButton.setOnClickListener(this);
+        closeButton = (Button) view.findViewById(R.id.closeButton);
+        closeButton.setOnClickListener(this);
+        closeButton.setVisibility(View.GONE);
 
-                        @Override
-                        public void onCancelled(FirebaseError firebaseError) {
-
-                        }
-                    }
-            );
-        }
 
         dialogDescription = (TextView) view.findViewById(R.id.dialogDescription);
         dialogConsequence = (TextView) view.findViewById(R.id.dialogConsequence);
