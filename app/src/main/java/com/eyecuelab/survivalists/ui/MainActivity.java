@@ -246,7 +246,6 @@ public class MainActivity extends FragmentActivity
                     Firebase firebaseStepsRef = new Firebase(Constants.FIREBASE_URL_USERS + "/" + mCurrentPlayerId + "/");
                     firebaseStepsRef.child("dailySteps").setValue(steps);
                 }
-
                 break;
             case R.id.leftInteractionButton:
                 Toast.makeText(this, "Item given!", Toast.LENGTH_SHORT).show();
@@ -342,6 +341,13 @@ public class MainActivity extends FragmentActivity
             initializeEventDialogFragments();
 
         }
+        if(key.equals(Constants.PREFERENCES_DAILY_STEPS)) {
+            if (dailyGoal < dailySteps && !reachedDailySafehouse) {
+                saveSafehouse();
+            }
+            initializeEventDialogFragments();
+        }
+
         if(key.equals(Constants.PREFERENCES_REACHED_SAFEHOUSE_BOOLEAN)) {
             reachedDailySafehouse = mSharedPreferences.getBoolean(Constants.PREFERENCES_REACHED_SAFEHOUSE_BOOLEAN, true);
         }
@@ -351,8 +357,8 @@ public class MainActivity extends FragmentActivity
 
     public void saveSafehouse() {
         //Sets the user's own atSafehouse node
-        Firebase firebaseAtSafeHouseRef = new Firebase(Constants.FIREBASE_URL_USERS + "/" + mCurrentPlayerId +"/atSafeHouse");
-        firebaseAtSafeHouseRef.setValue(true);
+        Firebase firebaseAtSafeHouseRef = new Firebase(Constants.FIREBASE_URL_USERS + "/" + mCurrentPlayerId);
+        firebaseAtSafeHouseRef.child("atSafeHouse").setValue(true);
 
         //Gets the pseudo ID of the next safehouse
         final Firebase nextTeamSafehouse = new Firebase (Constants.FIREBASE_URL_TEAM+"/"+ mCurrentMatchId +"/");
@@ -449,10 +455,11 @@ public class MainActivity extends FragmentActivity
         Intent intent = new Intent(this, StepResetAlarmReceiver.class);
         //Sets a recurring alarm just before midnight daily to trigger BroadcastReceiver
         Calendar calendar = Calendar.getInstance();
-        calendar.set(Calendar.HOUR_OF_DAY, 23);
-        calendar.set(Calendar.MINUTE, 59);
-        calendar.set(Calendar.SECOND, 0);
-        calendar.set(Calendar.MILLISECOND, 0);
+//        calendar.set(Calendar.HOUR_OF_DAY, 23);
+//        calendar.set(Calendar.MINUTE, 59);
+//        calendar.set(Calendar.SECOND, 0);
+//        calendar.set(Calendar.MILLISECOND, 0);
+//        calendar.add(Calendar.MINUTE, 30);
         PendingIntent pi = PendingIntent.getBroadcast(this, StepResetAlarmReceiver.REQUEST_CODE, intent, PendingIntent.FLAG_UPDATE_CURRENT);
         AlarmManager am = (AlarmManager) getApplicationContext().getSystemService(Context.ALARM_SERVICE);
         am.setRepeating(AlarmManager.RTC_WAKEUP, calendar.getTimeInMillis(), AlarmManager.INTERVAL_HALF_HOUR, pi);
