@@ -8,6 +8,7 @@ import android.os.Bundle;
 import android.os.Parcelable;
 import android.preference.PreferenceManager;
 import android.support.annotation.Nullable;
+import android.support.v4.app.BundleCompat;
 import android.support.v4.app.FragmentManager;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -74,13 +75,11 @@ public class EventDialogFragment extends android.support.v4.app.DialogFragment i
     //Empty constructor required for DialogFragments
     public EventDialogFragment(){}
 
-    public static android.support.v4.app.DialogFragment newInstance(int number, Weapon weapon, Item item, ArrayList<Weapon> inventoryWeapons) {
+    public static android.support.v4.app.DialogFragment newInstance(int number, ArrayList<Weapon> inventoryWeapons) {
         EventDialogFragment frag = new EventDialogFragment();
 
         Bundle args = new Bundle();
         args.putInt("number", number);
-        args.putParcelable("weapon", weapon);
-        args.putParcelable("item", item);
         args.putParcelableArrayList("inventoryWeapons", inventoryWeapons);
         frag.setArguments(args);
 
@@ -93,11 +92,14 @@ public class EventDialogFragment extends android.support.v4.app.DialogFragment i
         //Create Shared Preferences
         mSharedPreferences = PreferenceManager.getDefaultSharedPreferences(getActivity().getApplicationContext());
         mEditor = mSharedPreferences.edit();
+        Bundle bundle = getArguments();
         inventoryWeapons = new ArrayList<>();
         mPlayerId = mSharedPreferences.getString(Constants.PREFERENCES_GOOGLE_PLAYER_ID, null);
-        weapon = Parcels.unwrap(getArguments().getParcelable("weapon"));
-        item = Parcels.unwrap(getArguments().getParcelable("item"));
-        inventoryWeapons = Parcels.unwrap((Parcelable) getArguments().getParcelableArrayList("inventoryWeapons"));
+        Gson gson = new Gson();
+        mCurrentCharacter = gson.fromJson(mSharedPreferences.getString(Constants.PREFERENCES_CHARACTER, null), Character.class);
+        weapon = bundle.getParcelable("weapon");
+        item = bundle.getParcelable("item");
+        inventoryWeapons = bundle.getParcelableArrayList("userWeapons");
         int eventNumber = (int) Math.floor(Math.random() * 10 + 1);
 
         //0 is an attack event, 1 is an inspect event
@@ -110,9 +112,9 @@ public class EventDialogFragment extends android.support.v4.app.DialogFragment i
                         @Override
                         public void onDataChange(DataSnapshot dataSnapshot) {
                             description = dataSnapshot.child("description").getValue().toString();
-                            outcomeA = dataSnapshot.child("description").getValue().toString();
-                            outcomeB = dataSnapshot.child("description").getValue().toString();
-                            title = dataSnapshot.child("description").getValue().toString();
+                            outcomeA = dataSnapshot.child("outcome_a").getValue().toString();
+                            outcomeB = dataSnapshot.child("outcome_b").getValue().toString();
+                            title = dataSnapshot.child("title").getValue().toString();
                             long penaltyHPLong = (long) dataSnapshot.child("penalty_hp").getValue();
                             penaltyHP = (int) penaltyHPLong;
                             long stepsRequiredLong = (long)dataSnapshot.child("steps_required").getValue();
@@ -123,12 +125,7 @@ public class EventDialogFragment extends android.support.v4.app.DialogFragment i
                         public void onCancelled(FirebaseError firebaseError) {
 
                         }
-                    }
-            );
-            dialogConsequence.setVisibility(View.GONE);
-            affirmativeButton.setText("Attack");
-            negativeButton.setText("Run");
-
+                    });
         } else {
             mFirebaseEventRef = new Firebase(Constants.FIREBASE_URL_EVENTS + "/inspect/");
             mFirebaseEventRef.child(Integer.toString(eventNumber)).addListenerForSingleValueEvent(
@@ -153,13 +150,6 @@ public class EventDialogFragment extends android.support.v4.app.DialogFragment i
                         }
                     }
             );
-            affirmativeButton.setText("Inspect");
-            negativeButton.setText("Ignore");
-            if (stepsRequired > 0) {
-                dialogConsequence.setText("Inspecting will add " + Integer.toString(stepsRequired) + " to your daily goal.");
-            } else {
-                dialogConsequence.setVisibility(View.GONE);
-            }
         }
 
 
@@ -171,10 +161,6 @@ public class EventDialogFragment extends android.support.v4.app.DialogFragment i
         View view = inflater.inflate(R.layout.fragment_event_dialog, container, false);
         super.onViewCreated(view, savedInstanceState);
         ButterKnife.bind(this, view);
-        String characterJson = mSharedPreferences.getString(Constants.PREFERENCES_CHARACTER, null);
-        Gson gson = new Gson();
-        mCurrentCharacter = gson.fromJson(characterJson, Character.class);
-
 
         //TODO: change this to account for the size of the hashmap array in firebase--maybe move into an indv. listener
 
@@ -196,6 +182,20 @@ public class EventDialogFragment extends android.support.v4.app.DialogFragment i
         dialogTitle.setText(title);
         dialogDescription.setText(description);
 
+        if(attackOrInspect == 0) {
+            dialogConsequence.setVisibility(View.GONE);
+            affirmativeButton.setText("Attack");
+            negativeButton.setText("Run");
+
+        } else {
+            affirmativeButton.setText("Inspect");
+            negativeButton.setText("Ignore");
+            if (stepsRequired > 0) {
+                dialogConsequence.setText("Inspecting will add " + Integer.toString(stepsRequired) + " to your daily goal.");
+            } else {
+                dialogConsequence.setVisibility(View.GONE);
+            }
+        }
 
         return view;
     }

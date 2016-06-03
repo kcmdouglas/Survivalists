@@ -4,7 +4,9 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:orientation="vertical"
     android:layout_width="match_parent"
-    android:layout_height="match_parent">
+    android:layout_height="match_parent"
+    android:focusableInTouchMode="true"
+    android:focusable="false">
 
     <ImageView
         android:layout_width="match_parent"
@@ -189,7 +191,9 @@
             app:layout_heightPercent="50%"
             app:layout_marginLeftPercent="5%"
             app:layout_marginTopPercent="15%"
-            android:id="@+id/stepEditText"/>
+            android:id="@+id/stepEditText"
+            android:inputType="number"
+            android:singleLine="true" />
 
     </android.support.percent.PercentRelativeLayout>
 

@@ -73,7 +73,8 @@
             android:id="@+id/merchantTest"
             android:layout_above="@+id/startCampaignButton"
             android:layout_centerHorizontal="true"
-            android:layout_marginBottom="139dp" />
+            android:layout_marginBottom="139dp"
+            android:visibility="gone"/>
 
     </RelativeLayout>
 </RelativeLayout>

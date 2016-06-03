@@ -205,6 +205,8 @@ public class NewCampaignActivity extends BaseGameActivity implements View.OnClic
         IntentFilter intentFilter = new IntentFilter();
         intentFilter.addAction(RECEIVE_UPDATE_FROM_INVITATION);
         broadcastManager.registerReceiver(broadcastReceiver, intentFilter);
+
+        mCurrentPlayerId = mSharedPreferences.getString(Constants.PREFERENCES_GOOGLE_PLAYER_ID, null);
     }
 
     @Override
@@ -746,6 +748,7 @@ public class NewCampaignActivity extends BaseGameActivity implements View.OnClic
                 boolean uiIsntYetUpdated = true;
 
                 if (gameStatus == gameStarted) {
+                    Log.e("NEW CAMPAIGN", turnBasedMatch.getParticipant(turnBasedMatch.getLastUpdaterId()).getDisplayName() + "");
                     Toast.makeText(NewCampaignActivity.this, turnBasedMatch.getParticipant(turnBasedMatch.getLastUpdaterId()).getDisplayName() + " accepted invite", Toast.LENGTH_LONG).show();
                     tallyOfPlayersJoined.add(turnBasedMatch.getLastUpdaterId());
 
