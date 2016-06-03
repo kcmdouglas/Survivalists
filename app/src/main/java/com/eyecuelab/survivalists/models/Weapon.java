@@ -1,9 +1,12 @@
 package com.eyecuelab.survivalists.models;
 
+import android.os.Parcel;
+import android.os.Parcelable;
+
 /**
  * Created by eyecuelab on 5/23/16.
  */
-public class Weapon{
+public class Weapon implements Parcelable{
     String name;
     String description;
     int hitPoints;
@@ -22,6 +25,25 @@ public class Weapon{
         this.description=description;
         this.hitPoints=hitPoints;
     }
+
+    protected Weapon(Parcel in) {
+        name = in.readString();
+        description = in.readString();
+        hitPoints = in.readInt();
+        pushId = in.readString();
+    }
+
+    public static final Creator<Weapon> CREATOR = new Creator<Weapon>() {
+        @Override
+        public Weapon createFromParcel(Parcel in) {
+            return new Weapon(in);
+        }
+
+        @Override
+        public Weapon[] newArray(int size) {
+            return new Weapon[size];
+        }
+    };
 
     public int useWeapon(int enemyHP, Character character) {
         int result;
@@ -67,5 +89,18 @@ public class Weapon{
 
     public void setPushId(String pushId) {
         this.pushId = pushId;
+    }
+
+    @Override
+    public int describeContents() {
+        return 0;
+    }
+
+    @Override
+    public void writeToParcel(Parcel dest, int flags) {
+        dest.writeString(name);
+        dest.writeString(description);
+        dest.writeInt(hitPoints);
+        dest.writeString(pushId);
     }
 }

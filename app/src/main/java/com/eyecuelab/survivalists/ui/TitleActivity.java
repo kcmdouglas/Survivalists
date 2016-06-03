@@ -5,6 +5,9 @@ import android.content.IntentSender;
 import android.content.SharedPreferences;
 import android.preference.PreferenceManager;
 import android.support.annotation.NonNull;
+import android.support.v4.app.DialogFragment;
+import android.support.v4.app.Fragment;
+import android.support.v4.app.FragmentTransaction;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
@@ -29,6 +32,7 @@ import com.google.android.gms.games.multiplayer.turnbased.TurnBasedMultiplayer;
 import com.google.example.games.basegameutils.BaseGameActivity;
 import com.google.gson.Gson;
 
+import java.lang.reflect.Array;
 import java.util.ArrayList;
 
 import butterknife.Bind;
@@ -47,9 +51,11 @@ public class TitleActivity extends BaseGameActivity implements GoogleApiClient.C
 
     private String mCurrentPlayerId;
     private String mCurrentMatchId;
-    private int mStackLevel;
     private ArrayList<Weapon> allWeapons;
     private ArrayList<Item> allItems;
+    private ArrayList<Weapon> userWeaponInventory;
+    private ArrayList<Item> userItemInventory;
+    private int mStackLevel;
 
     @Bind(R.id.currentCampaignButton) Button currentCampaignButton;
     @Bind(R.id.startCampaignButton) Button startCampaignButton;
@@ -63,7 +69,8 @@ public class TitleActivity extends BaseGameActivity implements GoogleApiClient.C
         Firebase.setAndroidContext(this);
         allWeapons = new ArrayList<>();
         allItems = new ArrayList<>();
-
+        userItemInventory = new ArrayList<>();
+        userWeaponInventory = new ArrayList<>();
         setFullScreen();
 
         //set content view AFTER ABOVE sequence (to avoid crash)
@@ -74,9 +81,15 @@ public class TitleActivity extends BaseGameActivity implements GoogleApiClient.C
 
         ButterKnife.bind(this);
 
+
+
         //Create Shared Preferences
         mSharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
         mEditor = mSharedPreferences.edit();
+        mCurrentPlayerId = mSharedPreferences.getString(Constants.PREFERENCES_GOOGLE_PLAYER_ID, null);
+
+        instantiateAllItems();
+        instantiateInventory();
 
         mCurrentMatchId = mSharedPreferences.getString("matchId", null);
 
@@ -84,6 +97,7 @@ public class TitleActivity extends BaseGameActivity implements GoogleApiClient.C
         startCampaignButton.setOnClickListener(this);
         loginButton.setOnClickListener(this);
         joinCampaignButton.setOnClickListener(this);
+        merchantTest.setOnClickListener(this);
     }
 
     @Override
@@ -119,6 +133,25 @@ public class TitleActivity extends BaseGameActivity implements GoogleApiClient.C
             case R.id.joinCampaignButton:
                 campaignEditorIntent.putExtra("statusTag", 2);
                 startActivity(campaignEditorIntent);
+                break;
+            case R.id.merchantTest:
+                mStackLevel++;
+
+                FragmentTransaction ft = getSupportFragmentManager().beginTransaction();
+                Fragment prev = getSupportFragmentManager().findFragmentByTag("merchant");
+                if(prev != null) {
+                    ft.remove(prev);
+                }
+
+                ft.addToBackStack(null);
+                DialogFragment frag = MerchantDialogFragment.newInstance(mStackLevel);
+                Bundle bundle = new Bundle();
+                bundle.putParcelableArrayList("allWeapons", allWeapons);
+                bundle.putParcelableArrayList("allItems", allItems);
+                bundle.putParcelableArrayList("userWeapons", userWeaponInventory);
+                bundle.putParcelableArrayList("userItems", userItemInventory);
+                frag.setArguments(bundle);
+                frag.show(ft, "fragment_merchant_dialog");
                 break;
         }
     }
@@ -211,4 +244,97 @@ public class TitleActivity extends BaseGameActivity implements GoogleApiClient.C
     public void onSignInFailed() {}
     @Override
     public void onSignInSucceeded() {}
+
+    //MOVE ALL THIS LOGIC TO MAIN ACTIVITY
+    public void instantiateAllItems() {
+
+        Firebase itemRef = new Firebase(Constants.FIREBASE_URL_ITEMS +"/");
+
+        itemRef.child("weapons").addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                for(DataSnapshot child: dataSnapshot.getChildren()) {
+                    Weapon weapon = child.getValue(Weapon.class);
+                    Log.d("Weapon:", weapon + "");
+                    Log.d("Name:", weapon.getName());
+                    allWeapons.add(weapon);
+                }
+            }
+
+            @Override
+            public void onCancelled(FirebaseError firebaseError) {
+
+            }
+        });
+
+        itemRef.child("food").addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                for(DataSnapshot child: dataSnapshot.getChildren()) {
+                    Item item = child.getValue(Item.class);
+                    allItems.add(item);
+                }
+            }
+
+            @Override
+            public void onCancelled(FirebaseError firebaseError) {
+
+            }
+        });
+
+        itemRef.child("medicine").addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                for(DataSnapshot child: dataSnapshot.getChildren()) {
+                    Item item = child.getValue(Item.class);
+                    allItems.add(item);
+                }
+            }
+
+            @Override
+            public void onCancelled(FirebaseError firebaseError) {
+
+            }
+        });
+
+    }
+
+    public void instantiateInventory() {
+
+        Firebase userRef = new Firebase(Constants.FIREBASE_URL_USERS + "/" + mCurrentPlayerId + "/");
+
+        userRef.child("items").addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                for(DataSnapshot iterateItem : dataSnapshot.getChildren()) {
+                    Item item = new Item(iterateItem.getValue(Item.class));
+                    item.setPushId(iterateItem.child("pushId").getValue().toString());
+                    userItemInventory.add(item);
+                    Log.d("Item Inventory", userItemInventory.size() + "");
+                }
+            }
+
+            @Override
+            public void onCancelled(FirebaseError firebaseError) {
+
+            }
+        });
+
+        userRef.child("weapons").addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                for(DataSnapshot iterateWeapon: dataSnapshot.getChildren()) {
+                    Weapon weapon = new Weapon(iterateWeapon.getValue(Weapon.class));
+                    weapon.setPushId(iterateWeapon.child("pushId").getValue().toString());
+                    userWeaponInventory.add(weapon);
+                    Log.d("Weapon Inventory", userWeaponInventory.size() + "");
+                }
+            }
+
+            @Override
+            public void onCancelled(FirebaseError firebaseError) {
+
+            }
+        });
+    }
 }

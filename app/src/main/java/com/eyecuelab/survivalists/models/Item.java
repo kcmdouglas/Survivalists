@@ -1,13 +1,14 @@
 package com.eyecuelab.survivalists.models;
 
 
+import android.os.Parcelable;
+
 import org.parceler.Parcel;
 
 /**
  * Created by eyecuelab on 5/23/16.
  */
-@Parcel
-public class Item {
+public class Item implements Parcelable {
     String name;
     String description;
     int healthPoints;
@@ -30,6 +31,8 @@ public class Item {
         this.healthPoints = healthPoints;
         this.effectsHealth = effectsHealth;
     }
+
+
 
     public void useItem(Character character) {
         int startingEffectiveness = getHealthPoints();
@@ -111,5 +114,42 @@ public class Item {
 
     public void setPushId(String pushId) {
         this.pushId = pushId;
+    }
+
+    //Parcelling logic
+    protected Item(android.os.Parcel in) {
+        name = in.readString();
+        description = in.readString();
+        healthPoints = in.readInt();
+        effectsHealth = in.readByte() != 0;
+        imageId = in.readInt();
+        pushId = in.readString();
+    }
+
+    public static final Creator<Item> CREATOR = new Creator<Item>() {
+        @Override
+        public Item createFromParcel(android.os.Parcel in) {
+            return new Item(in);
+        }
+
+        @Override
+        public Item[] newArray(int size) {
+            return new Item[size];
+        }
+    };
+
+    @Override
+    public int describeContents() {
+        return 0;
+    }
+
+    @Override
+    public void writeToParcel(android.os.Parcel dest, int flags) {
+        dest.writeString(name);
+        dest.writeString(description);
+        dest.writeInt(healthPoints);
+        dest.writeByte((byte) (effectsHealth ? 1 : 0));
+        dest.writeInt(imageId);
+        dest.writeString(pushId);
     }
 }
