@@ -123,7 +123,6 @@ public class MainActivity extends FragmentActivity
         rightInteractionButton.setOnClickListener(this);
 
         mCurrentMatchId = mSharedPreferences.getString(Constants.PREFERENCES_MATCH_ID, null);
-
         mCurrentPlayerId = mSharedPreferences.getString(Constants.PREFERENCES_GOOGLE_PLAYER_ID, null);
 
         //Set counter text based on current shared preferences--these are updated in the shared preferences onChange listener
@@ -168,8 +167,6 @@ public class MainActivity extends FragmentActivity
 
         setupBackpackContent();
         loadCharacter();
-
-        mCurrentPlayerId = mSharedPreferences.getString(Constants.PREFERENCES_GOOGLE_PLAYER_ID, null);
     }
 
     @Override
@@ -510,6 +507,8 @@ public class MainActivity extends FragmentActivity
                         String name = child.child("name").getValue().toString();
                         String pushId = child.child("pushId").getValue().toString();
                         Item currentItem = new Item(name, description, healthPoints, true);
+                        currentItem.setImageId(imageId);
+                        currentItem.setPushId(pushId);
                         items.add(currentItem);
                         Log.v(TAG, items.size() + "");
                     }
@@ -529,7 +528,6 @@ public class MainActivity extends FragmentActivity
                         String name = child.child("name").getValue().toString();
                         Weapon currentWeapon = new Weapon(name, description, hitPoints);
                         weapons.add(currentWeapon);
-                        Log.v(TAG, weapons.size() + "");
                     }
                 }
 
@@ -539,13 +537,14 @@ public class MainActivity extends FragmentActivity
             });
 
         }
-
         GridView inventoryGridView = (GridView) findViewById(R.id.backpackGridView);
         inventoryGridView.setAdapter(new InventoryAdapter(this, items, weapons, R.layout.inventory_row_grid));
         inventoryGridView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                Toast.makeText(MainActivity.this, "" + position, Toast.LENGTH_SHORT).show();
+                FragmentTransaction ft = getSupportFragmentManager().beginTransaction();
+                DialogFragment frag = InventoryDetailFragment.newInstance(items.get(position), mCurrentCharacter, mCurrentPlayerId);
+                frag.show(ft, "fragment_safehouse_dialog");
             }
         });
         //This stops the grid from being scrolled.
