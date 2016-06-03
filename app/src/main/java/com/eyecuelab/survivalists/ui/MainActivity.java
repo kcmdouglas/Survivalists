@@ -494,39 +494,73 @@ public class MainActivity extends FragmentActivity
     }
 
     public void setupBackpackContent () {
-        //TODO: Remove these fake objects for testing:
-        ArrayList<Weapon> weapons = new ArrayList<>();
-        weapons.add(new Weapon("Axe!", "This is an axe!", 5));
-        ArrayList<Item> items = new ArrayList<>();
-//        items.add(new Item("Axe!", "This is an axe!", 5, true, R.drawable.axe_inventory));
-//        items.add(new Item("Health Pack", "This is a health pack!", 5, true, R.drawable.firstaid_inventory));
-//        items.add(new Item("Flare", "This is a flare!", 5, true, R.drawable.flare_inventory));
-//        items.add(new Item("Steak", "This is a steak!", 5, true, R.drawable.steak_inventory));
+        final ArrayList<Weapon> weapons = new ArrayList<>();
+        final ArrayList<Item> items = new ArrayList<>();
 
-        try {
-            GridView inventoryGridView = (GridView) findViewById(R.id.backpackGridView);
-            //TODO: Figure out why android studio thinks this catch is required (and isn't happy)
-            inventoryGridView.setAdapter(new InventoryAdapter(this, items, weapons, R.layout.inventory_row_grid));
-            inventoryGridView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+        mCurrentMatchId = mSharedPreferences.getString(Constants.PREFERENCES_GOOGLE_PLAYER_ID, null);
+        mUserFirebaseRef = new Firebase(Constants.FIREBASE_URL_USERS + "/" + "").child(mCurrentPlayerId);
+        Log.v(TAG, "user " + mCurrentMatchId + "");
+        Log.v(TAG, "firebase " + mUserFirebaseRef + "");
+
+        if (mCurrentMatchId != null && mUserFirebaseRef != null) {
+            mUserFirebaseRef.child("items").addListenerForSingleValueEvent(new ValueEventListener() {
                 @Override
-                public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                    Toast.makeText(MainActivity.this, "" + position, Toast.LENGTH_SHORT).show();
-                }
-            });
-            //This stops the grid from being scrolled.
-            inventoryGridView.setOnTouchListener(new View.OnTouchListener() {
-                @Override
-                public boolean onTouch(View v, MotionEvent event) {
-                    if (event.getAction() == MotionEvent.ACTION_MOVE) {
-                        return true;
+                public void onDataChange(DataSnapshot dataSnapshot) {
+                    for (DataSnapshot child : dataSnapshot.getChildren()) {
+                        String description = child.child("description").getValue().toString();
+                        int healthPoints = Integer.parseInt(child.child("healthPoints").getValue().toString());
+                        int imageId = Integer.parseInt(child.child("imageId").getValue().toString());
+                        String name = child.child("name").getValue().toString();
+                        String pushId = child.child("pushId").getValue().toString();
+                        Item currentItem = new Item(name, description, healthPoints, true);
+                        items.add(currentItem);
+                        Log.v(TAG, items.size() + "");
                     }
-                    return false;
+                }
+
+                @Override
+                public void onCancelled(FirebaseError firebaseError) {
                 }
             });
 
-        } catch (NullPointerException nullPointer) {
-            Log.e(TAG, nullPointer.getMessage());
+            mUserFirebaseRef.child("weapons").addListenerForSingleValueEvent(new ValueEventListener() {
+                @Override
+                public void onDataChange(DataSnapshot dataSnapshot) {
+                    for (DataSnapshot child : dataSnapshot.getChildren()) {
+                        String description = child.child("description").getValue().toString();
+                        int hitPoints = Integer.parseInt(child.child("hitPoints").getValue().toString());
+                        String name = child.child("name").getValue().toString();
+                        Weapon currentWeapon = new Weapon(name, description, hitPoints);
+                        weapons.add(currentWeapon);
+                        Log.v(TAG, weapons.size() + "");
+                    }
+                }
+
+                @Override
+                public void onCancelled(FirebaseError firebaseError) {
+                }
+            });
+
         }
+
+        GridView inventoryGridView = (GridView) findViewById(R.id.backpackGridView);
+        inventoryGridView.setAdapter(new InventoryAdapter(this, items, weapons, R.layout.inventory_row_grid));
+        inventoryGridView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            @Override
+            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                Toast.makeText(MainActivity.this, "" + position, Toast.LENGTH_SHORT).show();
+            }
+        });
+        //This stops the grid from being scrolled.
+        inventoryGridView.setOnTouchListener(new View.OnTouchListener() {
+            @Override
+            public boolean onTouch(View v, MotionEvent event) {
+                if (event.getAction() == MotionEvent.ACTION_MOVE) {
+                    return true;
+                }
+                return false;
+            }
+        });
     }
 
     public void loadCharacter() {
