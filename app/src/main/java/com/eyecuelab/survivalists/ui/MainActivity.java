@@ -62,8 +62,8 @@ public class MainActivity extends FragmentActivity
     private String mCurrentMatchId;
     private int mMatchDuration;
     private int mDefaultGoal;
+    private int mReachedSafeHouseNodeId;
     private int mReachedSafeHouseId;
-    private int mReachedSafeHousePseudoId;
     private ArrayList<String> invitees;
     private byte[] turnData;
     private SharedPreferences mSharedPreferences;
@@ -336,55 +336,57 @@ public class MainActivity extends FragmentActivity
         firebaseAtSafeHouseRef.setValue(true);
 
         //Gets the pseudo ID of the next safehouse
-        Firebase nextTeamSafehouse = new Firebase (Constants.FIREBASE_URL_TEAM+"/"+ mCurrentMatchId +"/");
-        nextTeamSafehouse.child("nextSafehousePseudoId").addListenerForSingleValueEvent(new ValueEventListener() {
+        final Firebase nextTeamSafehouse = new Firebase (Constants.FIREBASE_URL_TEAM+"/"+ mCurrentMatchId +"/");
+        nextTeamSafehouse.child("nextSafehouseId").addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
                 long safehousePseudoIdLong = (long) dataSnapshot.getValue();
-                mReachedSafeHousePseudoId = (int) safehousePseudoIdLong;
+                mReachedSafeHouseId = (int) safehousePseudoIdLong;
+
+                //Gets the SafeHouse Node ID from the Safehouse ID Map
+                nextTeamSafehouse.child("safehouseIdMap/" + mReachedSafeHouseId).addListenerForSingleValueEvent(new ValueEventListener() {
+                    @Override
+                    public void onDataChange(DataSnapshot dataSnapshot) {
+                        long nextSafehouseId = (long) dataSnapshot.getValue();
+                        mReachedSafeHouseNodeId = (int) nextSafehouseId;
+
+                        //Creates safehouse object from the Safehouse Node ID
+                        Firebase safehouseFirebaseRef = new Firebase(Constants.FIREBASE_URL_SAFEHOUSES + "/" + mReachedSafeHouseNodeId + "/");
+                        safehouseFirebaseRef.addListenerForSingleValueEvent(new ValueEventListener() {
+                            @Override
+                            public void onDataChange(DataSnapshot dataSnapshot) {
+                                String houseName = dataSnapshot.child("houseName").getValue().toString();
+                                String description = dataSnapshot.child("description").getValue().toString();
+
+                                // Build the current safehouse object and save it to shared preferences
+                                SafeHouse currentSafeHouse = new SafeHouse(mReachedSafeHouseNodeId, houseName, description);
+                                Gson gson = new Gson();
+                                String currentSafehouseJson = gson.toJson(currentSafeHouse);
+                                mEditor.putString(Constants.PREFERENCES_CURRENT_SAFEHOUSE, currentSafehouseJson);
+                                mEditor.commit();
+                                String safehouseJson = mSharedPreferences.getString(Constants.PREFERENCES_CURRENT_SAFEHOUSE, null);
+                                Gson safehouseGson = new Gson();
+                                mReachedSafehouse = safehouseGson.fromJson(safehouseJson, SafeHouse.class);
+                                showEventDialog(2);
+                            }
+
+                            @Override
+                            public void onCancelled(FirebaseError firebaseError) {}
+                        });
+
+                    }
+
+                    @Override
+                    public void onCancelled(FirebaseError firebaseError) {
+
+                    }
+                });
             }
 
             @Override
             public void onCancelled(FirebaseError firebaseError) {
 
             }
-        });
-
-        //Gets the actual safehouse ID
-        nextTeamSafehouse.child("safehouseIdMap/" + mReachedSafeHousePseudoId).addListenerForSingleValueEvent(new ValueEventListener() {
-            @Override
-            public void onDataChange(DataSnapshot dataSnapshot) {
-                long nextSafehouseId = (long) dataSnapshot.getValue();
-                mReachedSafeHouseId = (int) nextSafehouseId;
-            }
-
-            @Override
-            public void onCancelled(FirebaseError firebaseError) {
-
-            }
-        });
-
-        //Creates safehouse object from the actual safehouse ID
-        Firebase safehouseFirebaseRef = new Firebase(Constants.FIREBASE_URL_SAFEHOUSES + "/" + mReachedSafeHouseId + "/");
-        safehouseFirebaseRef.addListenerForSingleValueEvent(new ValueEventListener() {
-            @Override
-            public void onDataChange(DataSnapshot dataSnapshot) {
-                String houseName = dataSnapshot.child("houseName").getValue().toString();
-                String description = dataSnapshot.child("description").getValue().toString();
-
-                // Build the next safehouse object and save it to shared preferences
-                SafeHouse nextSafeHouse = new SafeHouse(mReachedSafeHouseId, houseName, description);
-                Gson gson = new Gson();
-                String nextSafehouseJson = gson.toJson(nextSafeHouse);
-                mEditor.putString(Constants.PREFERENCES_REACHED_SAFEHOUSE_BOOLEAN, nextSafehouseJson);
-                mEditor.commit();
-                String safehouseJson = mSharedPreferences.getString(Constants.PREFERENCES_REACHED_SAFEHOUSE_BOOLEAN, null);
-                Gson safehouseGson = new Gson();
-                mReachedSafehouse = safehouseGson.fromJson(safehouseJson, SafeHouse.class);
-            }
-
-            @Override
-            public void onCancelled(FirebaseError firebaseError) {}
         });
 
         //Sets boolean for reaching the safehouse so the dialog is only triggered once per day
@@ -406,6 +408,13 @@ public class MainActivity extends FragmentActivity
                         teammatesAtSafehouse.add(atSafeHouse);
                     }
 
+                    //If the rest of the team has made it to the safehouse, this resets the last safehouse pseudo ID and the next safehouse pseudo ID
+                    if(mPlayerIDs.size() == teammatesAtSafehouse.size()) {
+                        Firebase firebaseTeam = new Firebase (Constants.FIREBASE_URL_TEAM + "/" + mCurrentMatchId);
+                        firebaseTeam.child("lastSafehouseId").setValue(mReachedSafeHouseId);
+                        firebaseTeam.child("nextSafehouseId").setValue((mReachedSafeHouseId + 1));
+                    }
+
                 }
 
                 @Override
@@ -415,15 +424,6 @@ public class MainActivity extends FragmentActivity
             });
         }
 
-        //If the rest of the team has made it to the safehouse, this resets the last safehouse pseudo ID and the next safehouse pseudo ID
-        if(mPlayerIDs.size() == teammatesAtSafehouse.size()) {
-            Firebase firebaseTeam = new Firebase (Constants.FIREBASE_URL_TEAM + "/" + mCurrentMatchId);
-            firebaseTeam.child("lastSafehousePseudoId").setValue(mReachedSafeHousePseudoId);
-            firebaseTeam.child("nextSafehousePseudoId").setValue((mReachedSafeHouseId + 1));
-        }
-
-
-        showEventDialog(2);
     }
 
     public void initiateDailyCountResetService() {
