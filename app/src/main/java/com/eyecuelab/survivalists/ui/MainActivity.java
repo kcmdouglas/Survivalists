@@ -586,17 +586,10 @@ public class MainActivity extends FragmentActivity
                 @Override
                 public void onDataChange(DataSnapshot dataSnapshot) {
                     for (DataSnapshot child : dataSnapshot.getChildren()) {
-                        String description = child.child("description").getValue().toString();
-                        int healthPoints = Integer.parseInt(child.child("healthPoints").getValue().toString());
-                        int imageId = Integer.parseInt(child.child("imageId").getValue().toString());
-                        String name = child.child("name").getValue().toString();
-                        String pushId = child.child("pushId").getValue().toString();
-                        Item currentItem = new Item(name, description, healthPoints, true);
-                        currentItem.setPushId(pushId);
-                        userItems.add(currentItem);
-                        Log.v(TAG, userItems.size() + "");
-                        currentItem.setImageId(imageId);
-                        currentItem.setPushId(pushId);
+                        Item currentItem = new Item(child.getValue(Item.class));
+                        currentItem.setPushId(child.child("pushId").getValue().toString());
+                        long imageId = (long) child.child("imageId").getValue();
+                        currentItem.setImageId((int) imageId);
                         userItems.add(currentItem);
                         Log.v(TAG, userItems.size() + "");
                     }
@@ -611,12 +604,8 @@ public class MainActivity extends FragmentActivity
                 @Override
                 public void onDataChange(DataSnapshot dataSnapshot) {
                     for (DataSnapshot child : dataSnapshot.getChildren()) {
-                        String description = child.child("description").getValue().toString();
-                        int hitPoints = Integer.parseInt(child.child("hitPoints").getValue().toString());
-                        String name = child.child("name").getValue().toString();
-                        String pushId = child.child("pushId").getValue().toString();
-                        Weapon currentWeapon = new Weapon(name, description, hitPoints);
-                        currentWeapon.setPushId(pushId);
+                        Weapon currentWeapon = new Weapon(child.getValue(Weapon.class));
+                        currentWeapon.setPushId(child.child("pushId").getValue().toString());
                         userWeapons.add(currentWeapon);
                         Log.v(TAG, userWeapons.size() + "");
                     }
