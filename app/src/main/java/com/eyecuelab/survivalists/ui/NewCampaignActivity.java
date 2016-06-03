@@ -205,6 +205,8 @@ public class NewCampaignActivity extends BaseGameActivity implements View.OnClic
         IntentFilter intentFilter = new IntentFilter();
         intentFilter.addAction(RECEIVE_UPDATE_FROM_INVITATION);
         broadcastManager.registerReceiver(broadcastReceiver, intentFilter);
+
+        mCurrentPlayerId = mSharedPreferences.getString(Constants.PREFERENCES_GOOGLE_PLAYER_ID, null);
     }
 
     @Override
@@ -425,6 +427,8 @@ public class NewCampaignActivity extends BaseGameActivity implements View.OnClic
     public void takeTurn() {
         turnData = mCurrentMatch.getData();
         mCurrentPlayerId = Games.Players.getCurrentPlayerId(mGoogleApiClient);
+        mEditor.putString(Constants.PREFERENCES_GOOGLE_PLAYER_ID, mCurrentPlayerId).commit();
+        mEditor.putInt(Constants.PREFERENCES_PREVIOUS_STEPS_KEY, 0).commit();
 
         //First turn
         if (turnData == null) {

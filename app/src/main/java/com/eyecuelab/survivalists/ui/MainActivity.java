@@ -38,6 +38,7 @@ import com.firebase.client.Firebase;
 import com.firebase.client.FirebaseError;
 import com.firebase.client.ValueEventListener;
 
+import com.google.android.gms.games.Games;
 import com.google.gson.Gson;
 
 
@@ -524,7 +525,6 @@ public class MainActivity extends FragmentActivity
         } catch (NullPointerException nullPointer) {
             Log.e(TAG, nullPointer.getMessage());
         }
-
     }
 
     public void loadCharacter() {
