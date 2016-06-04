@@ -127,7 +127,6 @@ public class BackgroundStepService extends Service implements SensorEventListene
              firebaseStatsLevel.put("fullnessLevel", newHunger);
              firebaseStatsLevel.put("health", newHealth);
              firebaseCharacterRef.updateChildren(firebaseStatsLevel);
-             firebaseStatsListener();
         }
     }
 

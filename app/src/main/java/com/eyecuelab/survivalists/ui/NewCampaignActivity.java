@@ -427,7 +427,18 @@ public class NewCampaignActivity extends BaseGameActivity implements View.OnClic
 
     public void takeTurn() {
         turnData = mCurrentMatch.getData();
-        mEditor.putInt(Constants.PREFERENCES_PREVIOUS_STEPS_KEY, 0).commit();
+        mEditor.putInt(Constants.PREFERENCES_EVENT_1_STEPS, 100);
+        mEditor.putInt(Constants.PREFERENCES_EVENT_2_STEPS, 200);
+        mEditor.putInt(Constants.PREFERENCES_EVENT_3_STEPS, 300);
+        mEditor.putInt(Constants.PREFERENCES_EVENT_4_STEPS, 400);
+        mEditor.putInt(Constants.PREFERENCES_EVENT_5_STEPS, 500);
+        mEditor.putInt(Constants.PREFERENCES_DAILY_STEPS, 0);
+        mEditor.putBoolean(Constants.PREFERENCES_REACHED_SAFEHOUSE_BOOLEAN, false);
+        mEditor.commit();
+        int stepsInSensor = mSharedPreferences.getInt(Constants.PREFERENCES_STEPS_IN_SENSOR_KEY, 0);
+        if (stepsInSensor > 0) {
+            mEditor.putInt(Constants.PREFERENCES_PREVIOUS_STEPS_KEY, stepsInSensor);
+        }
 
 
         //First turn
@@ -442,6 +453,8 @@ public class NewCampaignActivity extends BaseGameActivity implements View.OnClic
             mEditor.putString(Constants.PREFERENCES_MATCH_ID, mCurrentMatchId);
             mEditor.putInt(Constants.PREFERENCES_LAST_SAFEHOUSE_ID, 0);
             mEditor.putInt(Constants.PREFERENCES_NEXT_SAFEHOUSE_ID, 1);
+            mEditor.putBoolean(Constants.PREFERENCES_REACHED_SAFEHOUSE_BOOLEAN, false);
+            mEditor.putString(Constants.PREFERENCES_CHARACTER, null);
             mEditor.commit();
 
             Firebase teamFirebaseRef = new Firebase(Constants.FIREBASE_URL_TEAM + "/" + "").child(mCurrentMatchId);
@@ -462,6 +475,7 @@ public class NewCampaignActivity extends BaseGameActivity implements View.OnClic
             Firebase mUserFirebaseRef = new Firebase(Constants.FIREBASE_URL_USERS + "/" + mCurrentPlayerId + "/");
             mUserFirebaseRef.child("teamId").setValue(mCurrentMatchId);
             mUserFirebaseRef.child("joinedMatch").setValue(true);
+            mUserFirebaseRef.child("atSafeHouse").setValue(false);
             createCampaign(mCampaignLength);
             saveSafehouse();
             turnData = new byte[1];

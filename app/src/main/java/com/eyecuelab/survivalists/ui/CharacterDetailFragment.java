@@ -34,10 +34,10 @@ public class CharacterDetailFragment extends Fragment {
         // Required empty public constructor
     }
 
-    public static CharacterDetailFragment newInstance(String playerID) {
+    public static CharacterDetailFragment newInstance(Character character) {
         CharacterDetailFragment fragment = new CharacterDetailFragment();
         Bundle args = new Bundle();
-        args.putParcelable("playerID", Parcels.wrap(playerID));
+        args.putParcelable("playerID", Parcels.wrap(character));
         fragment.setArguments(args);
         return fragment;
     }
@@ -45,35 +45,9 @@ public class CharacterDetailFragment extends Fragment {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        mPlayerID = Parcels.unwrap(getArguments().getParcelable("playerID"));
-        Firebase teamCharactersRef = new Firebase(Constants.FIREBASE_URL_USERS + "/" + mPlayerID + "/character/");
-        teamCharactersRef.addListenerForSingleValueEvent(new ValueEventListener() {
-            @Override
-            public void onDataChange(DataSnapshot dataSnapshot) {
-                String name = dataSnapshot.child("name").getValue().toString();
-                long ageLong = (long) dataSnapshot.child("age").getValue();
-                int age = (int) ageLong;
-                String description = dataSnapshot.child("description").getValue().toString();
-                long characterIdLong = (long) dataSnapshot.child("characterId").getValue();
-                int characterId = (int) characterIdLong;
-                long healthLong = (long) dataSnapshot.child("health").getValue();
-                int health = (int) healthLong;
-                long fullnessLevelLong = (long) dataSnapshot.child("fullnessLevel").getValue();
-                int fullnessLevel = (int) fullnessLevelLong;
-                String characterUrl = dataSnapshot.child("characterPictureUrl").getValue().toString();
-                Character character = new Character(name, description, age, health, fullnessLevel, characterUrl, characterId);
-                mCharacter = new Character(character);
+        Bundle bundle = getArguments();
+        mCharacter = bundle.getParcelable("character");
 
-                nameTextView.setText("Name: " + mCharacter.getName());
-                ageTextView.setText("Age: " + Integer.toString(mCharacter.getAge()));
-                healthTextView.setText("Health: " + Integer.toString(mCharacter.getHealth()));
-            }
-
-            @Override
-            public void onCancelled(FirebaseError firebaseError) {
-
-            }
-        });
 
     }
 
@@ -82,6 +56,10 @@ public class CharacterDetailFragment extends Fragment {
                              Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_character_detail, container, false);
         ButterKnife.bind(this, view);
+
+        nameTextView.setText("Name: " + mCharacter.getName());
+        ageTextView.setText("Age: " + Integer.toString(mCharacter.getAge()));
+        healthTextView.setText("Health: " + Integer.toString(mCharacter.getHealth()));
 
         return view;
     }
