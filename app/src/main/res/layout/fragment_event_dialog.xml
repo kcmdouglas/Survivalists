@@ -1,57 +1,62 @@
 <?xml version="1.0" encoding="utf-8"?>
-<android.support.percent.PercentRelativeLayout
+<RelativeLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:background="@android:color/transparent"
-    android:layout_width="match_parent"
+    android:layout_width="wrap_content"
     android:layout_height="wrap_content">
 
-    <android.support.percent.PercentRelativeLayout
-        app:layout_heightPercent="50%"
-        app:layout_widthPercent="100%"
-        app:layout_marginTopPercent="10%"
-        android:id="@+id/eventCardWrapper">
+    <RelativeLayout
+        android:layout_height="300dp"
+        android:layout_width="match_parent"
+        android:id="@+id/eventCardWrapper"
+        android:layout_centerInParent="true">
 
         <ImageView
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:src="@drawable/events_background"/>
-
-
-        <TextView
-            android:id="@+id/dialogTitle"
-            android:layout_width="155dp"
-            android:maxWidth="155dp"
-            android:layout_height="wrap_content"
-            app:layout_marginTopPercent="18%"
-            app:layout_marginLeftPercent="42%"
-            android:textAppearance="?android:attr/textAppearanceLarge"
-            android:rotation="-3"
-            android:textColor="@android:color/black"/>
+            android:scaleType="centerInside"
+            android:src="@drawable/events_background"
+            />
 
         <Button
             android:id="@+id/closeButton"
             android:layout_width="30dp"
             android:layout_height="30dp"
-            app:layout_marginLeftPercent="2%"
-            android:layout_alignBaseline="@+id/dialogTitle"
-            android:layout_toRightOf="@+id/dialogTitle"
-            android:layout_toEndOf="@+id/dialogTitle"
+            android:layout_alignParentEnd="true"
+            android:layout_alignParentRight="true"
             android:rotation="-3"
             android:background="@android:drawable/ic_menu_close_clear_cancel" />
 
         <TextView
-            android:id="@+id/dialogDescription"
-            android:layout_width="wrap_content"
+            android:id="@+id/dialogTitle"
+            android:layout_width="155dp"
             android:layout_height="wrap_content"
-            app:layout_marginTopPercent="10%"
-            app:layout_marginRightPercent="18%"
+            android:layout_marginTop="45dp"
+            android:layout_marginEnd="45dp"
+            android:layout_marginRight="45dp"
+            android:layout_alignParentEnd="true"
+            android:layout_alignParentRight="true"
+            android:singleLine="true"
+            android:textAppearance="?android:attr/textAppearanceLarge"
+            android:rotation="-3"
+            android:textColor="@android:color/black"
+            android:text="The application."/>
+
+
+        <TextView
+            android:id="@+id/dialogDescription"
+            android:layout_width="189dp"
+            android:layout_height="wrap_content"
+            android:layout_marginEnd="43dp"
+            android:layout_marginRight="43dp"
             android:layout_alignParentEnd="true"
             android:layout_alignParentRight="true"
             android:layout_below="@+id/dialogTitle"
             android:rotation="-3"
             android:textAppearance="?android:attr/textAppearanceMedium"
-            android:textColor="@android:color/black"/>
+            android:textColor="@android:color/black"
+            android:text="The application may be doing too much work on its main thread."/>
 
         <TextView
             android:id="@+id/dialogConsequence"
@@ -66,14 +71,14 @@
             android:rotation="-3"
             android:textColor="@android:color/black"/>
 
-    </android.support.percent.PercentRelativeLayout>
+    </RelativeLayout>
 
-    <android.support.percent.PercentRelativeLayout
+    <RelativeLayout
         android:layout_height="wrap_content"
         android:layout_width="match_parent"
         android:layout_below="@+id/eventCardWrapper"
-        android:layout_centerInParent="true"
-        android:id="@+id/eventInteractionButtons">
+        android:id="@+id/eventInteractionButtons"
+        android:background="@android:color/transparent">
 
 
         <Button
@@ -89,12 +94,11 @@
             app:layout_marginTopPercent="20%"
             app:layout_marginLeftPercent="20%"
             android:background="@drawable/blank_notebook_interaction_btn"
-            android:layout_alignParentBottom="true"
             android:layout_alignParentRight="true"
             android:layout_alignParentEnd="true"
             android:layout_alignBaseline="@+id/negativeButton"/>
 
-    </android.support.percent.PercentRelativeLayout>
+    </RelativeLayout>
 
 
-</android.support.percent.PercentRelativeLayout>
+</RelativeLayout>

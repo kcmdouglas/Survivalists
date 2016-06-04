@@ -4,10 +4,8 @@ package com.eyecuelab.survivalists.ui;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
-import android.support.annotation.Nullable;
 import android.support.v4.app.DialogFragment;
 import android.support.v4.app.Fragment;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -69,6 +67,8 @@ public class InventoryDetailFragment extends DialogFragment implements View.OnCl
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        setStyle(DialogFragment.STYLE_NO_FRAME, R.style.CustomFragment);
+
         mCharacter = Parcels.unwrap(getArguments().getParcelable("character"));
         mUserId = Parcels.unwrap(getArguments().getParcelable("userId"));
 
@@ -84,8 +84,9 @@ public class InventoryDetailFragment extends DialogFragment implements View.OnCl
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
-        View view = inflater.inflate(R.layout.fragment_event_dialog, container, false);
+        View view = LayoutInflater.from(getContext()).inflate(R.layout.fragment_event_dialog, container, false);
         super.onViewCreated(view, savedInstanceState);
+
         ButterKnife.bind(this, view);
 
         if (mItem != null) {

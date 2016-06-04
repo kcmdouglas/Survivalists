@@ -198,6 +198,7 @@ public class MainActivity extends FragmentActivity
     @Override
     protected void onPause() {
         super.onPause();
+        setFullScreen();
         SharedPreferences pref = PreferenceManager.getDefaultSharedPreferences(this);
         pref.unregisterOnSharedPreferenceChangeListener(this);
     }
@@ -206,6 +207,14 @@ public class MainActivity extends FragmentActivity
     protected void onDestroy() {
         stopService(mBackgroundStepServiceIntent);
         super.onDestroy();
+    }
+
+    @Override
+    public void onWindowFocusChanged(boolean hasFocus) {
+        super.onWindowFocusChanged(hasFocus);
+        if (hasFocus) {
+            setFullScreen();
+        }
     }
 
     public void setFullScreen() {
