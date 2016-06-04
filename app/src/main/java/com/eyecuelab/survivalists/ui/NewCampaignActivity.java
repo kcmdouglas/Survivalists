@@ -429,6 +429,7 @@ public class NewCampaignActivity extends BaseGameActivity implements View.OnClic
         turnData = mCurrentMatch.getData();
         mEditor.putInt(Constants.PREFERENCES_PREVIOUS_STEPS_KEY, 0).commit();
 
+
         //First turn
         if (turnData == null) {
             mCurrentMatchId = mCurrentMatch.getMatchId();

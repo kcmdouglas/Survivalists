@@ -5,8 +5,10 @@ import android.app.DialogFragment;
 import android.content.SharedPreferences;
 import android.content.res.Resources;
 import android.os.Bundle;
+import android.os.Parcelable;
 import android.preference.PreferenceManager;
 import android.support.annotation.Nullable;
+import android.support.v4.app.BundleCompat;
 import android.support.v4.app.FragmentManager;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -18,6 +20,7 @@ import android.widget.TextView;
 import com.eyecuelab.survivalists.Constants;
 import com.eyecuelab.survivalists.R;
 import com.eyecuelab.survivalists.models.Character;
+import com.eyecuelab.survivalists.models.Event;
 import com.eyecuelab.survivalists.models.Item;
 import com.eyecuelab.survivalists.models.Weapon;
 import com.firebase.client.DataSnapshot;
@@ -26,6 +29,7 @@ import com.firebase.client.FirebaseError;
 import com.firebase.client.ValueEventListener;
 import com.google.gson.Gson;
 
+import org.parceler.Parcels;
 import org.w3c.dom.Text;
 
 import java.util.ArrayList;
@@ -57,8 +61,8 @@ public class EventDialogFragment extends android.support.v4.app.DialogFragment i
     private int stepsRequired;
     private boolean getItemOnFlee = false;
     private boolean getItemOnInspect = false;
-    private Weapon weapon = null;
-    private Item item = null;
+    private Weapon weapon;
+    private Item item;
     private boolean effectsHealth;
     private int attackOrInspect;
     private Firebase mFirebaseStepsRef;
@@ -67,16 +71,18 @@ public class EventDialogFragment extends android.support.v4.app.DialogFragment i
     private SharedPreferences.Editor mEditor;
     private Character mCurrentCharacter;
     private ArrayList<Weapon> inventoryWeapons;
+    private Event event;
 
 
     //Empty constructor required for DialogFragments
     public EventDialogFragment(){}
 
-    public static android.support.v4.app.DialogFragment newInstance(int number) {
+    public static android.support.v4.app.DialogFragment newInstance(int number, ArrayList<Weapon> inventoryWeapons) {
         EventDialogFragment frag = new EventDialogFragment();
 
         Bundle args = new Bundle();
         args.putInt("number", number);
+        args.putParcelableArrayList("inventoryWeapons", inventoryWeapons);
         frag.setArguments(args);
 
         return frag;
@@ -88,25 +94,27 @@ public class EventDialogFragment extends android.support.v4.app.DialogFragment i
         //Create Shared Preferences
         mSharedPreferences = PreferenceManager.getDefaultSharedPreferences(getActivity().getApplicationContext());
         mEditor = mSharedPreferences.edit();
+        Bundle bundle = getArguments();
         inventoryWeapons = new ArrayList<>();
         mPlayerId = mSharedPreferences.getString(Constants.PREFERENCES_GOOGLE_PLAYER_ID, null);
+        Gson gson = new Gson();
+        mCurrentCharacter = gson.fromJson(mSharedPreferences.getString(Constants.PREFERENCES_CHARACTER, null), Character.class);
+        weapon = bundle.getParcelable("weapon");
+        item = bundle.getParcelable("item");
+        inventoryWeapons = bundle.getParcelableArrayList("userWeapons");
+        event = bundle.getParcelable("event");
+        attackOrInspect = bundle.getInt("attackOrInspect");
+        description = event.getDescription();
+        title = event.getTitle();
+        outcomeA = event.getOutcomeA();
+        outcomeB = event.getOutcomeB();
+        penaltyHP = event.getPenaltyHP();
+        stepsRequired = event.getStepsRequired();
+        if (attackOrInspect == 1) {
+            getItemOnFlee = event.isGetItemOnFlee();
+            getItemOnInspect = event.isGetItemOnInspect();
+        }
 
-
-        final Firebase inventoryWeaponFirebase = new Firebase(Constants.FIREBASE_URL_USERS + "/" + mPlayerId + "/weapons");
-        inventoryWeaponFirebase.addListenerForSingleValueEvent(new ValueEventListener() {
-            @Override
-            public void onDataChange(DataSnapshot dataSnapshot) {
-                for (DataSnapshot child : dataSnapshot.getChildren()) {
-                    Weapon userWeapon = new Weapon(child.getValue(Weapon.class));
-                    inventoryWeapons.add(userWeapon);
-                }
-            }
-
-            @Override
-            public void onCancelled(FirebaseError firebaseError) {
-
-            }
-        });
 
     }
 
@@ -116,16 +124,8 @@ public class EventDialogFragment extends android.support.v4.app.DialogFragment i
         View view = inflater.inflate(R.layout.fragment_event_dialog, container, false);
         super.onViewCreated(view, savedInstanceState);
         ButterKnife.bind(this, view);
-        String characterJson = mSharedPreferences.getString(Constants.PREFERENCES_CHARACTER, null);
-        Gson gson = new Gson();
-        mCurrentCharacter = gson.fromJson(characterJson, Character.class);
-
 
         //TODO: change this to account for the size of the hashmap array in firebase--maybe move into an indv. listener
-        int eventNumber = (int) Math.floor(Math.random() * 10 + 1);
-
-        //0 is an attack event, 1 is an inspect event
-        attackOrInspect = (int) (Math.random() +0.5);
 
         affirmativeButton = (Button) view.findViewById(R.id.affirmativeButton);
         affirmativeButton.setOnClickListener(this);
@@ -135,114 +135,6 @@ public class EventDialogFragment extends android.support.v4.app.DialogFragment i
         closeButton.setOnClickListener(this);
         closeButton.setVisibility(View.GONE);
 
-        if(attackOrInspect == 0) {
-            mFirebaseEventRef = new Firebase(Constants.FIREBASE_URL_EVENTS + "/attack/");
-            mFirebaseEventRef.child(Integer.toString(eventNumber)).addListenerForSingleValueEvent(
-                    new ValueEventListener() {
-                        @Override
-                        public void onDataChange(DataSnapshot dataSnapshot) {
-                            description = dataSnapshot.child("description").getValue().toString();
-                            outcomeA = dataSnapshot.child("description").getValue().toString();
-                            outcomeB = dataSnapshot.child("description").getValue().toString();
-                            title = dataSnapshot.child("description").getValue().toString();
-                            long penaltyHPLong = (long) dataSnapshot.child("penalty_hp").getValue();
-                            penaltyHP = (int) penaltyHPLong;
-                            long stepsRequiredLong = (long)dataSnapshot.child("steps_required").getValue();
-                            stepsRequired = (int) stepsRequiredLong;
-                        }
-
-                        @Override
-                        public void onCancelled(FirebaseError firebaseError) {
-
-                        }
-                    }
-            );
-            dialogConsequence.setVisibility(View.GONE);
-            affirmativeButton.setText("Attack");
-            negativeButton.setText("Run");
-
-        } else {
-            mFirebaseEventRef = new Firebase(Constants.FIREBASE_URL_EVENTS + "/inspect/");
-            mFirebaseEventRef.child(Integer.toString(eventNumber)).addListenerForSingleValueEvent(
-                    new ValueEventListener() {
-                        @Override
-                        public void onDataChange(DataSnapshot dataSnapshot) {
-                            description = dataSnapshot.child("description").getValue().toString();
-                            outcomeA = dataSnapshot.child("description").getValue().toString();
-                            outcomeB = dataSnapshot.child("description").getValue().toString();
-                            title = dataSnapshot.child("description").getValue().toString();
-                            long penaltyHPLong = (long) dataSnapshot.child("penalty_hp").getValue();
-                            penaltyHP = (int) penaltyHPLong;
-                            long stepsRequiredLong = (long)dataSnapshot.child("steps_required").getValue();
-                            stepsRequired = (int) stepsRequiredLong;
-                            getItemOnFlee = (boolean) dataSnapshot.child("get_item_on_flee").getValue();
-                            getItemOnInspect = (boolean) dataSnapshot.child("get_item_on_flee").getValue();
-                        }
-
-                        @Override
-                        public void onCancelled(FirebaseError firebaseError) {
-
-                        }
-                    }
-            );
-            affirmativeButton.setText("Inspect");
-            negativeButton.setText("Ignore");
-            if (stepsRequired > 0) {
-                dialogConsequence.setText("Inspecting will add " + Integer.toString(stepsRequired) + " to your daily goal.");
-            } else {
-                dialogConsequence.setVisibility(View.GONE);
-            }
-        }
-
-
-
-        if (getItemOnInspect || getItemOnFlee) {
-            int categoryRandomizer = (int) Math.floor(Math.random() * 3 + 1);
-            int itemRandomizer = (int) Math.floor(Math.random() * 10 + 1);
-
-            switch (categoryRandomizer) {
-                case 1:
-                    mFirebaseItemRef = new Firebase(Constants.FIREBASE_URL_ITEMS + "/food/");
-                    effectsHealth = false;
-                    break;
-                case 2:
-                    mFirebaseItemRef = new Firebase(Constants.FIREBASE_URL_ITEMS + "/medicine/");
-                    effectsHealth = true;
-                    break;
-                case 3:
-                    mFirebaseItemRef = new Firebase(Constants.FIREBASE_URL_ITEMS + "/weapons/");
-                    weapon = new Weapon("name", "description", 0);
-                    break;
-            }
-
-            mFirebaseItemRef.child(Integer.toString(itemRandomizer)).addListenerForSingleValueEvent(
-                    new ValueEventListener() {
-                        @Override
-                        public void onDataChange(DataSnapshot dataSnapshot) {
-                            if (weapon != null) {
-                                String weaponName = dataSnapshot.child("name").getValue().toString();
-                                String weaponDescription = dataSnapshot.child("description").getValue().toString();
-                                long hitPointsLong = (long) dataSnapshot.child("hitPoints").getValue();
-                                int hitPoints = (int) hitPointsLong;
-                                weapon = new Weapon(weaponName, weaponDescription, hitPoints);
-                            } else {
-                                String itemName = dataSnapshot.child("name").getValue().toString();
-                                String itemDescription = dataSnapshot.child("description").getValue().toString();
-                                long healthPointsLong = (long) dataSnapshot.child("healthPoints").getValue();
-                                int healthPoints = (int) healthPointsLong;
-                                int itemId = (int) dataSnapshot.getValue();
-                                item = new Item(itemName, itemDescription, healthPoints, effectsHealth);
-                            }
-
-                        }
-
-                        @Override
-                        public void onCancelled(FirebaseError firebaseError) {
-
-                        }
-                    }
-            );
-        }
 
         dialogDescription = (TextView) view.findViewById(R.id.dialogDescription);
         dialogConsequence = (TextView) view.findViewById(R.id.dialogConsequence);
@@ -253,6 +145,20 @@ public class EventDialogFragment extends android.support.v4.app.DialogFragment i
         dialogTitle.setText(title);
         dialogDescription.setText(description);
 
+        if(attackOrInspect == 0) {
+            dialogConsequence.setVisibility(View.GONE);
+            affirmativeButton.setText("Attack");
+            negativeButton.setText("Run");
+
+        } else {
+            affirmativeButton.setText("Inspect");
+            negativeButton.setText("Ignore");
+            if (stepsRequired > 0) {
+                dialogConsequence.setText("Inspecting will add " + Integer.toString(stepsRequired) + " to your daily goal.");
+            } else {
+                dialogConsequence.setVisibility(View.GONE);
+            }
+        }
 
         return view;
     }

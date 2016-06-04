@@ -28,6 +28,7 @@ import com.eyecuelab.survivalists.R;
 
 import com.eyecuelab.survivalists.adapters.InventoryAdapter;
 import com.eyecuelab.survivalists.models.Character;
+import com.eyecuelab.survivalists.models.Event;
 import com.eyecuelab.survivalists.models.Item;
 import com.eyecuelab.survivalists.models.SafeHouse;
 import com.eyecuelab.survivalists.models.Weapon;
@@ -46,6 +47,7 @@ import org.parceler.Parcels;
 
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -76,6 +78,8 @@ public class MainActivity extends FragmentActivity
     private SafeHouse mReachedSafehouse;
     private Character mCurrentCharacter;
     private Firebase mUserFirebaseRef;
+    private Weapon eventWeapon;
+    private Item eventItem;
 
     //Flags to indicate navigation
     private final int START_CAMPAIGN_INTENT = 2;
@@ -94,6 +98,11 @@ public class MainActivity extends FragmentActivity
     private boolean eventFourInitiated;
     private boolean eventFiveInitiated;
     private boolean reachedDailySafehouse;
+    private Event event;
+    ArrayList<Weapon> allWeapons;
+    ArrayList<Item> allItems;
+    ArrayList<Weapon> userWeapons;
+    ArrayList<Item> userItems;
 
     private boolean isRecurringAlarmSet;
     private ArrayList<Character> mCharacters;
@@ -114,6 +123,8 @@ public class MainActivity extends FragmentActivity
         mContext = this;
         ButterKnife.bind(this);
 
+        allWeapons = new ArrayList<>();
+        allItems = new ArrayList<>();
         //Create Shared Preferences
         mSharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
         mEditor = mSharedPreferences.edit();
@@ -124,6 +135,8 @@ public class MainActivity extends FragmentActivity
 
         mCurrentMatchId = mSharedPreferences.getString(Constants.PREFERENCES_MATCH_ID, null);
         mCurrentPlayerId = mSharedPreferences.getString(Constants.PREFERENCES_GOOGLE_PLAYER_ID, null);
+        mUserFirebaseRef = new Firebase (Constants.FIREBASE_URL_USERS + "/" + mCurrentPlayerId);
+        setupBackpackContent();
 
         //Set counter text based on current shared preferences--these are updated in the shared preferences onChange listener
         dailySteps = mSharedPreferences.getInt(Constants.PREFERENCES_DAILY_STEPS, 0);
@@ -136,8 +149,10 @@ public class MainActivity extends FragmentActivity
         reachedDailySafehouse = mSharedPreferences.getBoolean(Constants.PREFERENCES_REACHED_SAFEHOUSE_BOOLEAN, false);
 
         //Set recurring alarm
+        isRecurringAlarmSet = mSharedPreferences.getBoolean("recurringAlarmBoolean", false);
         if(!isRecurringAlarmSet) {
-            isRecurringAlarmSet = true;
+            mEditor.putBoolean("recurringAlarmBoolean", true).commit();
+            isRecurringAlarmSet = mSharedPreferences.getBoolean("recurringAlarmBoolean", true);
             initiateDailyCountResetService();
         }
 
@@ -161,11 +176,7 @@ public class MainActivity extends FragmentActivity
             instantiatePlayerIDs();
         }
 
-//        for(int i = 0; i < playerIDArray.length; i++ ) {
-//            mPlayerIDs.add(playerIDArray[i]);
-//        }
-
-        setupBackpackContent();
+        instantiateAllItems();
         loadCharacter();
     }
 
@@ -245,16 +256,17 @@ public class MainActivity extends FragmentActivity
                 Toast.makeText(this, "Inflate map here", Toast.LENGTH_SHORT).show();
                 break;
             case R.id.rightInteractionBUtton:
-                String inputtedSteps = stepEditText.getText().toString();
-                int steps = Integer.parseInt(inputtedSteps);
-                dailySteps = steps;
-                mEditor.putInt(Constants.PREFERENCES_DAILY_STEPS, dailySteps).commit();
-
-                if((mCurrentPlayerId != null) && (steps % 10 < 1)) {
-                    Log.v(TAG, "Should be saving!");
-                    Firebase firebaseStepsRef = new Firebase(Constants.FIREBASE_URL_USERS + "/" + mCurrentPlayerId + "/");
-                    firebaseStepsRef.child("dailySteps").setValue(steps);
-                }
+//                String inputtedSteps = stepEditText.getText().toString();
+//                int steps = Integer.parseInt(inputtedSteps);
+//                dailySteps = steps;
+//                mEditor.putInt(Constants.PREFERENCES_DAILY_STEPS, dailySteps).commit();
+//
+//                if((mCurrentPlayerId != null) && (steps % 10 < 1)) {
+//                    Log.v(TAG, "Should be saving!");
+//                    Firebase firebaseStepsRef = new Firebase(Constants.FIREBASE_URL_USERS + "/" + mCurrentPlayerId + "/");
+//                    firebaseStepsRef.child("dailySteps").setValue(steps);
+//                }
+                showEventDialog(1);
                 break;
         }
     }
@@ -307,15 +319,84 @@ public class MainActivity extends FragmentActivity
     public void showEventDialog(int type) {
         mStackLevel++;
         if (type==1) {
-            FragmentTransaction ft = getSupportFragmentManager().beginTransaction();
-            Fragment prev = getSupportFragmentManager().findFragmentByTag("event");
-            if(prev != null) {
-                ft.remove(prev);
+            pickEventItems();
+
+            int eventNumber = (int) Math.floor(Math.random() * 10 + 1);
+
+            //0 is an attack event, 1 is an inspect event
+            final int attackOrInspect = (int) (Math.random() +0.5);
+            Firebase mFirebaseEventRef = new Firebase(Constants.FIREBASE_URL_EVENTS);
+
+            if(attackOrInspect == 0) {
+                mFirebaseEventRef.child("attack").child(Integer.toString(eventNumber)).addListenerForSingleValueEvent(
+                        new ValueEventListener() {
+                            @Override
+                            public void onDataChange(DataSnapshot dataSnapshot) {
+                               event = new Event(dataSnapshot.getValue(Event.class));
+
+                                FragmentTransaction ft = getSupportFragmentManager().beginTransaction();
+                                Fragment prev = getSupportFragmentManager().findFragmentByTag("event");
+                                if(prev != null) {
+                                    ft.remove(prev);
+                                }
+                                Bundle bundle = new Bundle();
+                                bundle.putParcelable("weapon", eventWeapon);
+                                bundle.putParcelable("item", eventItem);
+                                bundle.putParcelableArrayList("userWeapons", userWeapons);
+                                bundle.putParcelable("event", event);
+                                bundle.putInt("attackOrInspect", attackOrInspect);
+
+
+                                ft.addToBackStack(null);
+                                DialogFragment frag = EventDialogFragment.newInstance(mStackLevel, userWeapons);
+                                frag.setArguments(bundle);
+                                frag.show(ft, "fragment_event_dialog");
+                            }
+
+                            @Override
+                            public void onCancelled(FirebaseError firebaseError) {
+
+                            }
+                        });
+            } else {
+                mFirebaseEventRef.child("inspect").child(Integer.toString(eventNumber)).addListenerForSingleValueEvent(
+                        new ValueEventListener() {
+                            @Override
+                            public void onDataChange(DataSnapshot dataSnapshot) {
+                                event = new Event(dataSnapshot.getValue(Event.class));
+                                event.setGetItemOnFlee((boolean) dataSnapshot.child("getItemOnFlee").getValue());
+                                event.setGetItemOnInspect((boolean) dataSnapshot.child("getItemOnInspect").getValue());
+
+                                FragmentTransaction ft = getSupportFragmentManager().beginTransaction();
+                                Fragment prev = getSupportFragmentManager().findFragmentByTag("event");
+                                if(prev != null) {
+                                    ft.remove(prev);
+                                }
+                                Bundle bundle = new Bundle();
+                                bundle.putParcelable("weapon", eventWeapon);
+                                bundle.putParcelable("item", eventItem);
+                                bundle.putParcelableArrayList("userWeapons", userWeapons);
+                                bundle.putParcelable("event", event);
+                                bundle.putInt("attackOrInspect", attackOrInspect);
+
+
+                                ft.addToBackStack(null);
+                                DialogFragment frag = EventDialogFragment.newInstance(mStackLevel, userWeapons);
+                                frag.setArguments(bundle);
+                                frag.show(ft, "fragment_event_dialog");
+                            }
+
+                            @Override
+                            public void onCancelled(FirebaseError firebaseError) {
+
+                            }
+                        }
+                );
             }
 
-            ft.addToBackStack(null);
-            DialogFragment frag = EventDialogFragment.newInstance(mStackLevel);
-            frag.show(ft, "fragment_event_dialog");
+
+
+
         } else if (type==2) {
             FragmentTransaction ft = getSupportFragmentManager().beginTransaction();
             Fragment prev = getSupportFragmentManager().findFragmentByTag("safehouse");
@@ -367,12 +448,16 @@ public class MainActivity extends FragmentActivity
         firebaseAtSafeHouseRef.child("atSafeHouse").setValue(true);
 
         //Gets the pseudo ID of the next safehouse
-        final Firebase nextTeamSafehouse = new Firebase (Constants.FIREBASE_URL_TEAM+"/"+ mCurrentMatchId +"/");
+        final Firebase nextTeamSafehouse = new Firebase (Constants.FIREBASE_URL_TEAM +"/"+ mCurrentMatchId +"/");
         nextTeamSafehouse.child("nextSafehouseId").addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
-                long safehousePseudoIdLong = (long) dataSnapshot.getValue();
-                mReachedSafeHouseId = (int) safehousePseudoIdLong;
+                if (dataSnapshot.getValue() != null) {
+                    long safehousePseudoIdLong = (long) dataSnapshot.getValue();
+                    mReachedSafeHouseId = (int) safehousePseudoIdLong;
+                } else {
+                    mReachedSafeHouseId = (int) dataSnapshot.getValue();
+                }
 
                 //Gets the SafeHouse Node ID from the Safehouse ID Map
                 nextTeamSafehouse.child("safehouseIdMap/" + mReachedSafeHouseId).addListenerForSingleValueEvent(new ValueEventListener() {
@@ -497,10 +582,10 @@ public class MainActivity extends FragmentActivity
     }
 
     public void setupBackpackContent () {
-        final ArrayList<Weapon> weapons = new ArrayList<>();
-        final ArrayList<Item> items = new ArrayList<>();
+        userWeapons = new ArrayList<>();
+        userItems = new ArrayList<>();
 
-        mCurrentMatchId = mSharedPreferences.getString(Constants.PREFERENCES_GOOGLE_PLAYER_ID, null);
+        mCurrentMatchId = mSharedPreferences.getString(Constants.PREFERENCES_MATCH_ID, null);
         mUserFirebaseRef = new Firebase(Constants.FIREBASE_URL_USERS + "/" + "").child(mCurrentPlayerId);
         Log.v(TAG, "user " + mCurrentMatchId + "");
         Log.v(TAG, "firebase " + mUserFirebaseRef + "");
@@ -510,16 +595,12 @@ public class MainActivity extends FragmentActivity
                 @Override
                 public void onDataChange(DataSnapshot dataSnapshot) {
                     for (DataSnapshot child : dataSnapshot.getChildren()) {
-                        String description = child.child("description").getValue().toString();
-                        int healthPoints = Integer.parseInt(child.child("healthPoints").getValue().toString());
-                        int imageId = Integer.parseInt(child.child("imageId").getValue().toString());
-                        String name = child.child("name").getValue().toString();
-                        String pushId = child.child("pushId").getValue().toString();
-                        Item currentItem = new Item(name, description, healthPoints, true);
-                        currentItem.setImageId(imageId);
-                        currentItem.setPushId(pushId);
-                        items.add(currentItem);
-                        Log.v(TAG, items.size() + "");
+                        Item currentItem = new Item(child.getValue(Item.class));
+                        currentItem.setPushId(child.child("pushId").getValue().toString());
+                        long imageId = (long) child.child("imageId").getValue();
+                        currentItem.setImageId((int) imageId);
+                        userItems.add(currentItem);
+                        Log.v(TAG, userItems.size() + "");
                     }
                 }
 
@@ -532,11 +613,10 @@ public class MainActivity extends FragmentActivity
                 @Override
                 public void onDataChange(DataSnapshot dataSnapshot) {
                     for (DataSnapshot child : dataSnapshot.getChildren()) {
-                        String description = child.child("description").getValue().toString();
-                        int hitPoints = Integer.parseInt(child.child("hitPoints").getValue().toString());
-                        String name = child.child("name").getValue().toString();
-                        Weapon currentWeapon = new Weapon(name, description, hitPoints);
-                        weapons.add(currentWeapon);
+                        Weapon currentWeapon = new Weapon(child.getValue(Weapon.class));
+                        currentWeapon.setPushId(child.child("pushId").getValue().toString());
+                        userWeapons.add(currentWeapon);
+                        Log.v(TAG, userWeapons.size() + "");
                     }
                 }
 
@@ -547,12 +627,12 @@ public class MainActivity extends FragmentActivity
 
         }
         GridView inventoryGridView = (GridView) findViewById(R.id.backpackGridView);
-        inventoryGridView.setAdapter(new InventoryAdapter(this, items, weapons, R.layout.inventory_row_grid));
+        inventoryGridView.setAdapter(new InventoryAdapter(this, userItems, userWeapons, R.layout.inventory_row_grid));
         inventoryGridView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
                 FragmentTransaction ft = getSupportFragmentManager().beginTransaction();
-                DialogFragment frag = InventoryDetailFragment.newInstance(items.get(position), mCurrentCharacter, mCurrentPlayerId);
+                DialogFragment frag = InventoryDetailFragment.newInstance(userItems.get(position), mCurrentCharacter, mCurrentPlayerId);
                 frag.show(ft, "fragment_safehouse_dialog");
             }
         });
@@ -601,5 +681,67 @@ public class MainActivity extends FragmentActivity
             instantiatePlayerIDs();
             mUserFirebaseRef.child("joinedMatch").setValue(true);
         }
+    }
+
+    public void instantiateAllItems() {
+
+        Firebase itemRef = new Firebase(Constants.FIREBASE_URL_ITEMS +"/");
+
+        itemRef.child("weapons").addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                for(DataSnapshot child: dataSnapshot.getChildren()) {
+                    Weapon weapon = child.getValue(Weapon.class);
+                    Log.d("Weapon:", weapon + "");
+                    Log.d("Name:", weapon.getName());
+                    allWeapons.add(weapon);
+                }
+            }
+
+            @Override
+            public void onCancelled(FirebaseError firebaseError) {
+
+            }
+        });
+
+        itemRef.child("food").addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                for(DataSnapshot child: dataSnapshot.getChildren()) {
+                    Item item = child.getValue(Item.class);
+                    allItems.add(item);
+                }
+            }
+
+            @Override
+            public void onCancelled(FirebaseError firebaseError) {
+
+            }
+        });
+
+        itemRef.child("medicine").addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                for(DataSnapshot child: dataSnapshot.getChildren()) {
+                    Item item = child.getValue(Item.class);
+                    allItems.add(item);
+                }
+            }
+
+            @Override
+            public void onCancelled(FirebaseError firebaseError) {
+
+            }
+        });
+
+    }
+
+    public void pickEventItems() {
+        Collections.shuffle(allWeapons);
+        Collections.shuffle(allItems);
+
+        eventWeapon = allWeapons.get(0);
+        eventItem = allItems.get(0);
+
     }
 }

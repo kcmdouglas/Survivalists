@@ -83,8 +83,7 @@ public class TitleActivity extends BaseGameActivity implements GoogleApiClient.C
         mSharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
         mEditor = mSharedPreferences.edit();
 
-        instantiateAllItems();
-        instantiateInventory();
+        //instantiateInventory();
 
         mCurrentMatchId = mSharedPreferences.getString("matchId", null);
 
@@ -239,96 +238,43 @@ public class TitleActivity extends BaseGameActivity implements GoogleApiClient.C
     @Override
     public void onSignInSucceeded() {}
 
-    //MOVE ALL THIS LOGIC TO MAIN ACTIVITY
-    public void instantiateAllItems() {
-
-        Firebase itemRef = new Firebase(Constants.FIREBASE_URL_ITEMS +"/");
-
-        itemRef.child("weapons").addListenerForSingleValueEvent(new ValueEventListener() {
-            @Override
-            public void onDataChange(DataSnapshot dataSnapshot) {
-                for(DataSnapshot child: dataSnapshot.getChildren()) {
-                    Weapon weapon = child.getValue(Weapon.class);
-                    Log.d("Weapon:", weapon + "");
-                    Log.d("Name:", weapon.getName());
-                    allWeapons.add(weapon);
-                }
-            }
-
-            @Override
-            public void onCancelled(FirebaseError firebaseError) {
-
-            }
-        });
-
-        itemRef.child("food").addListenerForSingleValueEvent(new ValueEventListener() {
-            @Override
-            public void onDataChange(DataSnapshot dataSnapshot) {
-                for(DataSnapshot child: dataSnapshot.getChildren()) {
-                    Item item = child.getValue(Item.class);
-                    allItems.add(item);
-                }
-            }
-
-            @Override
-            public void onCancelled(FirebaseError firebaseError) {
-
-            }
-        });
-
-        itemRef.child("medicine").addListenerForSingleValueEvent(new ValueEventListener() {
-            @Override
-            public void onDataChange(DataSnapshot dataSnapshot) {
-                for(DataSnapshot child: dataSnapshot.getChildren()) {
-                    Item item = child.getValue(Item.class);
-                    allItems.add(item);
-                }
-            }
-
-            @Override
-            public void onCancelled(FirebaseError firebaseError) {
-
-            }
-        });
-
-    }
-
-    public void instantiateInventory() {
-
-        Firebase userRef = new Firebase(Constants.FIREBASE_URL_USERS + "/" + mCurrentPlayerId + "/");
-
-        userRef.child("items").addListenerForSingleValueEvent(new ValueEventListener() {
-            @Override
-            public void onDataChange(DataSnapshot dataSnapshot) {
-                for(DataSnapshot iterateItem : dataSnapshot.getChildren()) {
-                    Item item = new Item(iterateItem.getValue(Item.class));
-                    item.setPushId(iterateItem.child("pushId").getValue().toString());
-                    userItemInventory.add(item);
-                    Log.d("Item Inventory", userItemInventory.size() + "");
-                }
-            }
-
-            @Override
-            public void onCancelled(FirebaseError firebaseError) {
-
-            }
-        });
-
-        userRef.child("weapons").addListenerForSingleValueEvent(new ValueEventListener() {
-            @Override
-            public void onDataChange(DataSnapshot dataSnapshot) {
-                for(DataSnapshot iterateWeapon: dataSnapshot.getChildren()) {
-                    Weapon weapon = new Weapon(iterateWeapon.getValue(Weapon.class));
-                    weapon.setPushId(iterateWeapon.child("pushId").getValue().toString());
-                    userWeaponInventory.add(weapon);
-                    Log.d("Weapon Inventory", userWeaponInventory.size() + "");
-                }
-            }
-
-            @Override
-            public void onCancelled(FirebaseError firebaseError) {
-
-            }
-        });
-    }
+//
+//    public void instantiateInventory() {
+//
+//        Firebase userRef = new Firebase(Constants.FIREBASE_URL_USERS + "/" + mCurrentPlayerId + "/");
+//
+//        userRef.child("items").addListenerForSingleValueEvent(new ValueEventListener() {
+//            @Override
+//            public void onDataChange(DataSnapshot dataSnapshot) {
+//                for(DataSnapshot iterateItem : dataSnapshot.getChildren()) {
+//                    Item item = new Item(iterateItem.getValue(Item.class));
+//                    item.setPushId(iterateItem.child("pushId").getValue().toString());
+//                    userItemInventory.add(item);
+//                    Log.d("Item Inventory", userItemInventory.size() + "");
+//                }
+//            }
+//
+//            @Override
+//            public void onCancelled(FirebaseError firebaseError) {
+//
+//            }
+//        });
+//
+//        userRef.child("weapons").addListenerForSingleValueEvent(new ValueEventListener() {
+//            @Override
+//            public void onDataChange(DataSnapshot dataSnapshot) {
+//                for(DataSnapshot iterateWeapon: dataSnapshot.getChildren()) {
+//                    Weapon weapon = new Weapon(iterateWeapon.getValue(Weapon.class));
+//                    weapon.setPushId(iterateWeapon.child("pushId").getValue().toString());
+//                    userWeaponInventory.add(weapon);
+//                    Log.d("Weapon Inventory", userWeaponInventory.size() + "");
+//                }
+//            }
+//
+//            @Override
+//            public void onCancelled(FirebaseError firebaseError) {
+//
+//            }
+//        });
+//    }
 }
