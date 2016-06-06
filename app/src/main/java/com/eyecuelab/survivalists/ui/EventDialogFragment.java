@@ -4,6 +4,7 @@ import android.app.Dialog;
 import android.app.DialogFragment;
 import android.content.SharedPreferences;
 import android.content.res.Resources;
+import android.graphics.Color;
 import android.os.Bundle;
 import android.os.Parcelable;
 import android.preference.PreferenceManager;
@@ -91,6 +92,7 @@ public class EventDialogFragment extends android.support.v4.app.DialogFragment i
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        setStyle(android.support.v4.app.DialogFragment.STYLE_NO_FRAME, R.style.CustomFragment);
         //Create Shared Preferences
         mSharedPreferences = PreferenceManager.getDefaultSharedPreferences(getActivity().getApplicationContext());
         mEditor = mSharedPreferences.edit();
@@ -159,7 +161,6 @@ public class EventDialogFragment extends android.support.v4.app.DialogFragment i
                 dialogConsequence.setVisibility(View.GONE);
             }
         }
-
         return view;
     }
 

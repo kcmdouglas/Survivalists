@@ -51,6 +51,7 @@ public class SafehouseDialogFragment extends android.support.v4.app.DialogFragme
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        setStyle(android.support.v4.app.DialogFragment.STYLE_NO_FRAME, R.style.CustomFragment);
         mSafeHouse = Parcels.unwrap(getArguments().getParcelable("safehouse"));
         mSharedPreferences = PreferenceManager.getDefaultSharedPreferences(getContext());
         mEditor = mSharedPreferences.edit();

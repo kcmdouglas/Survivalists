@@ -14,7 +14,7 @@
 
     <style name="CustomFragment" parent="@android:style/Theme.Dialog">
         <item name="android:windowFrame">@null</item>
-        <item name="android:windowBackground">@android:color/transparent</item>
+        <item name="android:windowBackground">@color/transparentBlack</item>
         <item name="android:windowIsFloating">false</item>
         <item name="android:windowContentOverlay">@null</item>
         <item name="android:windowTitleStyle">@null</item>
