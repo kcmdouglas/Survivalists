@@ -21,6 +21,8 @@ import android.widget.AdapterView;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.GridView;
+import android.widget.ProgressBar;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.eyecuelab.survivalists.Constants;
@@ -62,6 +64,14 @@ public class MainActivity extends FragmentActivity
     @Bind(R.id.tabCampaignButton) Button campaignButton;
     @Bind(R.id.mapTabButton) Button mapButton;
     @Bind(R.id.rightInteractionBUtton) Button rightInteractionButton;
+    @Bind(R.id.stepProgressBar) ProgressBar stepProgressBar;
+    @Bind(R.id.healthProgressBar) ProgressBar healthProgressBar;
+    @Bind(R.id.energyProgressBar) ProgressBar energyProgressBar;
+    @Bind(R.id.dailyGoalTextView) TextView dailyGoalTextView;
+    @Bind(R.id.healthTextView) TextView healthTextView;
+    @Bind(R.id.energyTextView) TextView energyTextView;
+
+    //TODO: Remove after testing
     @Bind(R.id.stepEditText) EditText stepEditText;
 
     private int dailySteps;
@@ -136,10 +146,10 @@ public class MainActivity extends FragmentActivity
         mCurrentMatchId = mSharedPreferences.getString(Constants.PREFERENCES_MATCH_ID, null);
         mCurrentPlayerId = mSharedPreferences.getString(Constants.PREFERENCES_GOOGLE_PLAYER_ID, null);
         mUserFirebaseRef = new Firebase (Constants.FIREBASE_URL_USERS + "/" + mCurrentPlayerId);
-        setupBackpackContent();
 
         //Set counter text based on current shared preferences--these are updated in the shared preferences onChange listener
         dailySteps = mSharedPreferences.getInt(Constants.PREFERENCES_DAILY_STEPS, 0);
+        dailyGoal = mSharedPreferences.getInt(Constants.PREFERENCES_DAILY_GOAL, 5000);
 
         eventOneInitiated = mSharedPreferences.getBoolean(Constants.PREFERENCES_INITIATE_EVENT_1, false);
         eventTwoInitiated = mSharedPreferences.getBoolean(Constants.PREFERENCES_INITIATE_EVENT_2, false);
@@ -176,8 +186,10 @@ public class MainActivity extends FragmentActivity
             instantiatePlayerIDs();
         }
 
+        setupBackpackContent();
         instantiateAllItems();
         loadCharacter();
+        checkDailyGoal();
     }
 
     @Override
@@ -256,16 +268,15 @@ public class MainActivity extends FragmentActivity
                 Toast.makeText(this, "Inflate map here", Toast.LENGTH_SHORT).show();
                 break;
             case R.id.rightInteractionBUtton:
-//                String inputtedSteps = stepEditText.getText().toString();
-//                int steps = Integer.parseInt(inputtedSteps);
-//                dailySteps = steps;
-//                mEditor.putInt(Constants.PREFERENCES_DAILY_STEPS, dailySteps).commit();
-//
-//                if((mCurrentPlayerId != null) && (steps % 10 < 1)) {
-//                    Log.v(TAG, "Should be saving!");
-//                    Firebase firebaseStepsRef = new Firebase(Constants.FIREBASE_URL_USERS + "/" + mCurrentPlayerId + "/");
-//                    firebaseStepsRef.child("dailySteps").setValue(steps);
-//                }
+                String inputtedSteps = stepEditText.getText().toString();
+                int steps = Integer.parseInt(inputtedSteps);
+                dailySteps = steps;
+                mEditor.putInt(Constants.PREFERENCES_DAILY_STEPS, dailySteps).commit();
+
+                if((mCurrentPlayerId != null) && (steps % 10 < 1)) {
+                    Firebase firebaseStepsRef = new Firebase(Constants.FIREBASE_URL_USERS + "/" + mCurrentPlayerId + "/");
+                    firebaseStepsRef.child("dailySteps").setValue(steps);
+                }
                 showEventDialog(1);
                 break;
         }
@@ -433,6 +444,7 @@ public class MainActivity extends FragmentActivity
                 saveSafehouse();
             }
             initializeEventDialogFragments();
+            updateStepsUi();
         }
 
         if(key.equals(Constants.PREFERENCES_REACHED_SAFEHOUSE_BOOLEAN)) {
@@ -667,6 +679,11 @@ public class MainActivity extends FragmentActivity
                     mCurrentCharacter = new Character(name, description, age, health, fullnessLevel, characterUrl, characterId);
                     Log.d("Current Character ID: ", mCurrentCharacter.getCharacterId() + "");
 
+                    healthProgressBar.setProgress(health);
+                    healthTextView.setText(health + "HP");
+                    energyProgressBar.setProgress(fullnessLevel);
+                    energyTextView.setText(fullnessLevel + "%");
+
                     Gson gson = new Gson();
                     String currentCharacter = gson.toJson(mCurrentCharacter);
                     mEditor.putString(Constants.PREFERENCES_CHARACTER, currentCharacter);
@@ -692,8 +709,6 @@ public class MainActivity extends FragmentActivity
             public void onDataChange(DataSnapshot dataSnapshot) {
                 for(DataSnapshot child: dataSnapshot.getChildren()) {
                     Weapon weapon = child.getValue(Weapon.class);
-                    Log.d("Weapon:", weapon + "");
-                    Log.d("Name:", weapon.getName());
                     allWeapons.add(weapon);
                 }
             }
@@ -743,5 +758,26 @@ public class MainActivity extends FragmentActivity
         eventWeapon = allWeapons.get(0);
         eventItem = allItems.get(0);
 
+    }
+
+    public void updateStepsUi() {
+        stepProgressBar.setProgress(dailySteps);
+        stepProgressBar.setMax(dailyGoal);
+        dailyGoalTextView.setText(dailySteps + "/" + dailyGoal);
+    }
+
+    public void checkDailyGoal() {
+        mUserFirebaseRef.child("dailyGoal").addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                dailyGoal = Integer.parseInt(dataSnapshot.getValue().toString());
+                mEditor.putInt(Constants.PREFERENCES_DAILY_GOAL, dailyGoal);
+                mEditor.apply();
+                updateStepsUi();
+            }
+
+            @Override
+            public void onCancelled(FirebaseError firebaseError) {}
+        });
     }
 }

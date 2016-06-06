@@ -51,6 +51,15 @@
         android:layout_alignParentTop="true"
         android:layout_toRightOf="@+id/sideTabs">
 
+        <ProgressBar
+            android:id="@+id/stepProgressBar"
+            android:layout_marginTop="45dp"
+            android:layout_width="match_parent"
+            android:layout_height="10dp"
+            style="?android:attr/progressBarStyleHorizontal"
+            android:max="5000"
+            android:progress="100"/>
+
         <TextView
             android:id="@+id/goalTitle"
             android:layout_height="wrap_content"
@@ -74,10 +83,20 @@
             android:maxLines="1"
             android:layout_toRightOf="@+id/goalTitle"
             android:textSize="10sp"
-            android:text="10,000/10,000"
+            android:text="0/0"
             android:textColor="@android:color/black"
             android:textAllCaps="true"
             android:textStyle="bold" />
+
+        <ProgressBar
+            android:id="@+id/healthProgressBar"
+            android:layout_below="@+id/goalTitle"
+            android:layout_marginTop="43dp"
+            android:layout_width="match_parent"
+            android:layout_height="10dp"
+            style="?android:attr/progressBarStyleHorizontal"
+            android:max="100"
+            android:progress="1"/>
 
         <TextView
             android:id="@+id/healthTitle"
@@ -105,10 +124,20 @@
             android:gravity="end"
             android:maxLines="1"
             android:textSize="10sp"
-            android:text="100HP"
+            android:text="0HP"
             android:textColor="@android:color/black"
             android:textAllCaps="true"
             android:textStyle="bold" />
+
+        <ProgressBar
+            android:id="@+id/energyProgressBar"
+            android:layout_below="@+id/healthTitle"
+            android:layout_marginTop="48dp"
+            android:layout_width="match_parent"
+            android:layout_height="10dp"
+            style="?android:attr/progressBarStyleHorizontal"
+            android:max="100"
+            android:progress="1"/>
 
         <TextView
             android:id="@+id/energyTitle"
@@ -136,7 +165,7 @@
             android:gravity="end"
             android:maxLines="1"
             android:textSize="10sp"
-            android:text="100%"
+            android:text="0%"
             android:textColor="@android:color/black"
             android:textAllCaps="true"
             android:textStyle="bold" />
