@@ -3,14 +3,17 @@ package com.eyecuelab.survivalists.models;
 import android.os.Parcel;
 import android.os.Parcelable;
 
+import com.eyecuelab.survivalists.Constants;
+
 /**
  * Created by eyecuelab on 5/23/16.
  */
-public class Weapon implements Parcelable{
+public class Weapon implements Parcelable, InventoryEntity {
     String name;
     String description;
     int hitPoints;
     String pushId;
+    int imageId;
 
     public Weapon () {}
 
@@ -89,6 +92,19 @@ public class Weapon implements Parcelable{
 
     public void setPushId(String pushId) {
         this.pushId = pushId;
+    }
+
+    public void setImageId(int imageId) {
+        this.imageId = imageId;
+    }
+
+    public int getImageId() {
+        return imageId;
+    }
+
+    @Override
+    public int getItemType() {
+        return Constants.WEAPON_TAG;
     }
 
     @Override
