@@ -31,6 +31,7 @@ import com.eyecuelab.survivalists.R;
 import com.eyecuelab.survivalists.adapters.InventoryAdapter;
 import com.eyecuelab.survivalists.models.Character;
 import com.eyecuelab.survivalists.models.Event;
+import com.eyecuelab.survivalists.models.InventoryEntity;
 import com.eyecuelab.survivalists.models.Item;
 import com.eyecuelab.survivalists.models.SafeHouse;
 import com.eyecuelab.survivalists.models.Weapon;
@@ -113,6 +114,8 @@ public class MainActivity extends FragmentActivity
     ArrayList<Item> allItems;
     ArrayList<Weapon> userWeapons;
     ArrayList<Item> userItems;
+
+    ArrayList<InventoryEntity> userInventory;
 
     private boolean isRecurringAlarmSet;
     private ArrayList<Character> mCharacters;
@@ -594,13 +597,10 @@ public class MainActivity extends FragmentActivity
     }
 
     public void setupBackpackContent () {
-        userWeapons = new ArrayList<>();
-        userItems = new ArrayList<>();
+        userInventory = new ArrayList<>();
 
         mCurrentMatchId = mSharedPreferences.getString(Constants.PREFERENCES_MATCH_ID, null);
         mUserFirebaseRef = new Firebase(Constants.FIREBASE_URL_USERS + "/" + "").child(mCurrentPlayerId);
-        Log.v(TAG, "user " + mCurrentMatchId + "");
-        Log.v(TAG, "firebase " + mUserFirebaseRef + "");
 
         if (mCurrentMatchId != null && mUserFirebaseRef != null) {
             mUserFirebaseRef.child("items").addListenerForSingleValueEvent(new ValueEventListener() {
@@ -611,14 +611,12 @@ public class MainActivity extends FragmentActivity
                         currentItem.setPushId(child.child("pushId").getValue().toString());
                         long imageId = (long) child.child("imageId").getValue();
                         currentItem.setImageId((int) imageId);
-                        userItems.add(currentItem);
-                        Log.v(TAG, userItems.size() + "");
+                        userInventory.add(currentItem);
                     }
                 }
 
                 @Override
-                public void onCancelled(FirebaseError firebaseError) {
-                }
+                public void onCancelled(FirebaseError firebaseError) {}
             });
 
             mUserFirebaseRef.child("weapons").addListenerForSingleValueEvent(new ValueEventListener() {
@@ -627,24 +625,22 @@ public class MainActivity extends FragmentActivity
                     for (DataSnapshot child : dataSnapshot.getChildren()) {
                         Weapon currentWeapon = new Weapon(child.getValue(Weapon.class));
                         currentWeapon.setPushId(child.child("pushId").getValue().toString());
-                        userWeapons.add(currentWeapon);
-                        Log.v(TAG, userWeapons.size() + "");
+                        userInventory.add(currentWeapon);
                     }
                 }
 
                 @Override
-                public void onCancelled(FirebaseError firebaseError) {
-                }
+                public void onCancelled(FirebaseError firebaseError) {}
             });
 
         }
         GridView inventoryGridView = (GridView) findViewById(R.id.backpackGridView);
-        inventoryGridView.setAdapter(new InventoryAdapter(this, userItems, userWeapons, R.layout.inventory_row_grid));
+        inventoryGridView.setAdapter(new InventoryAdapter(this, userInventory, R.layout.inventory_row_grid));
         inventoryGridView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
                 FragmentTransaction ft = getSupportFragmentManager().beginTransaction();
-                DialogFragment frag = InventoryDetailFragment.newInstance(userItems.get(position), mCurrentCharacter, mCurrentPlayerId);
+                DialogFragment frag = InventoryDetailFragment.newInstance(userInventory.get(position), mCurrentCharacter, mCurrentPlayerId);
                 frag.show(ft, "fragment_safehouse_dialog");
             }
         });
