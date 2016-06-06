@@ -40,36 +40,34 @@
             android:singleLine="true"
             android:textAppearance="?android:attr/textAppearanceLarge"
             android:rotation="-3"
-            android:textColor="@android:color/black"
-            android:text="The application."/>
-
+            android:textColor="@android:color/black"/>
 
         <TextView
             android:id="@+id/dialogDescription"
             android:layout_width="189dp"
             android:layout_height="wrap_content"
+            android:layout_marginTop="80dp"
             android:layout_marginEnd="43dp"
             android:layout_marginRight="43dp"
             android:layout_alignParentEnd="true"
             android:layout_alignParentRight="true"
-            android:layout_below="@+id/dialogTitle"
             android:rotation="-3"
             android:textAppearance="?android:attr/textAppearanceMedium"
-            android:textColor="@android:color/black"
-            android:text="The application may be doing too much work on its main thread."/>
+            android:textColor="@android:color/black"/>
 
         <TextView
             android:id="@+id/dialogConsequence"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
             android:textAppearance="?android:attr/textAppearanceMedium"
-            app:layout_marginTopPercent="10%"
-            app:layout_marginRightPercent="18%"
+            android:layout_width="189dp"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="70dp"
+            android:layout_marginEnd="40dp"
+            android:layout_marginRight="40dp"
             android:layout_alignParentEnd="true"
             android:layout_alignParentRight="true"
             android:layout_below="@+id/dialogDescription"
-            android:rotation="-3"
-            android:textColor="@android:color/black"/>
+            android:textColor="@android:color/black"
+            android:rotation="-3"/>
 
     </RelativeLayout>
 
@@ -85,7 +83,11 @@
             android:id="@+id/negativeButton"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:background="@drawable/blank_notebook_interaction_btn"/>
+            android:background="@drawable/blank_notebook_interaction_btn"
+            android:text="Run"
+            android:textColor="@android:color/white"
+            android:textAllCaps="true"
+            android:textStyle="bold"/>
 
         <Button
             android:id="@+id/affirmativeButton"
@@ -96,7 +98,11 @@
             android:background="@drawable/blank_notebook_interaction_btn"
             android:layout_alignParentRight="true"
             android:layout_alignParentEnd="true"
-            android:layout_alignBaseline="@+id/negativeButton"/>
+            android:layout_alignBaseline="@+id/negativeButton"
+            android:text="Attack"
+            android:textColor="@android:color/white"
+            android:textAllCaps="true"
+            android:textStyle="bold"/>
 
     </RelativeLayout>
 
