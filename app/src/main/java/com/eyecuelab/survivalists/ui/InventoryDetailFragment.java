@@ -1,11 +1,14 @@
 package com.eyecuelab.survivalists.ui;
 
 
+import android.app.Activity;
+import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.support.v4.app.DialogFragment;
 import android.support.v4.app.Fragment;
+import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -22,6 +25,7 @@ import com.eyecuelab.survivalists.models.Item;
 import com.eyecuelab.survivalists.models.Weapon;
 import com.firebase.client.Firebase;
 import com.firebase.client.FirebaseError;
+import com.google.gson.Gson;
 
 import org.parceler.Parcels;
 
@@ -38,6 +42,8 @@ public class InventoryDetailFragment extends DialogFragment implements View.OnCl
     Character mCharacter;
     String mUserId;
     int mTypeTag;
+
+    private MainActivity mainActivity;
 
     @Bind(R.id.dialogTitle) TextView dialogTitle;
     @Bind(R.id.closeButton) Button closeButton;
@@ -97,6 +103,12 @@ public class InventoryDetailFragment extends DialogFragment implements View.OnCl
     }
 
     @Override
+    public void onAttach(Activity activity) {
+        super.onAttach(activity);
+        this.mainActivity = (MainActivity) activity;
+    }
+
+    @Override
     public void onClick(View v) {
         switch (v.getId()) {
             case R.id.closeButton:
@@ -119,7 +131,6 @@ public class InventoryDetailFragment extends DialogFragment implements View.OnCl
                 @Override
                 public void onComplete(FirebaseError firebaseError, Firebase firebase) {
                     Toast.makeText(v.getContext(), currentItem.getName() + " Used", Toast.LENGTH_LONG).show();
-                    dismiss();
                 }
             });
         } else {
@@ -131,9 +142,11 @@ public class InventoryDetailFragment extends DialogFragment implements View.OnCl
                 @Override
                 public void onComplete(FirebaseError firebaseError, Firebase firebase) {
                     Toast.makeText(v.getContext(), currentWeapon.getName() + " Dropped", Toast.LENGTH_LONG).show();
-                    dismiss();
                 }
             });
         }
+        mainActivity.userInventory.remove(mItem);
+        mainActivity.setupGridView();
+        dismiss();
     }
 }
