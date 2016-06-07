@@ -3,6 +3,7 @@ package com.eyecuelab.survivalists.util;
 import android.util.Log;
 
 import com.eyecuelab.survivalists.ui.MainActivity;
+import com.google.android.gms.games.Games;
 import com.google.android.gms.games.multiplayer.Invitation;
 import com.google.android.gms.games.multiplayer.OnInvitationReceivedListener;
 import com.google.android.gms.games.request.GameRequest;
