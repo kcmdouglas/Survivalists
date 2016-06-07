@@ -103,11 +103,6 @@ public class Weapon implements Parcelable, InventoryEntity {
     }
 
     @Override
-    public int getItemType() {
-        return Constants.WEAPON_TAG;
-    }
-
-    @Override
     public int describeContents() {
         return 0;
     }

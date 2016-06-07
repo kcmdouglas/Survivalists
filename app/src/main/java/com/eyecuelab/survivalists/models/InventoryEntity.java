@@ -9,10 +9,6 @@ public interface InventoryEntity {
 
     String getDescription();
 
-    int getHitPoints();
-
     int getImageId();
-
-    int getItemType();
 
 }

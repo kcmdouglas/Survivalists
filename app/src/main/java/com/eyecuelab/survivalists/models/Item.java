@@ -81,11 +81,6 @@ public class Item implements Parcelable, InventoryEntity {
         return description;
     }
 
-    @Override
-    public int getHitPoints() {
-        return healthPoints;
-    }
-
     public int getHealthPoints() {
         return healthPoints;
     }
@@ -94,15 +89,9 @@ public class Item implements Parcelable, InventoryEntity {
         return imageId;
     }
 
-    @Override
-    public int getItemType() {
-        return Constants.ITEM_TAG;
-    }
-
     public void setHealthPoints(int healthPoints) {
         this.healthPoints = healthPoints;
     }
-
 
     public void setName(String name) {
         this.name = name;
