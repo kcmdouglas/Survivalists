@@ -10,7 +10,7 @@
         android:layout_width="60dp"
         android:layout_height="60dp"
         android:src="@drawable/axe_inventory"
-        android:layout_gravity="center" />
+        android:layout_gravity="center"/>
 
     <TextView
         android:id="@+id/playerNameTextView"

@@ -117,7 +117,6 @@ public class InventoryDetailFragment extends DialogFragment implements View.OnCl
             case R.id.affirmativeButton:
                 entityInteraction(v);
         }
-
     }
 
     public void entityInteraction(View view) {
