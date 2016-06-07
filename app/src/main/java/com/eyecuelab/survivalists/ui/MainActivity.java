@@ -2,6 +2,8 @@ package com.eyecuelab.survivalists.ui;
 
 import android.app.ActivityManager;
 import android.app.AlarmManager;
+import android.content.BroadcastReceiver;
+import android.content.IntentFilter;
 import android.support.v4.app.DialogFragment;
 import android.app.PendingIntent;
 import android.content.Context;
@@ -13,6 +15,7 @@ import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentActivity;
 import android.support.v4.app.FragmentTransaction;
 
+import android.support.v4.content.LocalBroadcastManager;
 import android.text.TextUtils;
 import android.util.Log;
 import android.view.MotionEvent;
@@ -91,6 +94,7 @@ public class MainActivity extends FragmentActivity
     private Firebase mUserFirebaseRef;
     private Weapon eventWeapon;
     private Item eventItem;
+    private InventoryEntity removedItem;
 
     //Flags to indicate navigation
     private final int START_CAMPAIGN_INTENT = 2;
@@ -188,7 +192,6 @@ public class MainActivity extends FragmentActivity
         if(mCurrentMatchId != null && mPlayerIDs == null) {
             instantiatePlayerIDs();
         }
-
         setupBackpackContent();
         instantiateAllItems();
         loadCharacter();
@@ -638,6 +641,12 @@ public class MainActivity extends FragmentActivity
             });
 
         }
+        if (userInventory != null) {
+            setupGridView();
+        }
+    }
+
+    public void setupGridView() {
         GridView inventoryGridView = (GridView) findViewById(R.id.backpackGridView);
         inventoryGridView.setAdapter(new InventoryAdapter(this, userInventory, R.layout.inventory_row_grid));
         inventoryGridView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
