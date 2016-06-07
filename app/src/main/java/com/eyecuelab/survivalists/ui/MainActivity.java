@@ -597,6 +597,8 @@ public class MainActivity extends FragmentActivity
     }
 
     public void setupBackpackContent () {
+        userWeapons = new ArrayList<>();
+        userItems = new ArrayList<>();
         userInventory = new ArrayList<>();
 
         mCurrentMatchId = mSharedPreferences.getString(Constants.PREFERENCES_MATCH_ID, null);
@@ -611,6 +613,7 @@ public class MainActivity extends FragmentActivity
                         currentItem.setPushId(child.child("pushId").getValue().toString());
                         long imageId = (long) child.child("imageId").getValue();
                         currentItem.setImageId((int) imageId);
+                        userItems.add(currentItem);
                         userInventory.add(currentItem);
                     }
                 }
@@ -625,6 +628,7 @@ public class MainActivity extends FragmentActivity
                     for (DataSnapshot child : dataSnapshot.getChildren()) {
                         Weapon currentWeapon = new Weapon(child.getValue(Weapon.class));
                         currentWeapon.setPushId(child.child("pushId").getValue().toString());
+                        userWeapons.add(currentWeapon);
                         userInventory.add(currentWeapon);
                     }
                 }

@@ -79,7 +79,7 @@ public class InventoryDetailFragment extends DialogFragment implements View.OnCl
 
         negativeButton.setVisibility(View.GONE);
 
-        if (mItem.getItemType() == Constants.ITEM_TAG) {
+        if (mItem.getClass().isInstance(Item.class)) {
             affirmativeButton.setText("Use Item");
         } else {
             affirmativeButton.setVisibility(View.GONE);
@@ -105,9 +105,8 @@ public class InventoryDetailFragment extends DialogFragment implements View.OnCl
     }
 
     public void useItem(View view) {
-        int typeTag = mItem.getItemType();
 
-        if (typeTag == Constants.ITEM_TAG) {
+        if (mItem.getClass().isInstance(Item.class)) {
             final Item currentItem = (Item) mItem;
             currentItem.useItem(mCharacter);
             final View v = view;
