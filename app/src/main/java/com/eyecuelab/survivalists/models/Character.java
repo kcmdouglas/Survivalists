@@ -9,7 +9,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Parcel
-public class Character implements Parcelable {
+public class Character {
     String name;
     String description;
     Integer age;
@@ -43,25 +43,6 @@ public class Character implements Parcelable {
         this.characterPictureUrl = characterPictureUrl;
         this.characterId = characterId;
     }
-
-    protected Character(android.os.Parcel in) {
-        name = in.readString();
-        description = in.readString();
-        characterPictureUrl = in.readString();
-        playerId = in.readString();
-    }
-
-    public static final Creator<Character> CREATOR = new Creator<Character>() {
-        @Override
-        public Character createFromParcel(android.os.Parcel in) {
-            return new Character(in);
-        }
-
-        @Override
-        public Character[] newArray(int size) {
-            return new Character[size];
-        }
-    };
 
     public String getName() {
         return name;
@@ -168,18 +149,5 @@ public class Character implements Parcelable {
 
     public void setPlayerId(String playerId) {
         this.playerId = playerId;
-    }
-
-    @Override
-    public int describeContents() {
-        return 0;
-    }
-
-    @Override
-    public void writeToParcel(android.os.Parcel dest, int flags) {
-        dest.writeString(name);
-        dest.writeString(description);
-        dest.writeString(characterPictureUrl);
-        dest.writeString(playerId);
     }
 }

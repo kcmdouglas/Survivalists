@@ -47,6 +47,7 @@ public class CharacterDetailFragment extends Fragment {
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         mCharacter = Parcels.unwrap(getArguments().getParcelable("character"));
+
     }
 
     @Override

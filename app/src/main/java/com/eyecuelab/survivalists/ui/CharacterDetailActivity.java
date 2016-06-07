@@ -25,7 +25,7 @@ public class CharacterDetailActivity extends AppCompatActivity {
     @Bind(R.id.viewPager) ViewPager mViewPager;
     private CharacterPagerAdapter adapterViewPager;
     ArrayList<String> mPlayerIDs = new ArrayList<>();
-    ArrayList<Character> mCharacters = new ArrayList<>();
+    ArrayList<Character> mCharacters;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -34,15 +34,8 @@ public class CharacterDetailActivity extends AppCompatActivity {
         ButterKnife.bind(this);
         mCharacters = Parcels.unwrap(getIntent().getParcelableExtra("characters"));
 
-        if (mCharacters.size() > 0) {
-            setPager();
-        }
-    }
-
-    public void setPager() {
         adapterViewPager = new CharacterPagerAdapter(getSupportFragmentManager(), mCharacters);
         mViewPager.setAdapter(adapterViewPager);
         mViewPager.setCurrentItem(0);
-        adapterViewPager.notifyDataSetChanged();
     }
 }
