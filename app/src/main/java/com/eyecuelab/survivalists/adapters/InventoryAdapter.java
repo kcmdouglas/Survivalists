@@ -11,6 +11,7 @@ import android.widget.ImageView;
 import android.widget.TextView;
 
 import com.eyecuelab.survivalists.R;
+import com.eyecuelab.survivalists.models.InventoryEntity;
 import com.eyecuelab.survivalists.models.Item;
 import com.eyecuelab.survivalists.models.Weapon;
 
@@ -23,20 +24,18 @@ public class InventoryAdapter extends BaseAdapter {
     private static final String TAG = "InventoryAdapter";
 
     private Context mContext;
-    private ArrayList<Item> mItems;
-    private ArrayList<Weapon> mWeapons;
+    private ArrayList<InventoryEntity> mItems;
     private int mInventoryItemLayout;
 
-    public InventoryAdapter(Context context, ArrayList<Item> items, ArrayList<Weapon> weapons, int inventoryItemLayout) {
+    public InventoryAdapter(Context context, ArrayList<InventoryEntity> items, int inventoryItemLayout) {
         mContext = context;
         mItems = items;
-        mWeapons = weapons;
         mInventoryItemLayout = inventoryItemLayout;
     }
 
     @Override
     public int getCount() {
-        return mItems.size() + mWeapons.size();
+        return mItems.size();
     }
 
     @Override
@@ -64,7 +63,7 @@ public class InventoryAdapter extends BaseAdapter {
         }
 
         try {
-            final Item item = mItems.get(position);
+            final InventoryEntity item = mItems.get(position);
             holder.txtTitle.setText(item.getName() + "");
             holder.imageItem.setImageResource(item.getImageId());
         } catch (IndexOutOfBoundsException outOfBounds) {

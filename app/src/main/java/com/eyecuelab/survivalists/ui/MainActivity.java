@@ -21,6 +21,8 @@ import android.widget.AdapterView;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.GridView;
+import android.widget.ProgressBar;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.eyecuelab.survivalists.Constants;
@@ -29,6 +31,7 @@ import com.eyecuelab.survivalists.R;
 import com.eyecuelab.survivalists.adapters.InventoryAdapter;
 import com.eyecuelab.survivalists.models.Character;
 import com.eyecuelab.survivalists.models.Event;
+import com.eyecuelab.survivalists.models.InventoryEntity;
 import com.eyecuelab.survivalists.models.Item;
 import com.eyecuelab.survivalists.models.SafeHouse;
 import com.eyecuelab.survivalists.models.Weapon;
@@ -62,6 +65,14 @@ public class MainActivity extends FragmentActivity
     @Bind(R.id.tabCampaignButton) Button campaignButton;
     @Bind(R.id.mapTabButton) Button mapButton;
     @Bind(R.id.rightInteractionBUtton) Button rightInteractionButton;
+    @Bind(R.id.stepProgressBar) ProgressBar stepProgressBar;
+    @Bind(R.id.healthProgressBar) ProgressBar healthProgressBar;
+    @Bind(R.id.energyProgressBar) ProgressBar energyProgressBar;
+    @Bind(R.id.dailyGoalTextView) TextView dailyGoalTextView;
+    @Bind(R.id.healthTextView) TextView healthTextView;
+    @Bind(R.id.energyTextView) TextView energyTextView;
+
+    //TODO: Remove after testing
     @Bind(R.id.stepEditText) EditText stepEditText;
 
     private int dailySteps;
@@ -104,6 +115,8 @@ public class MainActivity extends FragmentActivity
     ArrayList<Weapon> userWeapons;
     ArrayList<Item> userItems;
 
+    ArrayList<InventoryEntity> userInventory;
+
     private boolean isRecurringAlarmSet;
     private ArrayList<Character> mCharacters;
     ArrayList<String> mPlayerIDs;
@@ -136,7 +149,6 @@ public class MainActivity extends FragmentActivity
         mCurrentMatchId = mSharedPreferences.getString(Constants.PREFERENCES_MATCH_ID, null);
         mCurrentPlayerId = mSharedPreferences.getString(Constants.PREFERENCES_GOOGLE_PLAYER_ID, null);
         mUserFirebaseRef = new Firebase (Constants.FIREBASE_URL_USERS + "/" + mCurrentPlayerId);
-        setupBackpackContent();
 
         //Set counter text based on current shared preferences--these are updated in the shared preferences onChange listener
         dailySteps = mSharedPreferences.getInt(Constants.PREFERENCES_DAILY_STEPS, 0);
@@ -177,8 +189,10 @@ public class MainActivity extends FragmentActivity
             instantiatePlayerIDs();
         }
 
+        setupBackpackContent();
         instantiateAllItems();
         loadCharacter();
+        checkDailyGoal();
     }
 
     @Override
@@ -257,16 +271,15 @@ public class MainActivity extends FragmentActivity
                 Toast.makeText(this, "Inflate map here", Toast.LENGTH_SHORT).show();
                 break;
             case R.id.rightInteractionBUtton:
-//                String inputtedSteps = stepEditText.getText().toString();
-//                int steps = Integer.parseInt(inputtedSteps);
-//                dailySteps = steps;
-//                mEditor.putInt(Constants.PREFERENCES_DAILY_STEPS, dailySteps).commit();
-//
-//                if((mCurrentPlayerId != null) && (steps % 10 < 1)) {
-//                    Log.v(TAG, "Should be saving!");
-//                    Firebase firebaseStepsRef = new Firebase(Constants.FIREBASE_URL_USERS + "/" + mCurrentPlayerId + "/");
-//                    firebaseStepsRef.child("dailySteps").setValue(steps);
-//                }
+                String inputtedSteps = stepEditText.getText().toString();
+                int steps = Integer.parseInt(inputtedSteps);
+                dailySteps = steps;
+                mEditor.putInt(Constants.PREFERENCES_DAILY_STEPS, dailySteps).commit();
+
+                if((mCurrentPlayerId != null) && (steps % 10 < 1)) {
+                    Firebase firebaseStepsRef = new Firebase(Constants.FIREBASE_URL_USERS + "/" + mCurrentPlayerId + "/");
+                    firebaseStepsRef.child("dailySteps").setValue(steps);
+                }
                 showEventDialog(1);
                 break;
         }
@@ -434,6 +447,7 @@ public class MainActivity extends FragmentActivity
                 saveSafehouse();
             }
             initializeEventDialogFragments();
+            updateStepsUi();
         }
 
         if(key.equals(Constants.PREFERENCES_REACHED_SAFEHOUSE_BOOLEAN)) {
@@ -585,11 +599,10 @@ public class MainActivity extends FragmentActivity
     public void setupBackpackContent () {
         userWeapons = new ArrayList<>();
         userItems = new ArrayList<>();
+        userInventory = new ArrayList<>();
 
         mCurrentMatchId = mSharedPreferences.getString(Constants.PREFERENCES_MATCH_ID, null);
         mUserFirebaseRef = new Firebase(Constants.FIREBASE_URL_USERS + "/" + "").child(mCurrentPlayerId);
-        Log.v(TAG, "user " + mCurrentMatchId + "");
-        Log.v(TAG, "firebase " + mUserFirebaseRef + "");
 
         if (mCurrentMatchId != null && mUserFirebaseRef != null) {
             mUserFirebaseRef.child("items").addListenerForSingleValueEvent(new ValueEventListener() {
@@ -601,13 +614,12 @@ public class MainActivity extends FragmentActivity
                         long imageId = (long) child.child("imageId").getValue();
                         currentItem.setImageId((int) imageId);
                         userItems.add(currentItem);
-                        Log.v(TAG, userItems.size() + "");
+                        userInventory.add(currentItem);
                     }
                 }
 
                 @Override
-                public void onCancelled(FirebaseError firebaseError) {
-                }
+                public void onCancelled(FirebaseError firebaseError) {}
             });
 
             mUserFirebaseRef.child("weapons").addListenerForSingleValueEvent(new ValueEventListener() {
@@ -617,23 +629,22 @@ public class MainActivity extends FragmentActivity
                         Weapon currentWeapon = new Weapon(child.getValue(Weapon.class));
                         currentWeapon.setPushId(child.child("pushId").getValue().toString());
                         userWeapons.add(currentWeapon);
-                        Log.v(TAG, userWeapons.size() + "");
+                        userInventory.add(currentWeapon);
                     }
                 }
 
                 @Override
-                public void onCancelled(FirebaseError firebaseError) {
-                }
+                public void onCancelled(FirebaseError firebaseError) {}
             });
 
         }
         GridView inventoryGridView = (GridView) findViewById(R.id.backpackGridView);
-        inventoryGridView.setAdapter(new InventoryAdapter(this, userItems, userWeapons, R.layout.inventory_row_grid));
+        inventoryGridView.setAdapter(new InventoryAdapter(this, userInventory, R.layout.inventory_row_grid));
         inventoryGridView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
                 FragmentTransaction ft = getSupportFragmentManager().beginTransaction();
-                DialogFragment frag = InventoryDetailFragment.newInstance(userItems.get(position), mCurrentCharacter, mCurrentPlayerId);
+                DialogFragment frag = InventoryDetailFragment.newInstance(userInventory.get(position), mCurrentCharacter, mCurrentPlayerId);
                 frag.show(ft, "fragment_safehouse_dialog");
             }
         });
@@ -668,6 +679,11 @@ public class MainActivity extends FragmentActivity
                     mCurrentCharacter = new Character(name, description, age, health, fullnessLevel, characterUrl, characterId);
                     Log.d("Current Character ID: ", mCurrentCharacter.getCharacterId() + "");
 
+                    healthProgressBar.setProgress(health);
+                    healthTextView.setText(health + "HP");
+                    energyProgressBar.setProgress(fullnessLevel);
+                    energyTextView.setText(fullnessLevel + "%");
+
                     Gson gson = new Gson();
                     String currentCharacter = gson.toJson(mCurrentCharacter);
                     mEditor.putString(Constants.PREFERENCES_CHARACTER, currentCharacter);
@@ -693,8 +709,6 @@ public class MainActivity extends FragmentActivity
             public void onDataChange(DataSnapshot dataSnapshot) {
                 for(DataSnapshot child: dataSnapshot.getChildren()) {
                     Weapon weapon = child.getValue(Weapon.class);
-                    Log.d("Weapon:", weapon + "");
-                    Log.d("Name:", weapon.getName());
                     allWeapons.add(weapon);
                 }
             }
@@ -744,5 +758,26 @@ public class MainActivity extends FragmentActivity
         eventWeapon = allWeapons.get(0);
         eventItem = allItems.get(0);
 
+    }
+
+    public void updateStepsUi() {
+        stepProgressBar.setProgress(dailySteps);
+        stepProgressBar.setMax(dailyGoal);
+        dailyGoalTextView.setText(dailySteps + "/" + dailyGoal);
+    }
+
+    public void checkDailyGoal() {
+        mUserFirebaseRef.child("dailyGoal").addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                dailyGoal = Integer.parseInt(dataSnapshot.getValue().toString());
+                mEditor.putInt(Constants.PREFERENCES_DAILY_GOAL, dailyGoal);
+                mEditor.apply();
+                updateStepsUi();
+            }
+
+            @Override
+            public void onCancelled(FirebaseError firebaseError) {}
+        });
     }
 }

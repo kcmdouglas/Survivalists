@@ -3,12 +3,14 @@ package com.eyecuelab.survivalists.models;
 
 import android.os.Parcelable;
 
+import com.eyecuelab.survivalists.Constants;
+
 import org.parceler.Parcel;
 
 /**
  * Created by eyecuelab on 5/23/16.
  */
-public class Item implements Parcelable {
+public class Item implements Parcelable, InventoryEntity {
     String name;
     String description;
     int healthPoints;
@@ -90,7 +92,6 @@ public class Item implements Parcelable {
     public void setHealthPoints(int healthPoints) {
         this.healthPoints = healthPoints;
     }
-
 
     public void setName(String name) {
         this.name = name;

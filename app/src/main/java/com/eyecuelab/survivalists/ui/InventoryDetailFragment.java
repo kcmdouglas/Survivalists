@@ -6,6 +6,7 @@ import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.support.v4.app.DialogFragment;
 import android.support.v4.app.Fragment;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -16,6 +17,7 @@ import android.widget.Toast;
 import com.eyecuelab.survivalists.Constants;
 import com.eyecuelab.survivalists.R;
 import com.eyecuelab.survivalists.models.Character;
+import com.eyecuelab.survivalists.models.InventoryEntity;
 import com.eyecuelab.survivalists.models.Item;
 import com.eyecuelab.survivalists.models.Weapon;
 import com.firebase.client.Firebase;
@@ -32,10 +34,10 @@ import butterknife.ButterKnife;
 public class InventoryDetailFragment extends DialogFragment implements View.OnClickListener {
     SharedPreferences mSharedPreferences;
     SharedPreferences.Editor mEditor;
-    Item mItem;
-    Weapon mWeapon;
+    InventoryEntity mItem;
     Character mCharacter;
     String mUserId;
+    int mTypeTag;
 
     @Bind(R.id.dialogTitle) TextView dialogTitle;
     @Bind(R.id.closeButton) Button closeButton;
@@ -45,21 +47,12 @@ public class InventoryDetailFragment extends DialogFragment implements View.OnCl
 
     public InventoryDetailFragment() {}
 
-    public static DialogFragment newInstance(Item item, Character character, String userId) {
+    public static DialogFragment newInstance(InventoryEntity item, Character character, String userId) {
         InventoryDetailFragment fragment = new InventoryDetailFragment();
         Bundle args = new Bundle();
         args.putParcelable("item", Parcels.wrap(item));
         args.putParcelable("character", Parcels.wrap(character));
         args.putParcelable("userId", Parcels.wrap(userId));
-        fragment.setArguments(args);
-        return fragment;
-    }
-
-    public static DialogFragment newInstance(Weapon weapon, Character character, String userId) {
-        InventoryDetailFragment fragment = new InventoryDetailFragment();
-        Bundle args = new Bundle();
-        args.putParcelable("weapon", Parcels.wrap(weapon));
-        args.putParcelable("character", Parcels.wrap(character));
         fragment.setArguments(args);
         return fragment;
     }
@@ -71,12 +64,7 @@ public class InventoryDetailFragment extends DialogFragment implements View.OnCl
 
         mCharacter = Parcels.unwrap(getArguments().getParcelable("character"));
         mUserId = Parcels.unwrap(getArguments().getParcelable("userId"));
-
-        try {
-            mItem = Parcels.unwrap(getArguments().getParcelable("item"));
-        } catch (InstantiationException ie) {
-            mWeapon = Parcels.unwrap(getArguments().getParcelable("weapon"));
-        }
+        mItem = Parcels.unwrap(getArguments().getParcelable("item"));
         mSharedPreferences = PreferenceManager.getDefaultSharedPreferences(getContext());
         mEditor = mSharedPreferences.edit();
     }
@@ -88,17 +76,18 @@ public class InventoryDetailFragment extends DialogFragment implements View.OnCl
         super.onViewCreated(view, savedInstanceState);
 
         ButterKnife.bind(this, view);
-
-        if (mItem != null) {
-            dialogTitle.setText(mItem.getName());
-            dialogDescription.setText(mItem.getDescription());
-        } else {
-            dialogTitle.setText(mWeapon.getName());
-            dialogDescription.setText(mWeapon.getDescription());
-        }
+        dialogTitle.setText(mItem.getName());
+        dialogDescription.setText(mItem.getDescription());
 
         negativeButton.setVisibility(View.GONE);
-        affirmativeButton.setText("Use Item");
+
+        if (mItem.getClass().isAssignableFrom(Item.class)) {
+            affirmativeButton.setText("Use Item");
+            mTypeTag = Constants.ITEM_TAG;
+        } else {
+            affirmativeButton.setText("Drop Weapon");
+            mTypeTag = Constants.WEAPON_TAG;
+        }
 
         closeButton.setOnClickListener(this);
         negativeButton.setOnClickListener(this);
@@ -114,23 +103,37 @@ public class InventoryDetailFragment extends DialogFragment implements View.OnCl
                 dismiss();
                 break;
             case R.id.affirmativeButton:
-                useItem(v);
+                entityInteraction(v);
         }
 
     }
 
-    public void useItem(View view) {
-        mItem.useItem(mCharacter);
-        final View v = view;
+    public void entityInteraction(View view) {
+        if (mTypeTag == Constants.ITEM_TAG) {
+            final Item currentItem = (Item) mItem;
+            currentItem.useItem(mCharacter);
+            final View v = view;
 
-        Firebase userFirebaseRef = new Firebase(Constants.FIREBASE_URL_USERS + "/" + mUserId + "/" + "items");
-        userFirebaseRef.child(mItem.getPushId()).removeValue(new Firebase.CompletionListener() {
-            @Override
-            public void onComplete(FirebaseError firebaseError, Firebase firebase) {
-                Toast.makeText(v.getContext(), mItem.getName() + " Used", Toast.LENGTH_LONG).show();
-                dismiss();
-            }
-        });
+            Firebase userFirebaseRef = new Firebase(Constants.FIREBASE_URL_USERS + "/" + mUserId + "/" + "items");
+            userFirebaseRef.child(currentItem.getPushId()).removeValue(new Firebase.CompletionListener() {
+                @Override
+                public void onComplete(FirebaseError firebaseError, Firebase firebase) {
+                    Toast.makeText(v.getContext(), currentItem.getName() + " Used", Toast.LENGTH_LONG).show();
+                    dismiss();
+                }
+            });
+        } else {
+            final Weapon currentWeapon = (Weapon) mItem;
+            final View v = view;
 
+            Firebase userFirebaseRef = new Firebase(Constants.FIREBASE_URL_USERS + "/" + mUserId + "/" + "weapons");
+            userFirebaseRef.child(currentWeapon.getPushId()).removeValue(new Firebase.CompletionListener() {
+                @Override
+                public void onComplete(FirebaseError firebaseError, Firebase firebase) {
+                    Toast.makeText(v.getContext(), currentWeapon.getName() + " Dropped", Toast.LENGTH_LONG).show();
+                    dismiss();
+                }
+            });
+        }
     }
 }

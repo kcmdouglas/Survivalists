@@ -62,6 +62,8 @@ import butterknife.Bind;
 import butterknife.ButterKnife;
 
 public class NewCampaignActivity extends BaseGameActivity implements View.OnClickListener {
+    private static final String TAG = "NewCampaignActivity";
+
     private int mDifficultyLevel;
     private int mCampaignLength;
     private int mPartySize = 1;
@@ -641,54 +643,59 @@ public class NewCampaignActivity extends BaseGameActivity implements View.OnClic
     }
 
     private void removeOldInventory() {
-        for (int i = 0; i < invitedPlayers.size(); i++) {
-            final String playerBeingAssignId = invitedPlayers.get(i);
+        try {
+            for (int i = 0; i < invitedPlayers.size(); i++) {
+                final String playerBeingAssignId = invitedPlayers.get(i);
+                //TODO: Stop this method from throwing null pointers
+                Collections.shuffle(allWeapons);
+                Collections.shuffle(allMedicine);
+                Collections.shuffle(allFood);
+                final ArrayList<Item> itemsToPush = new ArrayList<>();
+                final Weapon freebieWeapon = allWeapons.get(0);
+                Item freebieFoodOne = allFood.get(0);
+                itemsToPush.add(freebieFoodOne);
+                Item freebieFoodTwo = allFood.get(1);
+                itemsToPush.add(freebieFoodTwo);
+                Item freebieMedicineOne = allMedicine.get(0);
+                itemsToPush.add(freebieMedicineOne);
+                Item freebieMedicineTwo = allMedicine.get(1);
+                itemsToPush.add(freebieMedicineTwo);
 
-            Collections.shuffle(allWeapons);
-            Collections.shuffle(allMedicine);
-            Collections.shuffle(allFood);
-            final ArrayList<Item> itemsToPush = new ArrayList<>();
-            final Weapon freebieWeapon = allWeapons.get(0);
-            Item freebieFoodOne = allFood.get(0);
-            itemsToPush.add(freebieFoodOne);
-            Item freebieFoodTwo = allFood.get(1);
-            itemsToPush.add(freebieFoodTwo);
-            Item freebieMedicineOne = allMedicine.get(0);
-            itemsToPush.add(freebieMedicineOne);
-            Item freebieMedicineTwo = allMedicine.get(1);
-            itemsToPush.add(freebieMedicineTwo);
+
+                Firebase playerRef = new Firebase(Constants.FIREBASE_URL_USERS + "/" + playerBeingAssignId);
+                playerRef.addListenerForSingleValueEvent(new ValueEventListener() {
+                    @Override
+                    public void onDataChange(DataSnapshot dataSnapshot) {
+                        dataSnapshot.child("items").getRef().removeValue();
+                        dataSnapshot.child("weapons").getRef().removeValue();
+
+                        for (int j = 0; j < itemsToPush.size(); j++) {
+                            Item item = itemsToPush.get(j);
+                            Firebase itemRef = new Firebase(Constants.FIREBASE_URL_USERS + "/" + playerBeingAssignId + "/items");
+                            Firebase newItemRef = itemRef.push();
+                            String itemPushId = newItemRef.getKey();
+                            item.setPushId(itemPushId);
+                            newItemRef.setValue(item);
+                        }
 
 
-            Firebase playerRef = new Firebase(Constants.FIREBASE_URL_USERS + "/" + playerBeingAssignId);
-            playerRef.addListenerForSingleValueEvent(new ValueEventListener() {
-                @Override
-                public void onDataChange(DataSnapshot dataSnapshot) {
-                    dataSnapshot.child("items").getRef().removeValue();
-                    dataSnapshot.child("weapons").getRef().removeValue();
+                        Firebase weaponRef = new Firebase(Constants.FIREBASE_URL_USERS + "/" + playerBeingAssignId + "/weapons");
+                        Firebase newWeaponRef = weaponRef.push();
+                        String weaponPushId = newWeaponRef.getKey();
 
-                    for(int j = 0; j < itemsToPush.size(); j++) {
-                        Item item = itemsToPush.get(j);
-                        Firebase itemRef = new Firebase (Constants.FIREBASE_URL_USERS + "/" + playerBeingAssignId + "/items");
-                        Firebase newItemRef = itemRef.push();
-                        String itemPushId = newItemRef.getKey();
-                        item.setPushId(itemPushId);
-                        newItemRef.setValue(item);
+                        freebieWeapon.setPushId(weaponPushId);
+                        newWeaponRef.setValue(freebieWeapon);
                     }
 
+                    @Override
+                    public void onCancelled(FirebaseError firebaseError) {
 
-                    Firebase weaponRef = new Firebase (Constants.FIREBASE_URL_USERS + "/" + playerBeingAssignId + "/weapons");
-                    Firebase newWeaponRef = weaponRef.push();
-                    String weaponPushId = newWeaponRef.getKey();
+                    }
+                });
 
-                    freebieWeapon.setPushId(weaponPushId);
-                    newWeaponRef.setValue(freebieWeapon);
-                }
-
-                @Override
-                public void onCancelled(FirebaseError firebaseError) {
-
-                }
-            });
+            }
+        } catch (NullPointerException np) {
+            Log.e(TAG, np.getMessage());
         }
     }
 
