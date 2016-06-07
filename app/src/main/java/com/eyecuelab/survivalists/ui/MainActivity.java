@@ -138,6 +138,8 @@ public class MainActivity extends FragmentActivity
 
         allWeapons = new ArrayList<>();
         allItems = new ArrayList<>();
+        mCharacters = new ArrayList<>();
+
         //Create Shared Preferences
         mSharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
         mEditor = mSharedPreferences.edit();
@@ -258,10 +260,10 @@ public class MainActivity extends FragmentActivity
     public void onClick(View view) {
         switch (view.getId()) {
             case R.id.tabCampaignButton:
-                if (mPlayerIDs != null) {
+                if (mCharacters != null) {
                     Intent intent = new Intent(mContext, CharacterDetailActivity.class);
                     intent.putExtra("position", 0);
-                    intent.putExtra("playerIDs", Parcels.wrap(mPlayerIDs));
+                    intent.putExtra("characters", Parcels.wrap(mCharacters));
                     mContext.startActivity(intent);
                 } else {
                     Toast.makeText(this, "Players have not yet joined.", Toast.LENGTH_SHORT).show();
@@ -578,10 +580,28 @@ public class MainActivity extends FragmentActivity
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
                 for (DataSnapshot child : dataSnapshot.getChildren()) {
-                    String playerId = child.getValue().toString();
+                    final String playerId = child.getValue().toString();
                     if (!(playerId.equals(mCurrentPlayerId))) {
                         mPlayerIDs.add(playerId);
+
+                        Firebase characterFirebase = new Firebase(Constants.FIREBASE_URL_USERS + "/" + playerId +"/character");
+
+                        characterFirebase.addListenerForSingleValueEvent(new ValueEventListener() {
+                            @Override
+                            public void onDataChange(DataSnapshot dataSnapshot) {
+                                Character character = new Character(dataSnapshot.getValue(Character.class));
+                                character.setPlayerId(playerId);
+                                mCharacters.add(character);
+
+                            }
+
+                            @Override
+                            public void onCancelled(FirebaseError firebaseError) {
+
+                            }
+                        });
                     }
+
                 }
             }
 
@@ -593,6 +613,9 @@ public class MainActivity extends FragmentActivity
 
         mEditor.putString(Constants.PREFERENCES_TEAM_IDs, TextUtils.join(",", mPlayerIDs));
         mEditor.commit();
+
+
+
 
     }
 

@@ -12,6 +12,7 @@ import android.widget.TextView;
 import com.eyecuelab.survivalists.Constants;
 import com.eyecuelab.survivalists.R;
 import com.eyecuelab.survivalists.models.Character;
+import com.firebase.client.ChildEventListener;
 import com.firebase.client.DataSnapshot;
 import com.firebase.client.Firebase;
 import com.firebase.client.FirebaseError;
@@ -37,7 +38,7 @@ public class CharacterDetailFragment extends Fragment {
     public static CharacterDetailFragment newInstance(Character character) {
         CharacterDetailFragment fragment = new CharacterDetailFragment();
         Bundle args = new Bundle();
-        args.putParcelable("playerID", Parcels.wrap(character));
+        args.putParcelable("character", Parcels.wrap(character));
         fragment.setArguments(args);
         return fragment;
     }
@@ -45,10 +46,7 @@ public class CharacterDetailFragment extends Fragment {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        Bundle bundle = getArguments();
-        mCharacter = bundle.getParcelable("character");
-
-
+        mCharacter = Parcels.unwrap(getArguments().getParcelable("character"));
     }
 
     @Override
@@ -60,6 +58,35 @@ public class CharacterDetailFragment extends Fragment {
         nameTextView.setText("Name: " + mCharacter.getName());
         ageTextView.setText("Age: " + Integer.toString(mCharacter.getAge()));
         healthTextView.setText("Health: " + Integer.toString(mCharacter.getHealth()));
+
+
+        Firebase firebase = new Firebase(Constants.FIREBASE_URL_USERS + "/" + mCharacter.getPlayerId() + "/character");
+        firebase.addChildEventListener(new ChildEventListener() {
+            @Override
+            public void onChildAdded(DataSnapshot dataSnapshot, String s) {
+
+            }
+
+            @Override
+            public void onChildChanged(DataSnapshot dataSnapshot, String s) {
+                healthTextView.setText(dataSnapshot.child("health").getValue().toString());
+            }
+
+            @Override
+            public void onChildRemoved(DataSnapshot dataSnapshot) {
+
+            }
+
+            @Override
+            public void onChildMoved(DataSnapshot dataSnapshot, String s) {
+
+            }
+
+            @Override
+            public void onCancelled(FirebaseError firebaseError) {
+
+            }
+        });
 
         return view;
     }

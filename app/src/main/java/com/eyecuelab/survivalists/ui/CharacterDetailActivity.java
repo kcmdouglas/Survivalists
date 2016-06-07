@@ -32,46 +32,10 @@ public class CharacterDetailActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_character_detail);
         ButterKnife.bind(this);
-        mPlayerIDs = Parcels.unwrap(getIntent().getParcelableExtra("playerIDs"));
-
-        for(String playerId: mPlayerIDs) {
-            Firebase teamCharactersRef = new Firebase(Constants.FIREBASE_URL_USERS + "/" + playerId + "/character/");
-            teamCharactersRef.addListenerForSingleValueEvent(new ValueEventListener() {
-                @Override
-                public void onDataChange(DataSnapshot dataSnapshot) {
-                    String name = dataSnapshot.child("name").getValue().toString();
-                    long ageLong = (long) dataSnapshot.child("age").getValue();
-                    int age = (int) ageLong;
-                    String description = dataSnapshot.child("description").getValue().toString();
-                    long characterIdLong = (long) dataSnapshot.child("characterId").getValue();
-                    int characterId = (int) characterIdLong;
-                    long healthLong = (long) dataSnapshot.child("health").getValue();
-                    int health = (int) healthLong;
-                    long fullnessLevelLong = (long) dataSnapshot.child("fullnessLevel").getValue();
-                    int fullnessLevel = (int) fullnessLevelLong;
-                    String characterUrl = dataSnapshot.child("characterPictureUrl").getValue().toString();
-                    Character character = new Character(name, description, age, health, fullnessLevel, characterUrl, characterId);
-                    mCharacters.add(character);
-
-                }
-
-                @Override
-                public void onCancelled(FirebaseError firebaseError) {
-
-                }
-            });
-
-        }
+        mCharacters = Parcels.unwrap(getIntent().getParcelableExtra("characters"));
 
         if (mCharacters.size() > 0) {
             setPager();
-        } else {
-            try {
-                Thread.sleep(1000);
-                setPager();
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
         }
     }
 
