@@ -6,6 +6,7 @@ import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.support.v4.app.DialogFragment;
 import android.support.v4.app.Fragment;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -36,6 +37,7 @@ public class InventoryDetailFragment extends DialogFragment implements View.OnCl
     InventoryEntity mItem;
     Character mCharacter;
     String mUserId;
+    int mTypeTag;
 
     @Bind(R.id.dialogTitle) TextView dialogTitle;
     @Bind(R.id.closeButton) Button closeButton;
@@ -79,10 +81,12 @@ public class InventoryDetailFragment extends DialogFragment implements View.OnCl
 
         negativeButton.setVisibility(View.GONE);
 
-        if (mItem.getClass().isInstance(Item.class)) {
+        if (mItem.getClass().isAssignableFrom(Item.class)) {
             affirmativeButton.setText("Use Item");
+            mTypeTag = Constants.ITEM_TAG;
         } else {
-            affirmativeButton.setVisibility(View.GONE);
+            affirmativeButton.setText("Drop Weapon");
+            mTypeTag = Constants.WEAPON_TAG;
         }
 
         closeButton.setOnClickListener(this);
@@ -99,14 +103,13 @@ public class InventoryDetailFragment extends DialogFragment implements View.OnCl
                 dismiss();
                 break;
             case R.id.affirmativeButton:
-                useItem(v);
+                entityInteraction(v);
         }
 
     }
 
-    public void useItem(View view) {
-
-        if (mItem.getClass().isInstance(Item.class)) {
+    public void entityInteraction(View view) {
+        if (mTypeTag == Constants.ITEM_TAG) {
             final Item currentItem = (Item) mItem;
             currentItem.useItem(mCharacter);
             final View v = view;
@@ -116,6 +119,18 @@ public class InventoryDetailFragment extends DialogFragment implements View.OnCl
                 @Override
                 public void onComplete(FirebaseError firebaseError, Firebase firebase) {
                     Toast.makeText(v.getContext(), currentItem.getName() + " Used", Toast.LENGTH_LONG).show();
+                    dismiss();
+                }
+            });
+        } else {
+            final Weapon currentWeapon = (Weapon) mItem;
+            final View v = view;
+
+            Firebase userFirebaseRef = new Firebase(Constants.FIREBASE_URL_USERS + "/" + mUserId + "/" + "weapons");
+            userFirebaseRef.child(currentWeapon.getPushId()).removeValue(new Firebase.CompletionListener() {
+                @Override
+                public void onComplete(FirebaseError firebaseError, Firebase firebase) {
+                    Toast.makeText(v.getContext(), currentWeapon.getName() + " Dropped", Toast.LENGTH_LONG).show();
                     dismiss();
                 }
             });
