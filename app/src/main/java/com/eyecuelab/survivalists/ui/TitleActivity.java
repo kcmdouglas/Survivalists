@@ -18,6 +18,7 @@ import com.eyecuelab.survivalists.Constants;
 import com.eyecuelab.survivalists.R;
 import com.eyecuelab.survivalists.models.Item;
 import com.eyecuelab.survivalists.models.Weapon;
+import com.eyecuelab.survivalists.util.InvitationListener;
 import com.firebase.client.DataSnapshot;
 import com.firebase.client.Firebase;
 import com.firebase.client.FirebaseError;
@@ -26,6 +27,9 @@ import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.common.api.ResultCallback;
 import com.google.android.gms.games.Games;
+import com.google.android.gms.games.multiplayer.Invitation;
+import com.google.android.gms.games.multiplayer.Invitations;
+import com.google.android.gms.games.multiplayer.OnInvitationReceivedListener;
 import com.google.android.gms.games.multiplayer.turnbased.TurnBasedMatch;
 import com.google.android.gms.games.multiplayer.turnbased.TurnBasedMultiplayer;
 import com.google.example.games.basegameutils.BaseGameActivity;
@@ -164,15 +168,14 @@ public class TitleActivity extends BaseGameActivity implements GoogleApiClient.C
     //Google api logic
     public void initializeGoogleApi() {
         this.mGoogleApiClient = new GoogleApiClient.Builder(this)
+                .addApiIfAvailable(Games.API)
                 .addConnectionCallbacks(this)
                 .addOnConnectionFailedListener(this)
-                .addApiIfAvailable(Games.API, Games.SCOPE_GAMES)
                 .build();
     }
 
     @Override
     public void onConnected(Bundle connectionHint) {
-        Log.v(TAG, "Connected to Google Api Client.");
         mCurrentPlayerId = Games.Players.getCurrentPlayerId(mGoogleApiClient);
         mEditor.putString(Constants.PREFERENCES_GOOGLE_PLAYER_ID, mCurrentPlayerId).apply();
 
@@ -236,7 +239,9 @@ public class TitleActivity extends BaseGameActivity implements GoogleApiClient.C
     @Override
     public void onSignInFailed() {}
     @Override
-    public void onSignInSucceeded() {}
+    public void onSignInSucceeded() {
+        Log.v(TAG, "Connected to BaseGame Util");
+    }
 
 //
 //    public void instantiateInventory() {

@@ -50,6 +50,7 @@ public class Constants {
     public static final String INVITATION_UPDATE_INTENT_EXTRA = "invitationUpdated";
     public static final String MATCH_UPDATE_INTENT_EXTRA = "matchUpdated";
     public static final String MATCH_UPDATE_INTENT_EXTRA_PLAYER = "playerWhoUpdated";
+    public static final String PLAYER_ADDED_TO_LIST_INTENT = "playerHasBeenAdded";
     public static final int WEAPON_TAG = 11111111;
     public static final int ITEM_TAG = 99999999;
     public static final String ITEM_REMOVED= "itemRemovedString";
