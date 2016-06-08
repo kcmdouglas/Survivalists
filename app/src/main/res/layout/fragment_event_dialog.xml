@@ -30,7 +30,7 @@
 
         <TextView
             android:id="@+id/dialogTitle"
-            android:layout_width="155dp"
+            android:layout_width="190dp"
             android:layout_height="wrap_content"
             android:layout_marginTop="45dp"
             android:layout_marginEnd="45dp"
@@ -38,13 +38,14 @@
             android:layout_alignParentEnd="true"
             android:layout_alignParentRight="true"
             android:singleLine="true"
-            android:textAppearance="?android:attr/textAppearanceLarge"
+            android:textAppearance="?android:attr/textAppearanceMedium"
+            android:textAlignment="center"
             android:rotation="-3"
             android:textColor="@android:color/black"/>
 
         <TextView
             android:id="@+id/dialogDescription"
-            android:layout_width="189dp"
+            android:layout_width="188dp"
             android:layout_height="wrap_content"
             android:layout_marginTop="80dp"
             android:layout_marginEnd="43dp"
@@ -60,7 +61,7 @@
             android:textAppearance="?android:attr/textAppearanceMedium"
             android:layout_width="189dp"
             android:layout_height="wrap_content"
-            android:layout_marginTop="70dp"
+            android:layout_marginTop="10dp"
             android:layout_marginEnd="40dp"
             android:layout_marginRight="40dp"
             android:layout_alignParentEnd="true"
