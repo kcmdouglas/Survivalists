@@ -103,6 +103,15 @@ public class Character {
         }
     }
 
+    public void addToInventory(Item item) {
+        if (itemInventory.size() < 12) {
+            itemInventory.add(item);
+            Log.d("Inventory: ", "Item Added");
+        } else {
+            Log.d("Inventory: ", "Cannot add, inventory full");
+        }
+    }
+
     public void removeWeapon(com.eyecuelab.survivalists.models.Weapon weapon) {
         for(int i=0; i < weaponInventory.size(); i++) {
                 Weapon inventoryWeapon = weaponInventory.get(i);
