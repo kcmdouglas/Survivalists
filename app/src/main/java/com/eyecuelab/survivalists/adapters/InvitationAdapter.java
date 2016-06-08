@@ -21,6 +21,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.BaseAdapter;
+import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.ToggleButton;
@@ -88,7 +89,7 @@ public class InvitationAdapter extends BaseAdapter implements AdapterView.OnItem
             convertView = inflater.inflate(mInvitationListLayout, parent, false);
             holder.txtTitle = (TextView) convertView.findViewById(R.id.playerNameTextView);
             holder.imageItem = (ImageView) convertView.findViewById(R.id.playerAvatarImage);
-            holder.toggleButton = (ToggleButton) convertView.findViewById(R.id.invitationToggle);
+            holder.button = (Button) convertView.findViewById(R.id.invitationToggle);
             convertView.setTag(holder);
         } else {
             holder = (RecordHolder) convertView.getTag();
@@ -98,7 +99,7 @@ public class InvitationAdapter extends BaseAdapter implements AdapterView.OnItem
             final Participant participant = mParticipants.get(position);
             final Invitation invitation = mInvitations.get(position);
             holder.txtTitle.setText(participant.getDisplayName());
-            holder.toggleButton.setOnClickListener(new View.OnClickListener() {
+            holder.button.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
                     Games.TurnBasedMultiplayer.acceptInvitation(mGoogleApiClient, invitation.getInvitationId());
@@ -167,6 +168,6 @@ public class InvitationAdapter extends BaseAdapter implements AdapterView.OnItem
     static class RecordHolder {
         TextView txtTitle;
         ImageView imageItem;
-        ToggleButton toggleButton;
+        Button button;
     }
 }

@@ -17,6 +17,7 @@ import android.os.Bundle;
 import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.ListAdapter;
@@ -77,6 +78,7 @@ public class NewCampaignActivity extends BaseGameActivity implements View.OnClic
     private int mPartySize = 1;
     private int mLastSafeHouseId;
     private int mNextSafeHouseId;
+    private int mUiStatus;
     private boolean mConfirmingSettings = true;
     private String mDifficultyDescription;
     private String mCurrentMatchId;
@@ -97,9 +99,13 @@ public class NewCampaignActivity extends BaseGameActivity implements View.OnClic
     private byte[] turnData;
     final int WAITING_ROOM_TAG = 89;
     final int SEARCH_PLAYERS_TAG = 69;
+    final int START_NEW_CAMPAIGN = 78964;
+    final int JOIN_CAMPAIGN = 211123;
+    final int CONFIRMING_SETTINGS = 989797;
     public static final String RECEIVE_UPDATE_FROM_INVITATION = "com.eyecuelab.survivalists.ui.RECEIVE_UPDATE_FROM_INVITATION";
     public static final String RECEIVE_UPDATE_FROM_MATCH = "com.eyecuelab.survivalists.ui.RECEIVE_UPDATE_FROM_MATCH";
     public static final String PLAYER_ADDED_TO_LIST = "com.eyecuelab.survivalists.ui.PLAYER_ADDED_TO_LIST";
+    public static final String PLAYER_REMOVED_FROM_LIST = "com.eyecuelab.survivalists.ui.PLAYER_REMOVED_FROM_LIST";
     private ArrayList<Weapon> allWeapons;
     private ArrayList<Item> allFood;
     private ArrayList<Item> allMedicine;
@@ -121,6 +127,7 @@ public class NewCampaignActivity extends BaseGameActivity implements View.OnClic
     @Bind(R.id.difficultyConfirmedText) TextView difficultyConfirmedTextView;
     @Bind(R.id.lengthConfirmedText) TextView lengthConfirmedTextView;
     @Bind(R.id.partySizeText) TextView partyTextView;
+    @Bind(R.id.pendingTeamTitle) TextView pendingTeamTitle;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -220,6 +227,7 @@ public class NewCampaignActivity extends BaseGameActivity implements View.OnClic
         IntentFilter intentFilter = new IntentFilter();
         intentFilter.addAction(RECEIVE_UPDATE_FROM_INVITATION);
         intentFilter.addAction(PLAYER_ADDED_TO_LIST);
+        intentFilter.addAction(PLAYER_REMOVED_FROM_LIST);
         broadcastManager.registerReceiver(broadcastReceiver, intentFilter);
 
         mCurrentPlayerId = mSharedPreferences.getString(Constants.PREFERENCES_GOOGLE_PLAYER_ID, null);
@@ -281,9 +289,11 @@ public class NewCampaignActivity extends BaseGameActivity implements View.OnClic
         settingConfirmationLayout.setVisibility(View.VISIBLE);
         generalInfoLayout.setVisibility(View.GONE);
         playerInvitationLayout.setVisibility(View.VISIBLE);
+        searchButton.setVisibility(View.VISIBLE);
 
         int remainingInvites = mPartySize - invitedPlayers.size();
-        confirmationButton.setText(remainingInvites + " invitations remaining...");
+        confirmationButton.setVisibility(View.INVISIBLE);
+        confirmationButton.setText("Send Invitations");
 
         difficultyConfirmedTextView.setText("Difficulty: " + mDifficultyDescription);
         lengthConfirmedTextView.setText("Length: " + mCampaignLength + " Days");
@@ -427,14 +437,15 @@ public class NewCampaignActivity extends BaseGameActivity implements View.OnClic
 
     public void setupJoinMatchesUi() {
         settingsLayout.setVisibility(View.GONE);
-        settingConfirmationLayout.setVisibility(View.VISIBLE);
+        settingConfirmationLayout.setVisibility(View.INVISIBLE);
         generalInfoLayout.setVisibility(View.GONE);
         playerInvitationLayout.setVisibility(View.VISIBLE);
+        confirmationButton.setVisibility(View.GONE);
+        pendingTeamTitle.setText("Game Invitations");
 
         //TODO: Need to pull these parameters from firebase or shared preferences
 //        difficultyConfirmedTextView.setText("Difficulty: " + difficultyDescriptions.get(mDifficultyLevel));
 //        lengthConfirmedTextView.setText("Length: " + lengths.get(mCampaignLength) + " Days");
-        confirmationButton.setText("Waiting for players to join...");
 
         Games.Invitations.loadInvitations(mGoogleApiClient).setResultCallback(new ResultCallback<Invitations.LoadInvitationsResult>() {
             @Override
@@ -788,6 +799,13 @@ public class NewCampaignActivity extends BaseGameActivity implements View.OnClic
             } else if (intent.getAction().equals(PLAYER_ADDED_TO_LIST)) {
                 String invitedPlayerId = intent.getStringExtra(Constants.PLAYER_ADDED_TO_LIST_INTENT);
                 invitedPlayers.add(invitedPlayerId);
+                confirmationButton.setVisibility(View.VISIBLE);
+            } else if (intent.getAction().equals(PLAYER_REMOVED_FROM_LIST)) {
+                String invitedPlayerId = intent.getStringExtra(Constants.PLAYER_REMOVED_FROM_LIST_INTENT);
+                invitedPlayers.remove(invitedPlayerId);
+                if (invitedPlayers.size() < 1) {
+                    confirmationButton.setVisibility(View.INVISIBLE);
+                }
             }
         }
     };

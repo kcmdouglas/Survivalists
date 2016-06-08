@@ -10,6 +10,8 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.BaseAdapter;
+import android.widget.Button;
+import android.widget.CompoundButton;
 import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -59,7 +61,7 @@ public class InvitePlayerAdapter extends BaseAdapter implements AdapterView.OnIt
     }
 
     @Override
-    public View getView(int position, View convertView, ViewGroup parent) {
+    public View getView(int position, View convertView, final ViewGroup parent) {
         RecordHolder holder = new RecordHolder();
 
         if (convertView == null) {
@@ -79,13 +81,27 @@ public class InvitePlayerAdapter extends BaseAdapter implements AdapterView.OnIt
             Uri imageUri = player.getIconImageUri();
             ImageManager imageManager = ImageManager.create(mContext);
             imageManager.loadImage(holder.imageItem, imageUri);
-            holder.toggleButton.setOnClickListener(new View.OnClickListener() {
+            holder.toggleButton.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
                 @Override
-                public void onClick(View v) {
-                    Toast.makeText(v.getContext(), player.getDisplayName() + " added to invitation", Toast.LENGTH_SHORT).show();
-                    addPlayerToList(player.getPlayerId());
+                public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                    if (isChecked) {
+                        Toast.makeText(buttonView.getContext(), player.getDisplayName() + " added to list", Toast.LENGTH_SHORT).show();
+                        addPlayerToList(player.getPlayerId());
+                    } else {
+                        Toast.makeText(buttonView.getContext(), player.getDisplayName() + " removed from list", Toast.LENGTH_SHORT).show();
+                        removePlayerFromList(player.getPlayerId());
+                    }
                 }
             });
+
+
+//                    .setOnClickListener(new View.OnClickListener() {
+//                @Override
+//                public void onClick(View v) {
+//                    Toast.makeText(v.getContext(), player.getDisplayName() + " added to list", Toast.LENGTH_SHORT).show();
+//                    addPlayerToList(player.getPlayerId());
+//                }
+//            });
         } catch (NullPointerException np) {
             np.getStackTrace();
         }
@@ -100,6 +116,12 @@ public class InvitePlayerAdapter extends BaseAdapter implements AdapterView.OnIt
     public void addPlayerToList(String playerId) {
         Intent broadcastIntent = new Intent(NewCampaignActivity.PLAYER_ADDED_TO_LIST);
         broadcastIntent.putExtra(Constants.PLAYER_ADDED_TO_LIST_INTENT, playerId);
+        LocalBroadcastManager.getInstance(mContext).sendBroadcast(broadcastIntent);
+    }
+
+    public void removePlayerFromList(String playerId) {
+        Intent broadcastIntent = new Intent(NewCampaignActivity.PLAYER_REMOVED_FROM_LIST);
+        broadcastIntent.putExtra(Constants.PLAYER_REMOVED_FROM_LIST_INTENT, playerId);
         LocalBroadcastManager.getInstance(mContext).sendBroadcast(broadcastIntent);
     }
 
