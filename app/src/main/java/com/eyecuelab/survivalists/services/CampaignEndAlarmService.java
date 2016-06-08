@@ -50,6 +50,7 @@ public class CampaignEndAlarmService extends Service {
         mEditor.putInt(Constants.PREFERENCES_EVENT_3_STEPS, -1);
         mEditor.putInt(Constants.PREFERENCES_EVENT_4_STEPS, -1);
         mEditor.putInt(Constants.PREFERENCES_EVENT_5_STEPS, -1);
+        mEditor.putString("matchId", null);
         mEditor.apply();
         Log.d("Here I am???", "In the alarm service??");
         Intent intent = new Intent(this, MainActivity.class);

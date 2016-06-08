@@ -429,6 +429,10 @@ public class MainActivity extends FragmentActivity
             DialogFragment frag = SafehouseDialogFragment.newInstance(mStackLevel, mReachedSafehouse);
             frag.show(ft, "fragment_safehouse_dialog");
         }
+
+        else if (type == 3) {
+
+        }
     }
 
     @Override
@@ -710,24 +714,13 @@ public class MainActivity extends FragmentActivity
             mUserFirebaseRef.child("character").addListenerForSingleValueEvent(new ValueEventListener() {
                 @Override
                 public void onDataChange(DataSnapshot dataSnapshot) {
-                    String name = dataSnapshot.child("name").getValue().toString();
-                    long ageLong = (long) dataSnapshot.child("age").getValue();
-                    int age = (int) ageLong;
-                    String description = dataSnapshot.child("description").getValue().toString();
-                    long characterIdLong = (long) dataSnapshot.child("characterId").getValue();
-                    int characterId = (int) characterIdLong;
-                    long healthLong = (long) dataSnapshot.child("health").getValue();
-                    int health = (int) healthLong;
-                    long fullnessLevelLong = (long) dataSnapshot.child("fullnessLevel").getValue();
-                    int fullnessLevel = (int) fullnessLevelLong;
-                    String characterUrl = dataSnapshot.child("characterPictureUrl").getValue().toString();
-                    mCurrentCharacter = new Character(name, description, age, health, fullnessLevel, characterUrl, characterId);
+                    mCurrentCharacter = new Character(dataSnapshot.getValue(Character.class));
                     Log.d("Current Character ID: ", mCurrentCharacter.getCharacterId() + "");
 
-                    healthProgressBar.setProgress(health);
-                    healthTextView.setText(health + "HP");
-                    energyProgressBar.setProgress(fullnessLevel);
-                    energyTextView.setText(fullnessLevel + "%");
+                    healthProgressBar.setProgress(mCurrentCharacter.getHealth());
+                    healthTextView.setText(mCurrentCharacter.getHealth() + "HP");
+                    energyProgressBar.setProgress(mCurrentCharacter.getFullnessLevel());
+                    energyTextView.setText(mCurrentCharacter.getFullnessLevel() + "%");
 
                     Gson gson = new Gson();
                     String currentCharacter = gson.toJson(mCurrentCharacter);
