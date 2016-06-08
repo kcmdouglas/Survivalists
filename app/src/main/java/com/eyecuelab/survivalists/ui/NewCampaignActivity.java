@@ -8,6 +8,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.SharedPreferences;
+import android.database.DataSetObserver;
 import android.net.Uri;
 import android.preference.PreferenceManager;
 import android.support.annotation.NonNull;
@@ -18,6 +19,7 @@ import android.util.Log;
 import android.view.View;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
+import android.widget.ListAdapter;
 import android.widget.ListView;
 import android.widget.SeekBar;
 import android.widget.TextView;
@@ -91,7 +93,8 @@ public class NewCampaignActivity extends BaseGameActivity implements View.OnClic
     private GoogleApiClient mGoogleApiClient;
     private TurnBasedMatch mCurrentMatch;
     private byte[] turnData;
-    final int WAITING_ROOM_TAG = 1;
+    final int WAITING_ROOM_TAG = 89;
+    final int SEARCH_PLAYERS_TAG = 69;
     public static final String RECEIVE_UPDATE_FROM_INVITATION = "com.eyecuelab.survivalists.ui.RECEIVE_UPDATE_FROM_INVITATION";
     public static final String RECEIVE_UPDATE_FROM_MATCH = "com.eyecuelab.survivalists.ui.RECEIVE_UPDATE_FROM_MATCH";
     public static final String PLAYER_ADDED_TO_LIST = "com.eyecuelab.survivalists.ui.PLAYER_ADDED_TO_LIST";
@@ -108,6 +111,7 @@ public class NewCampaignActivity extends BaseGameActivity implements View.OnClic
     @Bind(R.id.invitePlayersListView) ListView invitePlayerListView;
     @Bind(R.id.infoListView) ListView infoListView;
     @Bind(R.id.confirmationButton) Button confirmationButton;
+    @Bind(R.id.searchButton) Button searchButton;
     @Bind(R.id.settingsField) PercentRelativeLayout settingsLayout;
     @Bind(R.id.settingsConfirmedSection) PercentRelativeLayout settingConfirmationLayout;
     @Bind(R.id.infoSection) PercentRelativeLayout generalInfoLayout;
@@ -137,6 +141,7 @@ public class NewCampaignActivity extends BaseGameActivity implements View.OnClic
         mEditor = mSharedPreferences.edit();
 
         confirmationButton.setOnClickListener(this);
+        searchButton.setOnClickListener(this);
 
         difficultyDescriptions.add("Walk in the park");
         difficultyDescriptions.add("Walk the line");
@@ -240,10 +245,15 @@ public class NewCampaignActivity extends BaseGameActivity implements View.OnClic
                 } else if (mPartySize == invitedPlayers.size()){
                     Toast.makeText(NewCampaignActivity.this, "Invitations sent", Toast.LENGTH_LONG).show();
                     sendInvitations();
+                    Intent notebookIntent = new Intent(NewCampaignActivity.this, MainActivity.class);
+                    startActivity(notebookIntent);
                 } else {
                     Toast.makeText(NewCampaignActivity.this, "Waiting for " + mPartySize + " players to join.", Toast.LENGTH_LONG).show();
                 }
                 break;
+            case R.id.searchButton:
+                Intent searchPlayersIntent = Games.Players.getPlayerSearchIntent(mGoogleApiClient);
+                startActivityForResult(searchPlayersIntent, SEARCH_PLAYERS_TAG);
         }
     }
 
@@ -257,20 +267,14 @@ public class NewCampaignActivity extends BaseGameActivity implements View.OnClic
                 | View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY);
     }
 
-//    public void loadAvailablePlayers() {
-//        mConfirmingSettings = false;
-//        //Start the invitaiton UI
-//        final int MIN_OPPONENTS = 1;
-//        Intent intent = Games.TurnBasedMultiplayer.getSelectOpponentsIntent(mGoogleApiClient, MIN_OPPONENTS, mPartySize, false);
-//        startActivityForResult(intent, WAITING_ROOM_TAG);
-//
-//        settingsLayout.setVisibility(View.GONE);
-//        settingConfirmationLayout.setVisibility(View.VISIBLE);
-//        generalInfoLayout.setVisibility(View.GONE);
-//        playerInvitationLayout.setVisibility(View.VISIBLE);
-//
-
-//    }
+    @Override
+    protected void onActivityResult(int request, int response, Intent data) {
+        super.onActivityResult(request, response, data);
+        if (request == SEARCH_PLAYERS_TAG && response == Activity.RESULT_OK) {
+            ArrayList<Player> searchedPlayers = data.getParcelableArrayListExtra(Players.EXTRA_PLAYER_SEARCH_RESULTS);
+            invitePlayerListView.setAdapter(new InvitePlayerAdapter(getContext(), searchedPlayers, R.layout.player_list_item, mGoogleApiClient));
+        }
+    }
 
     public void loadAvailablePlayers() {
         settingsLayout.setVisibility(View.GONE);
