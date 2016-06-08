@@ -248,7 +248,7 @@ public class NewCampaignActivity extends BaseGameActivity implements View.OnClic
                     Toast.makeText(NewCampaignActivity.this, "Invitations sent", Toast.LENGTH_LONG).show();
                     sendInvitations();
                 } else {
-                    Toast.makeText(NewCampaignActivity.this, "Waiting for " + mPartySize + " players to join.", Toast.LENGTH_LONG).show();
+                    Toast.makeText(NewCampaignActivity.this, "You still need to select " + mPartySize + " players.", Toast.LENGTH_LONG).show();
                 }
                 break;
             case R.id.searchButton:
@@ -523,11 +523,6 @@ public class NewCampaignActivity extends BaseGameActivity implements View.OnClic
             saveSafehouse();
             turnData = new byte[1];
 
-            //Take as many turns as there are players, to invite all players at once
-            for (int i = 0; i < mCurrentMatch.getParticipantIds().size(); i++) {
-                String nextPlayer = mCurrentMatch.getParticipantIds().get(i);
-                Games.TurnBasedMultiplayer.takeTurn(mGoogleApiClient, mCurrentMatchId, turnData, nextPlayer);
-            }
             instantiateUserInformation();
 
         }
@@ -535,12 +530,14 @@ public class NewCampaignActivity extends BaseGameActivity implements View.OnClic
             @Override
             public void onSuccess(@NonNull TurnBasedMultiplayer.UpdateMatchResult updateMatchResult) {
                 try {
-                    Games.TurnBasedMultiplayer.takeTurn(mGoogleApiClient, mCurrentMatchId, turnData, mCurrentMatch.getParticipants().get(2).getParticipantId());
-                } catch (NullPointerException np) {
-                    Log.e(TAG, "At onSuccess " + np.getMessage());
+                    int size = (mCurrentMatch.getParticipants().size() - 1);
+                    Games.TurnBasedMultiplayer.takeTurn(mGoogleApiClient, mCurrentMatchId, turnData, mCurrentMatch.getParticipants().get(size).getParticipantId());
+                } catch (IndexOutOfBoundsException ie) {
+                    Log.e(TAG, "At onSuccess " + ie.getMessage());
                     Games.TurnBasedMultiplayer.takeTurn(mGoogleApiClient, mCurrentMatchId, turnData, mCurrentMatch.getCreatorId());
                 }
                 Log.e(TAG, "At onSuccess " + updateMatchResult.getStatus().getStatusMessage());
+                Log.e(TAG, "Turn status " + updateMatchResult.getMatch().getTurnStatus() + "");
             }
 
             @Override
@@ -824,6 +821,8 @@ public class NewCampaignActivity extends BaseGameActivity implements View.OnClic
 
             }
         });
+        Intent goToNotebook = new Intent(NewCampaignActivity.this, MainActivity.class);
+        startActivity(goToNotebook);
     }
 
     public Context getContext() {
