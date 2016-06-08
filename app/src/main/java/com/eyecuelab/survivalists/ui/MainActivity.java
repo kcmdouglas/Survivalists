@@ -215,9 +215,28 @@ public class MainActivity extends FragmentActivity
         userFirebase.addValueEventListener(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
-                Log.d("DataSnapshot", dataSnapshot.toString());
-                Log.d("Datasnapshot child", dataSnapshot.child("character").getValue().toString());
+                updateStepsUi();
+            }
 
+            @Override
+            public void onCancelled(FirebaseError firebaseError) {
+
+            }
+        });
+
+        userFirebase.child("character").addValueEventListener(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                mCurrentCharacter = new Character(dataSnapshot.getValue(Character.class));
+                healthProgressBar.setProgress(mCurrentCharacter.getHealth());
+                healthTextView.setText(mCurrentCharacter.getHealth() + "HP");
+                energyProgressBar.setProgress(mCurrentCharacter.getFullnessLevel());
+                energyTextView.setText(mCurrentCharacter.getFullnessLevel() + "%");
+
+                Gson gson = new Gson();
+                String currentCharacter = gson.toJson(mCurrentCharacter);
+                mEditor.putString(Constants.PREFERENCES_CHARACTER, currentCharacter);
+                mEditor.commit();
             }
 
             @Override

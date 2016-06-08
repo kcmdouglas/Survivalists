@@ -1,5 +1,6 @@
 package com.eyecuelab.survivalists.ui;
 
+import android.app.Activity;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.hardware.Sensor;
@@ -49,6 +50,7 @@ public class MerchantDialogFragment extends android.support.v4.app.DialogFragmen
     private ShakeDetector mShakeDetector;
     SharedPreferences mSharedPreferences;
     SharedPreferences.Editor mEditor;
+    private MainActivity mainActivity;
 
     @Bind(R.id.merchantCloseButton) Button merchantCloseButton;
     @Bind(R.id.acceptButton) Button acceptButton;
@@ -77,6 +79,11 @@ public class MerchantDialogFragment extends android.support.v4.app.DialogFragmen
 
         frag.setArguments(args);
         return frag;
+    }
+    @Override
+    public void onAttach(Activity activity) {
+        super.onAttach(activity);
+        this.mainActivity = (MainActivity) activity;
     }
 
     @Override
@@ -146,22 +153,25 @@ public class MerchantDialogFragment extends android.support.v4.app.DialogFragmen
         }
     }
 
+
     private void addItems() {
         switch (offerRandomizer){
             case 0:
                 determineItemToRemove();
                 addItemToInventory(weaponOne);
-                addItemToInventory(weaponTwo);
+                mainActivity.setupGridView();
                 break;
             case 1:
                 determineItemToRemove();
                 addItemToInventory(weaponOne);
                 addItemToInventory(itemOne);
+                mainActivity.setupGridView();
                 break;
             case 2:
                 determineItemToRemove();
                 addItemToInventory(itemOne);
                 addItemToInventory(itemTwo);
+                mainActivity.setupGridView();
                 break;
         }
     }
@@ -170,13 +180,17 @@ public class MerchantDialogFragment extends android.support.v4.app.DialogFragmen
         if (userItemInventory != null && userWeaponInventory != null) {
             if (selectedItemChooser == 0) {
                 removeItemFromInventory(selectedInventoryWeapon);
+                mainActivity.userInventory.remove(selectedInventoryWeapon);
             } else {
                 removeItemFromInventory(selectedInventoryItem);
+                mainActivity.userInventory.remove(selectedInventoryItem);
             }
         } else if (userItemInventory != null) {
             removeItemFromInventory(selectedInventoryItem);
+            mainActivity.userInventory.remove(selectedInventoryItem);
         } else if (userWeaponInventory != null){
             removeItemFromInventory(selectedInventoryWeapon);
+            mainActivity.userInventory.remove(selectedInventoryWeapon);
         }
     }
 
@@ -285,6 +299,8 @@ public class MerchantDialogFragment extends android.support.v4.app.DialogFragmen
         }
     }
 
+
+
     private void addItemToInventory(final Weapon weapon) {
         final Firebase weaponUpdate = new Firebase(Constants.FIREBASE_URL_USERS + "/" + playerId + "/weapons/");
 
@@ -297,7 +313,9 @@ public class MerchantDialogFragment extends android.support.v4.app.DialogFragmen
                     String weaponPushId = newWeaponRef.getKey();
                     weapon.setPushId(weaponPushId);
                     newWeaponRef.setValue(weapon);
+                    mainActivity.userInventory.add(weapon);
                 } else {
+                    Toast.makeText(mainActivity.getApplicationContext(), "No room in weapon inventory for " + weapon.getName(), Toast.LENGTH_LONG).show();
                 }
             }
 
@@ -320,7 +338,9 @@ public class MerchantDialogFragment extends android.support.v4.app.DialogFragmen
                     String itemPushId = newItemRef.getKey();
                     item.setPushId(itemPushId);
                     newItemRef.setValue(item);
+                    mainActivity.userInventory.add(item);
                 } else {
+                    Toast.makeText(mainActivity.getApplicationContext(), "No room in item inventory for " + item.getName(), Toast.LENGTH_LONG).show();
                 }
             }
 
