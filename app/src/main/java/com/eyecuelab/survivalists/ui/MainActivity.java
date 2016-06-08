@@ -40,6 +40,7 @@ import com.eyecuelab.survivalists.models.SafeHouse;
 import com.eyecuelab.survivalists.models.Weapon;
 import com.eyecuelab.survivalists.services.BackgroundStepService;
 import com.eyecuelab.survivalists.util.StepResetAlarmReceiver;
+import com.firebase.client.ChildEventListener;
 import com.firebase.client.DataSnapshot;
 import com.firebase.client.Firebase;
 import com.firebase.client.FirebaseError;
@@ -153,6 +154,7 @@ public class MainActivity extends FragmentActivity
         campaignButton.setOnClickListener(this);
         mapButton.setOnClickListener(this);
         rightInteractionButton.setOnClickListener(this);
+        merchantButton.setOnClickListener(this);
 
         mCurrentMatchId = mSharedPreferences.getString(Constants.PREFERENCES_MATCH_ID, null);
         mCurrentPlayerId = mSharedPreferences.getString(Constants.PREFERENCES_GOOGLE_PLAYER_ID, null);
@@ -204,6 +206,53 @@ public class MainActivity extends FragmentActivity
         instantiateAllItems();
         loadCharacter();
         checkDailyGoal();
+        startUserListener();
+    }
+
+    private void startUserListener() {
+        mUserFirebaseRef.addChildEventListener(new ChildEventListener() {
+            @Override
+            public void onChildAdded(DataSnapshot dataSnapshot, String s) {
+
+            }
+
+            @Override
+            public void onChildChanged(DataSnapshot dataSnapshot, String s) {
+                Log.d("DailyGoal", dataSnapshot.child("dailyGoal").getValue().toString());
+                dailyGoal = Integer.parseInt(dataSnapshot.child("dailyGoal").getValue().toString());
+                mEditor.putInt(Constants.PREFERENCES_DAILY_GOAL, dailyGoal);
+                mEditor.apply();
+                updateStepsUi();
+
+                mCurrentCharacter = new Character(dataSnapshot.child("character").getValue(Character.class));
+                Log.d("Current Character ID: ", mCurrentCharacter.getCharacterId() + "");
+
+                healthProgressBar.setProgress(mCurrentCharacter.getHealth());
+                healthTextView.setText(mCurrentCharacter.getHealth() + "HP");
+                energyProgressBar.setProgress(mCurrentCharacter.getFullnessLevel());
+                energyTextView.setText(mCurrentCharacter.getFullnessLevel() + "%");
+
+                Gson gson = new Gson();
+                String currentCharacter = gson.toJson(mCurrentCharacter);
+                mEditor.putString(Constants.PREFERENCES_CHARACTER, currentCharacter);
+                mEditor.commit();
+            }
+
+            @Override
+            public void onChildRemoved(DataSnapshot dataSnapshot) {
+
+            }
+
+            @Override
+            public void onChildMoved(DataSnapshot dataSnapshot, String s) {
+
+            }
+
+            @Override
+            public void onCancelled(FirebaseError firebaseError) {
+
+            }
+        });
     }
 
     @Override
@@ -292,6 +341,9 @@ public class MainActivity extends FragmentActivity
                     firebaseStepsRef.child("dailySteps").setValue(steps);
                 }
                 showEventDialog(1);
+                break;
+            case R.id.merchantButton:
+                showEventDialog(3);
                 break;
         }
     }
@@ -487,6 +539,10 @@ public class MainActivity extends FragmentActivity
             }
         }
 
+        if(key.equals(Constants.PREFERENCES_CHARACTER)) {
+
+        }
+
         //TODO: Add listener for isCampaignEnded boolean to trigger end of game screen
     }
 
@@ -561,7 +617,7 @@ public class MainActivity extends FragmentActivity
         final ArrayList<Boolean> teammatesAtSafehouse = new ArrayList<>();
 
         for(String playerId : mPlayerIDs) {
-            Firebase firebaseUserRef = new Firebase(Constants.FIREBASE_URL_USERS + "/" + playerId+ "/atSafeHouse" );
+            Firebase firebaseUserRef = new Firebase(Constants.FIREBASE_URL_USERS + "/" + playerId + "/atSafeHouse" );
 
             firebaseUserRef.addListenerForSingleValueEvent(new ValueEventListener() {
                 @Override
@@ -841,4 +897,6 @@ public class MainActivity extends FragmentActivity
             public void onCancelled(FirebaseError firebaseError) {}
         });
     }
+
+
 }
