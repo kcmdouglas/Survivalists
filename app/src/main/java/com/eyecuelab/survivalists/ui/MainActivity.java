@@ -2,8 +2,6 @@ package com.eyecuelab.survivalists.ui;
 
 import android.app.ActivityManager;
 import android.app.AlarmManager;
-import android.content.BroadcastReceiver;
-import android.content.IntentFilter;
 import android.support.v4.app.DialogFragment;
 import android.app.PendingIntent;
 import android.content.Context;
@@ -15,7 +13,6 @@ import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentActivity;
 import android.support.v4.app.FragmentTransaction;
 
-import android.support.v4.content.LocalBroadcastManager;
 import android.text.TextUtils;
 import android.util.Log;
 import android.view.MotionEvent;
@@ -46,7 +43,6 @@ import com.firebase.client.Firebase;
 import com.firebase.client.FirebaseError;
 import com.firebase.client.ValueEventListener;
 
-import com.google.android.gms.games.Games;
 import com.google.gson.Gson;
 
 
@@ -55,8 +51,6 @@ import org.parceler.Parcels;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Collections;
-import java.util.HashMap;
-import java.util.Map;
 
 import butterknife.Bind;
 import butterknife.ButterKnife;
@@ -137,7 +131,7 @@ public class MainActivity extends FragmentActivity
         setFullScreen();
 
         //set content view AFTER ABOVE sequence (to avoid crash)
-        setContentView(R.layout.activity_notebook);
+        setContentView(R.layout.activity_main);
 
         mContext = this;
         ButterKnife.bind(this);

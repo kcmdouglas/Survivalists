@@ -25,7 +25,7 @@ import butterknife.ButterKnife;
 
 public class CharacterDetailFragment extends Fragment {
     @Bind(R.id.nameTextView) TextView nameTextView;
-    @Bind(R.id.ageTExtView) TextView ageTextView;
+    @Bind(R.id.ageTextView) TextView ageTextView;
     @Bind(R.id.healthTextView) TextView healthTextView;
 
     private Character mCharacter;
