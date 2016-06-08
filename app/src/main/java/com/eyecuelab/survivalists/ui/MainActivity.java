@@ -210,41 +210,13 @@ public class MainActivity extends FragmentActivity
     }
 
     private void startUserListener() {
-        mUserFirebaseRef.addChildEventListener(new ChildEventListener() {
+        Firebase userFirebase = new Firebase(Constants.FIREBASE_URL_USERS + "/" + mCurrentPlayerId +"/");
+
+        userFirebase.addValueEventListener(new ValueEventListener() {
             @Override
-            public void onChildAdded(DataSnapshot dataSnapshot, String s) {
-
-            }
-
-            @Override
-            public void onChildChanged(DataSnapshot dataSnapshot, String s) {
-                Log.d("DailyGoal", dataSnapshot.child("dailyGoal").getValue().toString());
-                dailyGoal = Integer.parseInt(dataSnapshot.child("dailyGoal").getValue().toString());
-                mEditor.putInt(Constants.PREFERENCES_DAILY_GOAL, dailyGoal);
-                mEditor.apply();
-                updateStepsUi();
-
-                mCurrentCharacter = new Character(dataSnapshot.child("character").getValue(Character.class));
-                Log.d("Current Character ID: ", mCurrentCharacter.getCharacterId() + "");
-
-                healthProgressBar.setProgress(mCurrentCharacter.getHealth());
-                healthTextView.setText(mCurrentCharacter.getHealth() + "HP");
-                energyProgressBar.setProgress(mCurrentCharacter.getFullnessLevel());
-                energyTextView.setText(mCurrentCharacter.getFullnessLevel() + "%");
-
-                Gson gson = new Gson();
-                String currentCharacter = gson.toJson(mCurrentCharacter);
-                mEditor.putString(Constants.PREFERENCES_CHARACTER, currentCharacter);
-                mEditor.commit();
-            }
-
-            @Override
-            public void onChildRemoved(DataSnapshot dataSnapshot) {
-
-            }
-
-            @Override
-            public void onChildMoved(DataSnapshot dataSnapshot, String s) {
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                Log.d("DataSnapshot", dataSnapshot.toString());
+                Log.d("Datasnapshot child", dataSnapshot.child("character").getValue().toString());
 
             }
 
@@ -253,6 +225,7 @@ public class MainActivity extends FragmentActivity
 
             }
         });
+
     }
 
     @Override
@@ -617,11 +590,13 @@ public class MainActivity extends FragmentActivity
         final ArrayList<Boolean> teammatesAtSafehouse = new ArrayList<>();
 
         for(String playerId : mPlayerIDs) {
-            Firebase firebaseUserRef = new Firebase(Constants.FIREBASE_URL_USERS + "/" + playerId + "/atSafeHouse" );
+            final Firebase firebaseUserRef = new Firebase(Constants.FIREBASE_URL_USERS + "/" + playerId + "/atSafeHouse");
 
             firebaseUserRef.addListenerForSingleValueEvent(new ValueEventListener() {
                 @Override
                 public void onDataChange(DataSnapshot dataSnapshot) {
+                    Log.d("Safehouse User Ref", firebaseUserRef + "");
+                    Log.d("Safehouse Boolean", dataSnapshot + "");
                     boolean atSafeHouse = (boolean) dataSnapshot.getValue();
 
                     if(atSafeHouse) {
@@ -668,7 +643,7 @@ public class MainActivity extends FragmentActivity
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
                     for (DataSnapshot child : dataSnapshot.getChildren()) {
-                        final String playerId = child.toString();
+                        final String playerId = child.getValue().toString();
                         if (!(playerId.equals(mCurrentPlayerId))) {
                             mPlayerIDs.add(playerId);
                             Log.d("PlayerIDs", mPlayerIDs.size() + "");
