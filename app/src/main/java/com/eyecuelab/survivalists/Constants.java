@@ -53,4 +53,5 @@ public class Constants {
     public static final int WEAPON_TAG = 11111111;
     public static final int ITEM_TAG = 99999999;
     public static final String ITEM_REMOVED= "itemRemovedString";
+    public static final String PREFERENCES_SENSOR_SET_BOOLEAN = "listenerSetBoolean";
 }

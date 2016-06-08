@@ -61,33 +61,33 @@ public class CharacterDetailFragment extends Fragment {
         healthTextView.setText("Health: " + Integer.toString(mCharacter.getHealth()));
 
 
-        Firebase firebase = new Firebase(Constants.FIREBASE_URL_USERS + "/" + mCharacter.getPlayerId() + "/character");
-        firebase.addChildEventListener(new ChildEventListener() {
-            @Override
-            public void onChildAdded(DataSnapshot dataSnapshot, String s) {
-
-            }
-
-            @Override
-            public void onChildChanged(DataSnapshot dataSnapshot, String s) {
-                healthTextView.setText(dataSnapshot.child("health").getValue().toString());
-            }
-
-            @Override
-            public void onChildRemoved(DataSnapshot dataSnapshot) {
-
-            }
-
-            @Override
-            public void onChildMoved(DataSnapshot dataSnapshot, String s) {
-
-            }
-
-            @Override
-            public void onCancelled(FirebaseError firebaseError) {
-
-            }
-        });
+//        Firebase firebase = new Firebase(Constants.FIREBASE_URL_USERS + "/" + mCharacter.getPlayerId() + "/character");
+//        firebase.addChildEventListener(new ChildEventListener() {
+//            @Override
+//            public void onChildAdded(DataSnapshot dataSnapshot, String s) {
+//
+//            }
+//
+//            @Override
+//            public void onChildChanged(DataSnapshot dataSnapshot, String s) {
+//                healthTextView.setText(dataSnapshot.child("health").getValue().toString());
+//            }
+//
+//            @Override
+//            public void onChildRemoved(DataSnapshot dataSnapshot) {
+//
+//            }
+//
+//            @Override
+//            public void onChildMoved(DataSnapshot dataSnapshot, String s) {
+//
+//            }
+//
+//            @Override
+//            public void onCancelled(FirebaseError firebaseError) {
+//
+//            }
+//        });
 
         return view;
     }

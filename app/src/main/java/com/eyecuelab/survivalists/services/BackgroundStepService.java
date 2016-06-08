@@ -1,6 +1,8 @@
 package com.eyecuelab.survivalists.services;
 
 import android.app.AlarmManager;
+import android.app.Notification;
+import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.app.Service;
 import android.content.Context;
@@ -14,6 +16,7 @@ import android.os.Bundle;
 import android.os.IBinder;
 import android.preference.PreferenceManager;
 import android.support.annotation.Nullable;
+import android.support.v4.app.NotificationCompat;
 import android.text.TextUtils;
 import android.util.Log;
 import android.widget.Toast;
@@ -21,6 +24,7 @@ import android.widget.Toast;
 import com.eyecuelab.survivalists.Constants;
 import com.eyecuelab.survivalists.models.Character;
 import com.eyecuelab.survivalists.models.User;
+import com.eyecuelab.survivalists.ui.MainActivity;
 import com.eyecuelab.survivalists.util.BackgroundStepReceiver;
 import com.eyecuelab.survivalists.util.StepResetAlarmReceiver;
 import com.firebase.client.ChildEventListener;
@@ -72,6 +76,7 @@ public class BackgroundStepService extends Service implements SensorEventListene
         mEditor = mSharedPreferences.edit();
         mCurrentPlayerId = mSharedPreferences.getString(Constants.PREFERENCES_GOOGLE_PLAYER_ID, null);
 
+        mEditor.putBoolean(Constants.PREFERENCES_SENSOR_SET_BOOLEAN, true).apply();
         firebaseStatsListener();
         return START_STICKY;
     }
@@ -101,7 +106,7 @@ public class BackgroundStepService extends Service implements SensorEventListene
         mEditor.commit();
         String dailyStepsString = Integer.toString(dailySteps);
 
-        if((mCurrentPlayerId != null) && (dailySteps % 10 < 1)) {
+        if((mCurrentPlayerId != null) && (dailySteps % 10 == 0) && (dailySteps > 9)) {
             Firebase firebaseStepsRef = new Firebase(Constants.FIREBASE_URL_USERS + "/" + mCurrentPlayerId + "/");
             Map<String, Object> firebaseDailySteps = new HashMap<>();
             firebaseDailySteps.put("dailySteps", dailyStepsString);
@@ -109,7 +114,7 @@ public class BackgroundStepService extends Service implements SensorEventListene
             firebaseStatsListener();
         }
 
-         if((mCurrentPlayerId != null) && (dailySteps % 50 < 1)) {
+         if((mCurrentPlayerId != null) && (dailySteps % 50 == 0) && (dailySteps > 49)) {
              int newHunger;
              int newHealth;
              if(mFullnessLevel > 0) {
@@ -143,6 +148,23 @@ public class BackgroundStepService extends Service implements SensorEventListene
             public void onDataChange(DataSnapshot dataSnapshot) {
                 long fullnessLevelLong = (long) dataSnapshot.getValue();
                 mFullnessLevel = (int) fullnessLevelLong;
+                if (mFullnessLevel < 25) {
+                    Intent intent = new Intent(getApplicationContext(), MainActivity.class);
+                    long[] pattern = {0, 300, 0};
+                    PendingIntent pi = PendingIntent.getActivity(getApplicationContext(), 12345, intent, 0);
+                    NotificationCompat.Builder mBuilder = new NotificationCompat.Builder(getApplicationContext())
+                            .setSmallIcon(android.R.drawable.sym_def_app_icon)
+                            .setContentTitle("Getting pretty hungry...")
+                            .setContentText("It'd be wise to get some food before your health starts to decline. Use some food in your inventory to fill your fullness meter.")
+                            .setVibrate(pattern)
+                            .setAutoCancel(true);
+
+                    mBuilder.setContentIntent(pi);
+                    mBuilder.setDefaults(Notification.DEFAULT_SOUND);
+                    mBuilder.setAutoCancel(true);
+                    NotificationManager notificationManager = (NotificationManager) getApplicationContext().getSystemService(Context.NOTIFICATION_SERVICE);
+                    notificationManager.notify(12345, mBuilder.build());
+                }
             }
 
             @Override
