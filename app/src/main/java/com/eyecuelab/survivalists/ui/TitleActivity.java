@@ -87,9 +87,11 @@ public class TitleActivity extends BaseGameActivity implements GoogleApiClient.C
         mSharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
         mEditor = mSharedPreferences.edit();
 
-        //instantiateInventory();
-
         mCurrentMatchId = mSharedPreferences.getString("matchId", null);
+
+        if(mCurrentMatchId == null) {
+            currentCampaignButton.setVisibility(View.INVISIBLE);
+        }
 
         currentCampaignButton.setOnClickListener(this);
         startCampaignButton.setOnClickListener(this);
@@ -133,24 +135,7 @@ public class TitleActivity extends BaseGameActivity implements GoogleApiClient.C
                 startActivity(campaignEditorIntent);
                 break;
             case R.id.merchantTest:
-                mStackLevel++;
 
-                FragmentTransaction ft = getSupportFragmentManager().beginTransaction();
-                Fragment prev = getSupportFragmentManager().findFragmentByTag("merchant");
-                if(prev != null) {
-                    ft.remove(prev);
-                }
-
-                ft.addToBackStack(null);
-                DialogFragment frag = MerchantDialogFragment.newInstance(mStackLevel);
-                Bundle bundle = new Bundle();
-                bundle.putParcelableArrayList("allWeapons", allWeapons);
-                bundle.putParcelableArrayList("allItems", allItems);
-                bundle.putParcelableArrayList("userWeapons", userWeaponInventory);
-                bundle.putParcelableArrayList("userItems", userItemInventory);
-                frag.setArguments(bundle);
-                frag.show(ft, "fragment_merchant_dialog");
-                break;
         }
     }
 
@@ -243,43 +228,4 @@ public class TitleActivity extends BaseGameActivity implements GoogleApiClient.C
         Log.v(TAG, "Connected to BaseGame Util");
     }
 
-//
-//    public void instantiateInventory() {
-//
-//        Firebase userRef = new Firebase(Constants.FIREBASE_URL_USERS + "/" + mCurrentPlayerId + "/");
-//
-//        userRef.child("items").addListenerForSingleValueEvent(new ValueEventListener() {
-//            @Override
-//            public void onDataChange(DataSnapshot dataSnapshot) {
-//                for(DataSnapshot iterateItem : dataSnapshot.getChildren()) {
-//                    Item item = new Item(iterateItem.getValue(Item.class));
-//                    item.setPushId(iterateItem.child("pushId").getValue().toString());
-//                    userItemInventory.add(item);
-//                    Log.d("Item Inventory", userItemInventory.size() + "");
-//                }
-//            }
-//
-//            @Override
-//            public void onCancelled(FirebaseError firebaseError) {
-//
-//            }
-//        });
-//
-//        userRef.child("weapons").addListenerForSingleValueEvent(new ValueEventListener() {
-//            @Override
-//            public void onDataChange(DataSnapshot dataSnapshot) {
-//                for(DataSnapshot iterateWeapon: dataSnapshot.getChildren()) {
-//                    Weapon weapon = new Weapon(iterateWeapon.getValue(Weapon.class));
-//                    weapon.setPushId(iterateWeapon.child("pushId").getValue().toString());
-//                    userWeaponInventory.add(weapon);
-//                    Log.d("Weapon Inventory", userWeaponInventory.size() + "");
-//                }
-//            }
-//
-//            @Override
-//            public void onCancelled(FirebaseError firebaseError) {
-//
-//            }
-//        });
-//    }
 }

@@ -132,6 +132,8 @@ public class InventoryDetailFragment extends DialogFragment implements View.OnCl
                     Toast.makeText(v.getContext(), currentItem.getName() + " Used", Toast.LENGTH_LONG).show();
                 }
             });
+            Firebase characterFirebaseRef = new Firebase(Constants.FIREBASE_URL_USERS + "/" + mUserId + "/character");
+            characterFirebaseRef.setValue(mCharacter);
         } else {
             final Weapon currentWeapon = (Weapon) mItem;
             final View v = view;
