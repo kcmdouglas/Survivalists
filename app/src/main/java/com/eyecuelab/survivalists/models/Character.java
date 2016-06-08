@@ -18,7 +18,8 @@ public class Character {
     String characterPictureUrl;
     Integer characterId;
     String playerId;
-    ArrayList<Object> inventory = new ArrayList<Object>();
+    ArrayList<Weapon> weaponInventory = new ArrayList<>();
+    ArrayList<Item> itemInventory = new ArrayList<>();
 
     public Character() {
         //Required blank constructor
@@ -88,13 +89,14 @@ public class Character {
         this.fullnessLevel = fullnessLevel;
     }
 
-    public List<Object> getInventory () {
-        return inventory;
+    public List<Weapon> getWeaponInventory () {
+        return weaponInventory;
     }
+    public List<Item> getItemInventory() {return itemInventory;}
 
-    public void addToInventory(Object item) {
-        if (inventory.size() < 16) {
-            inventory.add(item);
+    public void addToInventory(Weapon weapon) {
+        if (weaponInventory.size() < 4) {
+            weaponInventory.add(weapon);
             Log.d("Inventory: ", "Item Added");
         } else {
             Log.d("Inventory: ", "Cannot add, inventory full");
@@ -102,27 +104,19 @@ public class Character {
     }
 
     public void removeWeapon(com.eyecuelab.survivalists.models.Weapon weapon) {
-        for(int i=0; i < inventory.size(); i++) {
-            boolean result = inventory.get(i) instanceof com.eyecuelab.survivalists.models.Weapon;
-            com.eyecuelab.survivalists.models.Weapon inventoryWeapon = null;
-            if (result) {
-                inventoryWeapon = (com.eyecuelab.survivalists.models.Weapon) inventory.get(i);
+        for(int i=0; i < weaponInventory.size(); i++) {
+                Weapon inventoryWeapon = weaponInventory.get(i);
                 if((inventoryWeapon.getName().equals(weapon.getName())) && (inventoryWeapon.getHitPoints() == weapon.getHitPoints())) {
-                    inventory.remove(i);
-                }
+                    weaponInventory.remove(i);
             }
         }
     }
 
     public void removeItem(Item item) {
-        for(int i=0; i < inventory.size(); i++) {
-            boolean result = inventory.get(i) instanceof Item;
-            Item inventoryItem = null;
-            if (result) {
-                inventoryItem = (Item) inventory.get(i);
-                if((inventoryItem.getName().equals(item.getName())) && (inventoryItem.getHealthPoints() == item.getHealthPoints())) {
-                    inventory.remove(i);
-                }
+        for(int i=0; i < itemInventory.size(); i++) {
+            Item inventoryItem = itemInventory.get(i);
+            if((inventoryItem.getName().equals(item.getName())) && (inventoryItem.getHealthPoints() == item.getHealthPoints())) {
+                itemInventory.remove(i);
             }
         }
     }
@@ -139,8 +133,11 @@ public class Character {
         this.characterId = characterId;
     }
 
-    public void setInventory(ArrayList<Object> inventory) {
-        this.inventory = inventory;
+    public void setItemInventory(ArrayList<Item> itemInventory) {
+        this.itemInventory = itemInventory;
+    }
+    public void setWeaponInventory(ArrayList<Weapon> weaponInventory) {
+        this.weaponInventory = weaponInventory;
     }
 
     public String getPlayerId() {

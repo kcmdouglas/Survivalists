@@ -533,8 +533,8 @@ public class MainActivity extends FragmentActivity
         //Checks if the rest of the team has made it to the safehouse
         final ArrayList<Boolean> teammatesAtSafehouse = new ArrayList<>();
 
-        for(int i = 0; i < mPlayerIDs.size(); i++) {
-            Firebase firebaseUserRef = new Firebase(Constants.FIREBASE_URL_USERS + "/" + mPlayerIDs.get(i)+ "/atSafeHouse" );
+        for(String playerId : mPlayerIDs) {
+            Firebase firebaseUserRef = new Firebase(Constants.FIREBASE_URL_USERS + "/" + playerId+ "/atSafeHouse" );
 
             firebaseUserRef.addListenerForSingleValueEvent(new ValueEventListener() {
                 @Override
@@ -586,7 +586,6 @@ public class MainActivity extends FragmentActivity
             public void onDataChange(DataSnapshot dataSnapshot) {
                     for (DataSnapshot child : dataSnapshot.getChildren()) {
                         final String playerId = child.toString();
-                        Log.d("PlayerId", playerId);
                         if (!(playerId.equals(mCurrentPlayerId))) {
                             mPlayerIDs.add(playerId);
                             Log.d("PlayerIDs", mPlayerIDs.size() + "");
