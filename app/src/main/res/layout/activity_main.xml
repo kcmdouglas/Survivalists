@@ -1,194 +1,229 @@
 <?xml version="1.0" encoding="utf-8"?>
-<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:tools="http://schemas.android.com/tools"
+<android.support.percent.PercentRelativeLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:orientation="vertical"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:paddingBottom="@dimen/activity_vertical_margin"
-    android:paddingLeft="@dimen/activity_horizontal_margin"
-    android:paddingRight="@dimen/activity_horizontal_margin"
-    android:paddingTop="@dimen/activity_vertical_margin"
-    tools:context=".ui.MainActivity"
-    android:background="@color/accent_material_dark"
-    android:focusable="false"
-    android:focusableInTouchMode="true">
+    android:focusableInTouchMode="true"
+    android:focusable="false">
 
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="System Steps:"
-        android:id="@+id/textView2"
-        android:layout_marginTop="107dp"
-        android:layout_centerHorizontal="true"
-        android:layout_below="@+id/findPlayersButton" />
+    <ImageView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:src="@drawable/campaign_main_background"
+        android:scaleType="centerCrop"/>
 
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text=" 0"
-        android:id="@+id/stepTextView"
-        android:layout_below="@+id/textView2"
-        android:layout_centerHorizontal="true" />
+    <android.support.percent.PercentRelativeLayout
+        app:layout_widthPercent="15%"
+        android:layout_height="match_parent"
+        android:id="@+id/sideTabs">
 
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Daily Steps:"
-        android:id="@+id/textView"
-        android:layout_below="@+id/stepTextView"
-        android:layout_centerHorizontal="true" />
+        <Button
+            app:layout_widthPercent="100%"
+            app:layout_heightPercent="9%"
+            app:layout_marginTopPercent="14%"
+            android:id="@+id/mapTabButton"
+            android:layout_alignParentLeft="true"
+            android:layout_alignParentStart="true"
+            android:background="@android:color/transparent"
+            android:alpha="0" />
 
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="0"
-        android:id="@+id/dailyStepsTextView"
-        android:layout_below="@+id/textView"
-        android:layout_centerHorizontal="true" />
+        <Button
+            app:layout_widthPercent="100%"
+            app:layout_heightPercent="21%"
+            android:id="@+id/tabCampaignButton"
+            app:layout_marginTopPercent="3.5%"
+            android:background="@android:color/transparent"
+            android:alpha="0"
+            android:layout_below="@+id/mapTabButton"
+            android:layout_alignParentLeft="true"
+            android:layout_alignParentStart="true" />
 
-    <Button
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="New Match"
-        android:id="@+id/findPlayersButton"
-        android:layout_centerHorizontal="true" />
+    </android.support.percent.PercentRelativeLayout>
 
-    <Button
-        android:layout_width="wrap_content"
-        android:layout_height="90dp"
-        android:text="End Current Match"
-        android:id="@+id/endMatchButton"
+    <android.support.percent.PercentRelativeLayout
+        app:layout_widthPercent="30%"
+        app:layout_heightPercent="24%"
+        app:layout_marginTopPercent="15%"
+        app:layout_marginLeftPercent="11%"
+        android:id="@+id/playerStatus"
         android:layout_alignParentTop="true"
-        android:layout_toRightOf="@+id/findPlayersButton"
-        android:layout_toEndOf="@+id/findPlayersButton" />
+        android:layout_toRightOf="@+id/sideTabs">
 
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Match Players:"
-        android:id="@+id/textView3"
-        android:layout_marginTop="29dp"
-        android:layout_below="@+id/textView4"
-        android:layout_alignParentLeft="true"
-        android:layout_alignParentStart="true" />
+        <ProgressBar
+            android:id="@+id/stepProgressBar"
+            android:layout_marginTop="15dp"
+            android:layout_width="150dp"
+            android:layout_height="10dp"
+            style="?android:attr/progressBarStyleHorizontal"
+            android:max="5000"
+            android:progress="100"/>
 
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="None yet, please wait for google!"
-        android:id="@+id/playerTextView"
-        android:layout_below="@+id/textView3"
-        android:layout_alignParentLeft="true"
-        android:layout_alignParentStart="true" />
+        <TextView
+            android:id="@+id/goalTitle"
+            android:layout_height="wrap_content"
+            android:layout_width="wrap_content"
+            app:layout_marginTopPercent="15%"
+            android:textSize="10sp"
+            android:text="Daily Goal"
+            android:textColor="@android:color/black"
+            android:textAllCaps="true"
+            android:textStyle="bold" />
 
-    <Button
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Test Button"
-        android:id="@+id/testButton"
-        android:layout_alignParentBottom="true"
+        <TextView
+            android:id="@+id/dailyGoalTextView"
+            android:layout_height="wrap_content"
+            android:layout_width="wrap_content"
+            app:layout_marginTopPercent="15%"
+            android:layout_alignParentEnd="true"
+            android:layout_alignParentRight="true"
+            android:textAlignment="textEnd"
+            android:gravity="end"
+            android:maxLines="1"
+            android:layout_toRightOf="@+id/goalTitle"
+            android:textSize="10sp"
+            android:text="0/0"
+            android:textColor="@android:color/black"
+            android:textAllCaps="true"
+            android:textStyle="bold" />
+
+        <ProgressBar
+            android:id="@+id/healthProgressBar"
+            android:layout_below="@+id/goalTitle"
+            android:layout_marginTop="25dp"
+            android:layout_width="150dp"
+            android:layout_height="10dp"
+            style="?android:attr/progressBarStyleHorizontal"
+            android:max="100"
+            android:progress="1"/>
+
+        <TextView
+            android:id="@+id/healthTitle"
+            android:layout_height="wrap_content"
+            android:layout_width="wrap_content"
+            android:layout_below="@+id/goalTitle"
+            app:layout_marginTopPercent="22%"
+            android:textSize="10sp"
+            android:text="Health"
+            android:textColor="@android:color/black"
+            android:textAllCaps="true"
+            android:textStyle="bold" />
+
+        <TextView
+            android:id="@+id/healthTextView"
+            android:layout_height="wrap_content"
+            android:layout_width="wrap_content"
+            android:layout_toRightOf="@+id/healthTitle"
+            android:layout_below="@+id/goalTitle"
+            app:layout_marginTopPercent="22%"
+            app:layout_marginLeftPercent="43%"
+            android:layout_alignParentEnd="true"
+            android:layout_alignParentRight="true"
+            android:textAlignment="textEnd"
+            android:gravity="end"
+            android:maxLines="1"
+            android:textSize="10sp"
+            android:text="0HP"
+            android:textColor="@android:color/black"
+            android:textAllCaps="true"
+            android:textStyle="bold" />
+
+        <ProgressBar
+            android:id="@+id/energyProgressBar"
+            android:layout_below="@+id/healthTitle"
+            android:layout_marginTop="28dp"
+            android:layout_width="150dp"
+            android:layout_height="10dp"
+            style="?android:attr/progressBarStyleHorizontal"
+            android:max="100"
+            android:progress="1"/>
+
+        <TextView
+            android:id="@+id/energyTitle"
+            android:layout_height="wrap_content"
+            android:layout_width="wrap_content"
+            android:layout_below="@+id/healthTitle"
+            app:layout_marginTopPercent="24%"
+            android:textSize="10sp"
+            android:text="Energy Level"
+            android:textColor="@android:color/black"
+            android:textAllCaps="true"
+            android:textStyle="bold" />
+
+        <TextView
+            android:id="@+id/energyTextView"
+            android:layout_height="wrap_content"
+            android:layout_width="wrap_content"
+            android:layout_toRightOf="@+id/healthTitle"
+            android:layout_below="@+id/healthTitle"
+            app:layout_marginTopPercent="24%"
+            app:layout_marginLeftPercent="45%"
+            android:layout_alignParentEnd="true"
+            android:layout_alignParentRight="true"
+            android:textAlignment="textEnd"
+            android:gravity="end"
+            android:maxLines="1"
+            android:textSize="10sp"
+            android:text="0%"
+            android:textColor="@android:color/black"
+            android:textAllCaps="true"
+            android:textStyle="bold" />
+
+    </android.support.percent.PercentRelativeLayout>
+
+    <android.support.percent.PercentRelativeLayout
+        android:id="@+id/backpackContent"
+        app:layout_widthPercent="85%"
+        app:layout_heightPercent="41%"
+        android:layout_below="@+id/playerStatus"
+        android:layout_toRightOf="@+id/sideTabs"
+        android:layout_toEndOf="@+id/sideTabs">
+
+        <GridView
+            android:id="@+id/backpackGridView"
+            app:layout_widthPercent="100%"
+            app:layout_heightPercent="100%"
+            app:layout_marginLeftPercent="7%"
+            android:horizontalSpacing="20dp"
+            android:verticalSpacing="10dp"
+            android:numColumns="4">
+        </GridView>
+
+    </android.support.percent.PercentRelativeLayout>
+
+    <android.support.percent.PercentRelativeLayout
+        android:id="@+id/interactionButtons"
+        app:layout_heightPercent="13%"
+        app:layout_marginTopPercent="0%"
         android:layout_alignParentRight="true"
-        android:layout_alignParentEnd="true" />
+        android:layout_alignParentEnd="true"
+        android:layout_below="@+id/backpackContent"
+        android:layout_toRightOf="@+id/sideTabs"
+        android:layout_toEndOf="@+id/sideTabs">
 
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Match Id:"
-        android:id="@+id/textView4"
-        android:layout_centerVertical="true"
-        android:layout_alignParentLeft="true"
-        android:layout_alignParentStart="true" />
+        <Button
+            android:id="@+id/rightInteractionBUtton"
+            app:layout_widthPercent="40%"
+            app:layout_heightPercent="50%"
+            app:layout_marginLeftPercent="5%"
+            app:layout_marginTopPercent="15%"
+            android:layout_toRightOf="@+id/stepEditText"
+            android:background="@drawable/blank_notebook_interaction_btn"
+            android:text="Set Steps"
+            android:textColor="@android:color/white"
+            android:textAllCaps="true"
+            android:textStyle="bold"/>
 
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="0"
-        android:id="@+id/matchIdTextView"
-        android:layout_below="@+id/textView4"
-        android:layout_alignParentLeft="true"
-        android:layout_alignParentStart="true" />
+        <EditText
+            app:layout_widthPercent="40%"
+            app:layout_heightPercent="50%"
+            app:layout_marginLeftPercent="5%"
+            app:layout_marginTopPercent="15%"
+            android:id="@+id/stepEditText"
+            android:inputType="number"
+            android:singleLine="true" />
 
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Your User Id"
-        android:id="@+id/textView5"
-        android:layout_below="@+id/textView3"
-        android:layout_alignParentLeft="true"
-        android:layout_alignParentStart="true"
-        android:layout_marginTop="38dp" />
+    </android.support.percent.PercentRelativeLayout>
 
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="0"
-        android:id="@+id/userIdTextView"
-        android:layout_below="@+id/textView5"
-        android:layout_alignParentLeft="true"
-        android:layout_alignParentStart="true" />
-
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="User Name Goes HERE!"
-        android:id="@+id/userNameTextView"
-        android:layout_alignParentLeft="true"
-        android:layout_alignParentStart="true" />
-
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Next Safehouse:"
-        android:id="@+id/textView6"
-        android:layout_marginTop="19dp"
-        android:layout_below="@+id/userIdTextView"
-        android:layout_alignParentLeft="true"
-        android:layout_alignParentStart="true" />
-
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="0"
-        android:id="@+id/safehouseTextView"
-        android:layout_alignParentStart="true"
-        android:layout_below="@+id/textView6"
-        android:layout_alignParentLeft="true" />
-
-    <!-- sign-in button -->
-    <com.google.android.gms.common.SignInButton
-        android:id="@+id/sign_in_button"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_above="@+id/textView2"
-        android:layout_alignParentLeft="true"
-        android:layout_alignParentStart="true" />
-
-    <!-- sign-out button -->
-    <Button
-        android:id="@+id/sign_out_button"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Sign Out"
-        android:visibility="gone"
-        android:layout_above="@+id/textView2"
-        android:layout_alignParentLeft="true"
-        android:layout_alignParentStart="true" />
-
-    <Button
-        style="?android:attr/buttonStyleSmall"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Characters"
-        android:id="@+id/characterButton"
-        android:layout_below="@+id/endMatchButton"
-        android:layout_alignParentLeft="true"
-        android:layout_alignParentStart="true" />
-
-    <Button
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Take Turn"
-        android:id="@+id/testButton2"
-        android:layout_alignBottom="@+id/testButton"
-        android:layout_alignParentLeft="true"
-        android:layout_alignParentStart="true" />
-</RelativeLayout>
+</android.support.percent.PercentRelativeLayout>
