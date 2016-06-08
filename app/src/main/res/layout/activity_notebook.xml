@@ -176,7 +176,6 @@
         android:id="@+id/backpackContent"
         app:layout_widthPercent="85%"
         app:layout_heightPercent="41%"
-        app:layout_marginTopPercent="3%"
         android:layout_below="@+id/playerStatus"
         android:layout_toRightOf="@+id/sideTabs"
         android:layout_toEndOf="@+id/sideTabs">

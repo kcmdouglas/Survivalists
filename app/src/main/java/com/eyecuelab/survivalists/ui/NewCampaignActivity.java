@@ -43,6 +43,8 @@ import com.firebase.client.FirebaseError;
 import com.firebase.client.ValueEventListener;
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.common.api.ResultCallback;
+import com.google.android.gms.common.api.ResultCallbacks;
+import com.google.android.gms.common.api.Status;
 import com.google.android.gms.games.Games;
 import com.google.android.gms.games.Player;
 import com.google.android.gms.games.PlayerBuffer;
@@ -245,10 +247,8 @@ public class NewCampaignActivity extends BaseGameActivity implements View.OnClic
                 } else if (mPartySize == invitedPlayers.size()){
                     Toast.makeText(NewCampaignActivity.this, "Invitations sent", Toast.LENGTH_LONG).show();
                     sendInvitations();
-                    Intent notebookIntent = new Intent(NewCampaignActivity.this, MainActivity.class);
-                    startActivity(notebookIntent);
                 } else {
-                    Toast.makeText(NewCampaignActivity.this, "Waiting for " + mPartySize + " players to join.", Toast.LENGTH_LONG).show();
+                    Toast.makeText(NewCampaignActivity.this, "You still need to select " + mPartySize + " players.", Toast.LENGTH_LONG).show();
                 }
                 break;
             case R.id.searchButton:
@@ -290,7 +290,7 @@ public class NewCampaignActivity extends BaseGameActivity implements View.OnClic
 
         mConfirmingSettings = false;
         final ArrayList<Player> players = new ArrayList<>();
-        Games.Players.loadRecentlyPlayedWithPlayers(mGoogleApiClient, 25, true).setResultCallback(new ResultCallback<Players.LoadPlayersResult>() {
+        Games.Players.loadRecentlyPlayedWithPlayers(mGoogleApiClient, 5, false).setResultCallback(new ResultCallback<Players.LoadPlayersResult>() {
             @Override
             public void onResult(@NonNull Players.LoadPlayersResult loadPlayersResult) {
                 PlayerBuffer pendingPlayers = loadPlayersResult.getPlayers();
@@ -299,7 +299,7 @@ public class NewCampaignActivity extends BaseGameActivity implements View.OnClic
                     Log.e("TAG", currentInvitee.getDisplayName() + "");
                     players.add(currentInvitee);
 
-                    Games.Players.loadConnectedPlayers(mGoogleApiClient, true).setResultCallback(new ResultCallback<Players.LoadPlayersResult>() {
+                    Games.Players.loadConnectedPlayers(mGoogleApiClient, false).setResultCallback(new ResultCallback<Players.LoadPlayersResult>() {
                         @Override
                         public void onResult(@NonNull Players.LoadPlayersResult loadPlayersResult) {
                             PlayerBuffer pendingPlayers = loadPlayersResult.getPlayers();
@@ -455,14 +455,15 @@ public class NewCampaignActivity extends BaseGameActivity implements View.OnClic
 
     public void loadMatch(String matchId) {
         mCurrentMatchId = matchId;
+        mEditor.putString(Constants.PREFERENCES_MATCH_ID, mCurrentMatchId);
+        mEditor.commit();
 
         Games.TurnBasedMultiplayer.loadMatch(mGoogleApiClient, mCurrentMatchId).setResultCallback(new ResultCallback<TurnBasedMultiplayer.LoadMatchResult>() {
             @Override
             public void onResult(@NonNull TurnBasedMultiplayer.LoadMatchResult result) {
                 mCurrentMatch = result.getMatch();
                 takeTurn();
-                mEditor.putString(Constants.PREFERENCES_MATCH_ID, mCurrentMatchId);
-                mEditor.commit();
+
             }
         });
     }
@@ -522,29 +523,29 @@ public class NewCampaignActivity extends BaseGameActivity implements View.OnClic
             saveSafehouse();
             turnData = new byte[1];
 
-            //Take as many turns as there are players, to invite all players at once
-            for (int i = 0; i < mCurrentMatch.getParticipantIds().size(); i++) {
-                String nextPlayer = mCurrentMatch.getParticipantIds().get(i);
-                Games.TurnBasedMultiplayer.takeTurn(mGoogleApiClient, mCurrentMatchId, turnData, nextPlayer);
-            }
             instantiateUserInformation();
 
         }
-        turnData = new byte[1];
+        Games.TurnBasedMultiplayer.takeTurn(mGoogleApiClient, mCurrentMatchId, turnData, mCurrentMatch.getPendingParticipantId()).setResultCallback(new ResultCallbacks<TurnBasedMultiplayer.UpdateMatchResult>() {
+            @Override
+            public void onSuccess(@NonNull TurnBasedMultiplayer.UpdateMatchResult updateMatchResult) {
+                try {
+                    int size = (mCurrentMatch.getParticipants().size() - 1);
+                    Games.TurnBasedMultiplayer.takeTurn(mGoogleApiClient, mCurrentMatchId, turnData, mCurrentMatch.getParticipants().get(size).getParticipantId());
+                } catch (IndexOutOfBoundsException ie) {
+                    Log.e(TAG, "At onSuccess " + ie.getMessage());
+                    Games.TurnBasedMultiplayer.takeTurn(mGoogleApiClient, mCurrentMatchId, turnData, mCurrentMatch.getCreatorId());
+                }
+                Log.e(TAG, "At onSuccess " + updateMatchResult.getStatus().getStatusMessage());
+                Log.e(TAG, "Turn status " + updateMatchResult.getMatch().getTurnStatus() + "");
+            }
 
+            @Override
+            public void onFailure(@NonNull Status status) {
+                Log.e(TAG, "On failure called " + status.getStatusMessage());
+            }
+        });
         ArrayList<Participant> allPlayers = mCurrentMatch.getParticipants();
-        int nextPlayerNumber = Integer.parseInt(mCurrentMatch.getLastUpdaterId().substring(2));
-        try {
-            //Should pass invitation to the next player
-            String nextPlayerId = allPlayers.get(nextPlayerNumber).getParticipantId();
-            Games.TurnBasedMultiplayer.takeTurn(mGoogleApiClient, mCurrentMatchId, turnData, nextPlayerId);
-
-            //Grab the next player in case the previous above didn't work
-            nextPlayerId = allPlayers.get(nextPlayerNumber + 1).getParticipantId();
-            Games.TurnBasedMultiplayer.takeTurn(mGoogleApiClient, mCurrentMatchId, turnData, nextPlayerId);
-        } catch (IndexOutOfBoundsException indexOutOfBonds) {
-            Games.TurnBasedMultiplayer.takeTurn(mGoogleApiClient, mCurrentMatchId, turnData, mCurrentMatch.getPendingParticipantId());
-        }
         registerMatchUpdateListener();
         saveCampaignSettingsFromFirebase();
     }
@@ -777,7 +778,7 @@ public class NewCampaignActivity extends BaseGameActivity implements View.OnClic
     private BroadcastReceiver broadcastReceiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
-            Log.v("NewCampaign", intent.getAction().toString());
+            Log.v("NewCampaign", intent.getAction() + "");
             if(intent.getAction().equals(RECEIVE_UPDATE_FROM_INVITATION)) {
                 boolean matchMakingDone = intent.getBooleanExtra(Constants.INVITATION_UPDATE_INTENT_EXTRA, false);
                 if (matchMakingDone) {
@@ -787,7 +788,6 @@ public class NewCampaignActivity extends BaseGameActivity implements View.OnClic
             } else if (intent.getAction().equals(PLAYER_ADDED_TO_LIST)) {
                 String invitedPlayerId = intent.getStringExtra(Constants.PLAYER_ADDED_TO_LIST_INTENT);
                 invitedPlayers.add(invitedPlayerId);
-                Log.v("TAG", invitedPlayers.size() + "");
             }
         }
     };
@@ -821,6 +821,8 @@ public class NewCampaignActivity extends BaseGameActivity implements View.OnClic
 
             }
         });
+        Intent goToNotebook = new Intent(NewCampaignActivity.this, MainActivity.class);
+        startActivity(goToNotebook);
     }
 
     public Context getContext() {

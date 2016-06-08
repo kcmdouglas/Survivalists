@@ -724,6 +724,7 @@ public class MainActivity extends FragmentActivity
         userInventory = new ArrayList<>();
 
         mCurrentMatchId = mSharedPreferences.getString(Constants.PREFERENCES_MATCH_ID, null);
+
         mUserFirebaseRef = new Firebase(Constants.FIREBASE_URL_USERS + "/" + "").child(mCurrentPlayerId);
 
         if (mCurrentMatchId != null && mUserFirebaseRef != null) {

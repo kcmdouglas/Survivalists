@@ -87,7 +87,7 @@ public class TitleActivity extends BaseGameActivity implements GoogleApiClient.C
         mSharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
         mEditor = mSharedPreferences.edit();
 
-        mCurrentMatchId = mSharedPreferences.getString("matchId", null);
+        mCurrentMatchId = mSharedPreferences.getString(Constants.PREFERENCES_MATCH_ID, null);
 
         if(mCurrentMatchId == null) {
             currentCampaignButton.setVisibility(View.INVISIBLE);
@@ -153,7 +153,7 @@ public class TitleActivity extends BaseGameActivity implements GoogleApiClient.C
     //Google api logic
     public void initializeGoogleApi() {
         this.mGoogleApiClient = new GoogleApiClient.Builder(this)
-                .addApiIfAvailable(Games.API)
+                .addApiIfAvailable(Games.API, Games.SCOPE_GAMES)
                 .addConnectionCallbacks(this)
                 .addOnConnectionFailedListener(this)
                 .build();
@@ -177,7 +177,7 @@ public class TitleActivity extends BaseGameActivity implements GoogleApiClient.C
             mUserFirebaseRef.child("atSafeHouse").setValue(false);
             mUserFirebaseRef.child("joinedMatch").setValue(false);
         } else {
-            loadMatch(mCurrentMatchId);
+            loadMatch();
         }
     }
 
@@ -209,9 +209,9 @@ public class TitleActivity extends BaseGameActivity implements GoogleApiClient.C
         }
     }
 
-    public void loadMatch(String matchId) {
-        if (matchId != null) {
-            Games.TurnBasedMultiplayer.loadMatch(mGoogleApiClient, matchId).setResultCallback(new ResultCallback<TurnBasedMultiplayer.LoadMatchResult>() {
+    public void loadMatch() {
+        if (mCurrentMatchId != null) {
+            Games.TurnBasedMultiplayer.loadMatch(mGoogleApiClient, mCurrentMatchId).setResultCallback(new ResultCallback<TurnBasedMultiplayer.LoadMatchResult>() {
                 @Override
                 public void onResult(@NonNull TurnBasedMultiplayer.LoadMatchResult result) {
                     mCurrentMatch = result.getMatch();
@@ -224,8 +224,6 @@ public class TitleActivity extends BaseGameActivity implements GoogleApiClient.C
     @Override
     public void onSignInFailed() {}
     @Override
-    public void onSignInSucceeded() {
-        Log.v(TAG, "Connected to BaseGame Util");
-    }
+    public void onSignInSucceeded() {}
 
 }
