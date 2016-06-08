@@ -642,6 +642,7 @@ public class MainActivity extends FragmentActivity
         userInventory = new ArrayList<>();
 
         mCurrentMatchId = mSharedPreferences.getString(Constants.PREFERENCES_MATCH_ID, null);
+
         mUserFirebaseRef = new Firebase(Constants.FIREBASE_URL_USERS + "/" + "").child(mCurrentPlayerId);
 
         if (mCurrentMatchId != null && mUserFirebaseRef != null) {
@@ -723,7 +724,6 @@ public class MainActivity extends FragmentActivity
                     int fullnessLevel = (int) fullnessLevelLong;
                     String characterUrl = dataSnapshot.child("characterPictureUrl").getValue().toString();
                     mCurrentCharacter = new Character(name, description, age, health, fullnessLevel, characterUrl, characterId);
-                    Log.d("Current Character ID: ", mCurrentCharacter.getCharacterId() + "");
 
                     healthProgressBar.setProgress(health);
                     healthTextView.setText(health + "HP");

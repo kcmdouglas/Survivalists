@@ -455,14 +455,15 @@ public class NewCampaignActivity extends BaseGameActivity implements View.OnClic
 
     public void loadMatch(String matchId) {
         mCurrentMatchId = matchId;
+        mEditor.putString(Constants.PREFERENCES_MATCH_ID, mCurrentMatchId);
+        mEditor.commit();
 
         Games.TurnBasedMultiplayer.loadMatch(mGoogleApiClient, mCurrentMatchId).setResultCallback(new ResultCallback<TurnBasedMultiplayer.LoadMatchResult>() {
             @Override
             public void onResult(@NonNull TurnBasedMultiplayer.LoadMatchResult result) {
                 mCurrentMatch = result.getMatch();
                 takeTurn();
-                mEditor.putString(Constants.PREFERENCES_MATCH_ID, mCurrentMatchId);
-                mEditor.commit();
+
             }
         });
     }
@@ -777,7 +778,7 @@ public class NewCampaignActivity extends BaseGameActivity implements View.OnClic
     private BroadcastReceiver broadcastReceiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
-            Log.v("NewCampaign", intent.getAction().toString());
+            Log.v("NewCampaign", intent.getAction() + "");
             if(intent.getAction().equals(RECEIVE_UPDATE_FROM_INVITATION)) {
                 boolean matchMakingDone = intent.getBooleanExtra(Constants.INVITATION_UPDATE_INTENT_EXTRA, false);
                 if (matchMakingDone) {
@@ -787,7 +788,6 @@ public class NewCampaignActivity extends BaseGameActivity implements View.OnClic
             } else if (intent.getAction().equals(PLAYER_ADDED_TO_LIST)) {
                 String invitedPlayerId = intent.getStringExtra(Constants.PLAYER_ADDED_TO_LIST_INTENT);
                 invitedPlayers.add(invitedPlayerId);
-                Log.v("TAG", invitedPlayers.size() + "");
             }
         }
     };

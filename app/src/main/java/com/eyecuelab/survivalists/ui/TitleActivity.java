@@ -168,7 +168,7 @@ public class TitleActivity extends BaseGameActivity implements GoogleApiClient.C
     //Google api logic
     public void initializeGoogleApi() {
         this.mGoogleApiClient = new GoogleApiClient.Builder(this)
-                .addApiIfAvailable(Games.API)
+                .addApiIfAvailable(Games.API, Games.SCOPE_GAMES)
                 .addConnectionCallbacks(this)
                 .addOnConnectionFailedListener(this)
                 .build();
