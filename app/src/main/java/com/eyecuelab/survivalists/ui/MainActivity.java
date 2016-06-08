@@ -37,6 +37,7 @@ import com.eyecuelab.survivalists.models.SafeHouse;
 import com.eyecuelab.survivalists.models.Weapon;
 import com.eyecuelab.survivalists.services.BackgroundStepService;
 import com.eyecuelab.survivalists.util.StepResetAlarmReceiver;
+import com.firebase.client.ChildEventListener;
 import com.firebase.client.DataSnapshot;
 import com.firebase.client.Firebase;
 import com.firebase.client.FirebaseError;
@@ -68,6 +69,7 @@ public class MainActivity extends FragmentActivity
     @Bind(R.id.dailyGoalTextView) TextView dailyGoalTextView;
     @Bind(R.id.healthTextView) TextView healthTextView;
     @Bind(R.id.energyTextView) TextView energyTextView;
+    @Bind(R.id.merchantButton) Button merchantButton;
 
     //TODO: Remove after testing
     @Bind(R.id.stepEditText) EditText stepEditText;
@@ -146,6 +148,7 @@ public class MainActivity extends FragmentActivity
         campaignButton.setOnClickListener(this);
         mapButton.setOnClickListener(this);
         rightInteractionButton.setOnClickListener(this);
+        merchantButton.setOnClickListener(this);
 
         mCurrentMatchId = mSharedPreferences.getString(Constants.PREFERENCES_MATCH_ID, null);
         mCurrentPlayerId = mSharedPreferences.getString(Constants.PREFERENCES_GOOGLE_PLAYER_ID, null);
@@ -161,6 +164,10 @@ public class MainActivity extends FragmentActivity
         eventFourInitiated = mSharedPreferences.getBoolean(Constants.PREFERENCES_INITIATE_EVENT_4, false);
         eventFiveInitiated = mSharedPreferences.getBoolean(Constants.PREFERENCES_INITIATE_EVENT_5, false);
         reachedDailySafehouse = mSharedPreferences.getBoolean(Constants.PREFERENCES_REACHED_SAFEHOUSE_BOOLEAN, false);
+
+        if (!reachedDailySafehouse) {
+            merchantButton.setVisibility(View.INVISIBLE);
+        }
 
         //Set recurring alarm
         isRecurringAlarmSet = mSharedPreferences.getBoolean("recurringAlarmBoolean", false);
@@ -193,6 +200,45 @@ public class MainActivity extends FragmentActivity
         instantiateAllItems();
         loadCharacter();
         checkDailyGoal();
+        startUserListener();
+    }
+
+    private void startUserListener() {
+        Firebase userFirebase = new Firebase(Constants.FIREBASE_URL_USERS + "/" + mCurrentPlayerId +"/");
+
+        userFirebase.addValueEventListener(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                updateStepsUi();
+            }
+
+            @Override
+            public void onCancelled(FirebaseError firebaseError) {
+
+            }
+        });
+
+        userFirebase.child("character").addValueEventListener(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                mCurrentCharacter = new Character(dataSnapshot.getValue(Character.class));
+                healthProgressBar.setProgress(mCurrentCharacter.getHealth());
+                healthTextView.setText(mCurrentCharacter.getHealth() + "HP");
+                energyProgressBar.setProgress(mCurrentCharacter.getFullnessLevel());
+                energyTextView.setText(mCurrentCharacter.getFullnessLevel() + "%");
+
+                Gson gson = new Gson();
+                String currentCharacter = gson.toJson(mCurrentCharacter);
+                mEditor.putString(Constants.PREFERENCES_CHARACTER, currentCharacter);
+                mEditor.commit();
+            }
+
+            @Override
+            public void onCancelled(FirebaseError firebaseError) {
+
+            }
+        });
+
     }
 
     @Override
@@ -281,6 +327,9 @@ public class MainActivity extends FragmentActivity
                     firebaseStepsRef.child("dailySteps").setValue(steps);
                 }
                 showEventDialog(1);
+                break;
+            case R.id.merchantButton:
+                showEventDialog(3);
                 break;
         }
     }
@@ -425,6 +474,21 @@ public class MainActivity extends FragmentActivity
         }
 
         else if (type == 3) {
+            FragmentTransaction ft = getSupportFragmentManager().beginTransaction();
+            Fragment prev = getSupportFragmentManager().findFragmentByTag("merchant");
+            if(prev != null) {
+                ft.remove(prev);
+            }
+
+            ft.addToBackStack(null);
+            DialogFragment frag = MerchantDialogFragment.newInstance(mStackLevel);
+            Bundle bundle = new Bundle();
+            bundle.putParcelableArrayList("allWeapons", allWeapons);
+            bundle.putParcelableArrayList("allItems", allItems);
+            bundle.putParcelableArrayList("userWeapons", userWeapons);
+            bundle.putParcelableArrayList("userItems", userItems);
+            frag.setArguments(bundle);
+            frag.show(ft, "fragment_merchant_dialog");
 
         }
     }
@@ -456,6 +520,13 @@ public class MainActivity extends FragmentActivity
 
         if(key.equals(Constants.PREFERENCES_REACHED_SAFEHOUSE_BOOLEAN)) {
             reachedDailySafehouse = mSharedPreferences.getBoolean(Constants.PREFERENCES_REACHED_SAFEHOUSE_BOOLEAN, true);
+            if (reachedDailySafehouse) {
+                merchantButton.setVisibility(View.VISIBLE);
+            }
+        }
+
+        if(key.equals(Constants.PREFERENCES_CHARACTER)) {
+
         }
 
         //TODO: Add listener for isCampaignEnded boolean to trigger end of game screen
@@ -532,11 +603,13 @@ public class MainActivity extends FragmentActivity
         final ArrayList<Boolean> teammatesAtSafehouse = new ArrayList<>();
 
         for(String playerId : mPlayerIDs) {
-            Firebase firebaseUserRef = new Firebase(Constants.FIREBASE_URL_USERS + "/" + playerId+ "/atSafeHouse" );
+            final Firebase firebaseUserRef = new Firebase(Constants.FIREBASE_URL_USERS + "/" + playerId + "/atSafeHouse");
 
             firebaseUserRef.addListenerForSingleValueEvent(new ValueEventListener() {
                 @Override
                 public void onDataChange(DataSnapshot dataSnapshot) {
+                    Log.d("Safehouse User Ref", firebaseUserRef + "");
+                    Log.d("Safehouse Boolean", dataSnapshot + "");
                     boolean atSafeHouse = (boolean) dataSnapshot.getValue();
 
                     if(atSafeHouse) {
@@ -583,7 +656,7 @@ public class MainActivity extends FragmentActivity
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
                     for (DataSnapshot child : dataSnapshot.getChildren()) {
-                        final String playerId = child.toString();
+                        final String playerId = child.getValue().toString();
                         if (!(playerId.equals(mCurrentPlayerId))) {
                             mPlayerIDs.add(playerId);
                             Log.d("PlayerIDs", mPlayerIDs.size() + "");
@@ -813,4 +886,6 @@ public class MainActivity extends FragmentActivity
             public void onCancelled(FirebaseError firebaseError) {}
         });
     }
+
+
 }
