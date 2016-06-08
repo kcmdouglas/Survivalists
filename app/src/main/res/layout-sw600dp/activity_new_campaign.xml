@@ -294,8 +294,8 @@
 
         <Button
             android:id="@+id/searchButton"
-            android:layout_width="30dp"
-            android:layout_height="30dp"
+            android:layout_width="60dp"
+            android:layout_height="60dp"
             app:layout_marginTopPercent="15%"
             android:layout_marginLeft="15dp"
             android:layout_marginStart="15dp"
@@ -303,7 +303,8 @@
             android:layout_toEndOf="@+id/confirmationButton"
             android:background="@drawable/blank_notebook_interaction_btn"
             android:foreground="@drawable/abc_ic_search_api_mtrl_alpha"
-            android:foregroundGravity="center" />
+            android:foregroundGravity="center"
+            android:visibility="invisible"/>
 
     </android.support.percent.PercentRelativeLayout>
 
