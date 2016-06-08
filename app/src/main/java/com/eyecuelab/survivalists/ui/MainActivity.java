@@ -142,6 +142,9 @@ public class MainActivity extends FragmentActivity
 
         allWeapons = new ArrayList<>();
         allItems = new ArrayList<>();
+        mPlayerIDs = new ArrayList<>();
+
+
         //Create Shared Preferences
         mSharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
         mEditor = mSharedPreferences.edit();
@@ -189,7 +192,7 @@ public class MainActivity extends FragmentActivity
             String [] playerIDArray = TextUtils.split(",", playerIDsString);
         }
 
-        if(mCurrentMatchId != null && mPlayerIDs == null) {
+        if(mCurrentMatchId != null) {
             instantiatePlayerIDs();
         }
         setupBackpackContent();
@@ -261,10 +264,10 @@ public class MainActivity extends FragmentActivity
     public void onClick(View view) {
         switch (view.getId()) {
             case R.id.tabCampaignButton:
-                if (mPlayerIDs != null) {
+                if (mCharacters != null) {
                     Intent intent = new Intent(mContext, CharacterDetailActivity.class);
                     intent.putExtra("position", 0);
-                    intent.putExtra("playerIDs", Parcels.wrap(mPlayerIDs));
+                    intent.putExtra("characters", Parcels.wrap(mCharacters));
                     mContext.startActivity(intent);
                 } else {
                     Toast.makeText(this, "Players have not yet joined.", Toast.LENGTH_SHORT).show();
@@ -575,18 +578,53 @@ public class MainActivity extends FragmentActivity
     }
 
     public void instantiatePlayerIDs() {
-        mPlayerIDs = new ArrayList<>();
-        Firebase playerIDRef = new Firebase(Constants.FIREBASE_URL_TEAM + "/" + mCurrentMatchId + "/players/");
-        playerIDRef.addListenerForSingleValueEvent(new ValueEventListener() {
+        mCharacters = new ArrayList<>();
+
+        Firebase playerIDRef = new Firebase(Constants.FIREBASE_URL_TEAM + "/" + mCurrentMatchId);
+        playerIDRef.child("players").addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
-                for (DataSnapshot child : dataSnapshot.getChildren()) {
-                    String playerId = child.getValue().toString();
-                    if (!(playerId.equals(mCurrentPlayerId))) {
-                        mPlayerIDs.add(playerId);
+                    for (DataSnapshot child : dataSnapshot.getChildren()) {
+                        final String playerId = child.toString();
+                        Log.d("PlayerId", playerId);
+                        if (!(playerId.equals(mCurrentPlayerId))) {
+                            mPlayerIDs.add(playerId);
+                            Log.d("PlayerIDs", mPlayerIDs.size() + "");
+                        }
+                    }
+                    for (DataSnapshot child : dataSnapshot.getChildren()) {
+                        final String playerId = child.getValue().toString();
+                        if (!(playerId.equals(mCurrentPlayerId)) ) {
+                            Firebase characterFirebase = new Firebase(Constants.FIREBASE_URL_USERS + "/" + playerId + "/character");
+
+                            characterFirebase.addListenerForSingleValueEvent(new ValueEventListener() {
+                                @Override
+                                public void onDataChange(DataSnapshot dataSnapshot) {
+                                    String name = dataSnapshot.child("name").getValue().toString();
+                                    long ageLong = (long) dataSnapshot.child("age").getValue();
+                                    int age = (int) ageLong;
+                                    String description = dataSnapshot.child("description").getValue().toString();
+                                    long characterIdLong = (long) dataSnapshot.child("characterId").getValue();
+                                    int characterId = (int) characterIdLong;
+                                    long healthLong = (long) dataSnapshot.child("health").getValue();
+                                    int health = (int) healthLong;
+                                    long fullnessLevelLong = (long) dataSnapshot.child("fullnessLevel").getValue();
+                                    int fullnessLevel = (int) fullnessLevelLong;
+                                    String characterUrl = dataSnapshot.child("characterPictureUrl").getValue().toString();
+                                    Character playerCharacter = new Character(name, description, age, health, fullnessLevel, characterUrl, characterId);
+                                    playerCharacter.setPlayerId(playerId);
+                                    mCharacters.add(playerCharacter);
+                                    Log.d("mCharacters size:", mCharacters.size() + "");
+                                }
+
+                                @Override
+                                public void onCancelled(FirebaseError firebaseError) {
+
+                                }
+                            });
+                        }
                     }
                 }
-            }
 
             @Override
             public void onCancelled(FirebaseError firebaseError) {
@@ -596,7 +634,6 @@ public class MainActivity extends FragmentActivity
 
         mEditor.putString(Constants.PREFERENCES_TEAM_IDs, TextUtils.join(",", mPlayerIDs));
         mEditor.commit();
-
     }
 
     public void setupBackpackContent () {
@@ -704,7 +741,7 @@ public class MainActivity extends FragmentActivity
 
                 }
             });
-            instantiatePlayerIDs();
+
             mUserFirebaseRef.child("joinedMatch").setValue(true);
         }
     }

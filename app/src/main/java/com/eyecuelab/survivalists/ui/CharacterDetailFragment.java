@@ -12,6 +12,7 @@ import android.widget.TextView;
 import com.eyecuelab.survivalists.Constants;
 import com.eyecuelab.survivalists.R;
 import com.eyecuelab.survivalists.models.Character;
+import com.firebase.client.ChildEventListener;
 import com.firebase.client.DataSnapshot;
 import com.firebase.client.Firebase;
 import com.firebase.client.FirebaseError;
@@ -34,10 +35,10 @@ public class CharacterDetailFragment extends Fragment {
         // Required empty public constructor
     }
 
-    public static CharacterDetailFragment newInstance(String playerID) {
+    public static CharacterDetailFragment newInstance(Character character) {
         CharacterDetailFragment fragment = new CharacterDetailFragment();
         Bundle args = new Bundle();
-        args.putParcelable("playerID", Parcels.wrap(playerID));
+        args.putParcelable("character", Parcels.wrap(character));
         fragment.setArguments(args);
         return fragment;
     }
@@ -45,35 +46,7 @@ public class CharacterDetailFragment extends Fragment {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        mPlayerID = Parcels.unwrap(getArguments().getParcelable("playerID"));
-        Firebase teamCharactersRef = new Firebase(Constants.FIREBASE_URL_USERS + "/" + mPlayerID + "/character/");
-        teamCharactersRef.addListenerForSingleValueEvent(new ValueEventListener() {
-            @Override
-            public void onDataChange(DataSnapshot dataSnapshot) {
-                String name = dataSnapshot.child("name").getValue().toString();
-                long ageLong = (long) dataSnapshot.child("age").getValue();
-                int age = (int) ageLong;
-                String description = dataSnapshot.child("description").getValue().toString();
-                long characterIdLong = (long) dataSnapshot.child("characterId").getValue();
-                int characterId = (int) characterIdLong;
-                long healthLong = (long) dataSnapshot.child("health").getValue();
-                int health = (int) healthLong;
-                long fullnessLevelLong = (long) dataSnapshot.child("fullnessLevel").getValue();
-                int fullnessLevel = (int) fullnessLevelLong;
-                String characterUrl = dataSnapshot.child("characterPictureUrl").getValue().toString();
-                Character character = new Character(name, description, age, health, fullnessLevel, characterUrl, characterId);
-                mCharacter = new Character(character);
-
-                nameTextView.setText("Name: " + mCharacter.getName());
-                ageTextView.setText("Age: " + Integer.toString(mCharacter.getAge()));
-                healthTextView.setText("Health: " + Integer.toString(mCharacter.getHealth()));
-            }
-
-            @Override
-            public void onCancelled(FirebaseError firebaseError) {
-
-            }
-        });
+        mCharacter = Parcels.unwrap(getArguments().getParcelable("character"));
 
     }
 
@@ -82,6 +55,39 @@ public class CharacterDetailFragment extends Fragment {
                              Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_character_detail, container, false);
         ButterKnife.bind(this, view);
+
+        nameTextView.setText("Name: " + mCharacter.getName());
+        ageTextView.setText("Age: " + Integer.toString(mCharacter.getAge()));
+        healthTextView.setText("Health: " + Integer.toString(mCharacter.getHealth()));
+
+
+//        Firebase firebase = new Firebase(Constants.FIREBASE_URL_USERS + "/" + mCharacter.getPlayerId() + "/character");
+//        firebase.addChildEventListener(new ChildEventListener() {
+//            @Override
+//            public void onChildAdded(DataSnapshot dataSnapshot, String s) {
+//
+//            }
+//
+//            @Override
+//            public void onChildChanged(DataSnapshot dataSnapshot, String s) {
+//                healthTextView.setText(dataSnapshot.child("health").getValue().toString());
+//            }
+//
+//            @Override
+//            public void onChildRemoved(DataSnapshot dataSnapshot) {
+//
+//            }
+//
+//            @Override
+//            public void onChildMoved(DataSnapshot dataSnapshot, String s) {
+//
+//            }
+//
+//            @Override
+//            public void onCancelled(FirebaseError firebaseError) {
+//
+//            }
+//        });
 
         return view;
     }

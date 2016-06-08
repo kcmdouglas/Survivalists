@@ -17,6 +17,7 @@ public class Character {
     Integer fullnessLevel;
     String characterPictureUrl;
     Integer characterId;
+    String playerId;
     ArrayList<Object> inventory = new ArrayList<Object>();
 
     public Character() {
@@ -140,5 +141,13 @@ public class Character {
 
     public void setInventory(ArrayList<Object> inventory) {
         this.inventory = inventory;
+    }
+
+    public String getPlayerId() {
+        return playerId;
+    }
+
+    public void setPlayerId(String playerId) {
+        this.playerId = playerId;
     }
 }
