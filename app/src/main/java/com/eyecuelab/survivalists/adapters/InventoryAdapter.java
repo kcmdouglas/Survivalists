@@ -2,6 +2,7 @@ package com.eyecuelab.survivalists.adapters;
 
 import android.app.Activity;
 import android.content.Context;
+import android.graphics.Typeface;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -14,6 +15,7 @@ import com.eyecuelab.survivalists.R;
 import com.eyecuelab.survivalists.models.InventoryEntity;
 import com.eyecuelab.survivalists.models.Item;
 import com.eyecuelab.survivalists.models.Weapon;
+import com.eyecuelab.survivalists.ui.MainActivity;
 
 import java.util.ArrayList;
 
@@ -65,6 +67,10 @@ public class InventoryAdapter extends BaseAdapter {
         try {
             final InventoryEntity item = mItems.get(position);
             holder.txtTitle.setText(item.getName() + "");
+
+            Typeface typeface = Typeface.createFromAsset(mContext.getAssets(), "BebasNeue.ttf");
+            holder.txtTitle.setTypeface(typeface);
+
             holder.imageItem.setImageResource(item.getImageId());
         } catch (IndexOutOfBoundsException outOfBounds) {
             Log.v(TAG, outOfBounds.getMessage());

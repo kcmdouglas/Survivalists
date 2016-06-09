@@ -5,6 +5,7 @@ import android.app.DialogFragment;
 import android.content.SharedPreferences;
 import android.content.res.Resources;
 import android.graphics.Color;
+import android.graphics.Typeface;
 import android.os.Bundle;
 import android.os.Parcelable;
 import android.preference.PreferenceManager;
@@ -143,7 +144,6 @@ public class EventDialogFragment extends android.support.v4.app.DialogFragment i
         dialogTitle = (TextView) view.findViewById(R.id.dialogTitle);
         res = getResources();
 
-
         dialogTitle.setText(title);
         dialogDescription.setText(description);
 
@@ -161,6 +161,15 @@ public class EventDialogFragment extends android.support.v4.app.DialogFragment i
                 dialogConsequence.setVisibility(View.GONE);
             }
         }
+
+        Typeface bodyTypeFace = Typeface.createFromAsset(getContext().getAssets(), "BebasNeue.ttf");
+
+        dialogDescription.setTypeface(bodyTypeFace);
+        dialogConsequence.setTypeface(bodyTypeFace);
+        dialogTitle.setTypeface(bodyTypeFace);
+        affirmativeButton.setTypeface(bodyTypeFace);
+        negativeButton.setTypeface(bodyTypeFace);
+
         return view;
     }
 
