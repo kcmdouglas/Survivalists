@@ -3,6 +3,7 @@ package com.eyecuelab.survivalists.ui;
 import android.content.Intent;
 import android.content.IntentSender;
 import android.content.SharedPreferences;
+import android.graphics.Typeface;
 import android.preference.PreferenceManager;
 import android.support.annotation.NonNull;
 import android.support.v4.app.DialogFragment;
@@ -72,8 +73,7 @@ public class TitleActivity extends BaseGameActivity implements GoogleApiClient.C
         mGoogleApiClient.connect();
 
         ButterKnife.bind(this);
-
-
+        setCustomFonts();
 
         //Create Shared Preferences
         mSharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
@@ -215,5 +215,13 @@ public class TitleActivity extends BaseGameActivity implements GoogleApiClient.C
     public void onSignInFailed() {}
     @Override
     public void onSignInSucceeded() {}
+
+    public void setCustomFonts() {
+        Typeface buttonTypeface = Typeface.createFromAsset(getAssets(), "BebasNeue.ttf");
+        currentCampaignButton.setTypeface(buttonTypeface);
+        startCampaignButton.setTypeface(buttonTypeface);
+        joinCampaignButton.setTypeface(buttonTypeface);
+        loginButton.setTypeface(buttonTypeface);
+    }
 
 }
