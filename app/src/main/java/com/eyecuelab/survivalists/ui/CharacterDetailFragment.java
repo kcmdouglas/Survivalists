@@ -7,6 +7,7 @@ import android.support.v4.app.Fragment;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ProgressBar;
 import android.widget.TextView;
 
 import com.eyecuelab.survivalists.Constants;
@@ -27,9 +28,20 @@ public class CharacterDetailFragment extends Fragment {
     @Bind(R.id.nameTextView) TextView nameTextView;
     @Bind(R.id.ageTextView) TextView ageTextView;
     @Bind(R.id.healthTextView) TextView healthTextView;
+    @Bind(R.id.teamDailyGoalTextView) TextView teamDailyGoalTextView;
+    @Bind(R.id.teamHealthProgressBar) ProgressBar teamHealthProgressBar;
+    @Bind(R.id.teamStepProgressBar) ProgressBar teamStepProgressBar;
+    @Bind(R.id.teamEnergyProgressBar) ProgressBar teamEnergyProgressBar;
+    @Bind(R.id.teamEnergyTextView) TextView teamEnergyTextView;
+
 
     private Character mCharacter;
     private String mPlayerID;
+    private int teammateSteps;
+    private int teammateGoal;
+    private int teammateHealth;
+    private int dailySteps;
+    private int dailyGoal;
 
     public CharacterDetailFragment() {
         // Required empty public constructor
@@ -60,36 +72,41 @@ public class CharacterDetailFragment extends Fragment {
         ageTextView.setText("Age: " + Integer.toString(mCharacter.getAge()));
         healthTextView.setText("Health: " + Integer.toString(mCharacter.getHealth()));
 
-
-//        Firebase firebase = new Firebase(Constants.FIREBASE_URL_USERS + "/" + mCharacter.getPlayerId() + "/character");
-//        firebase.addChildEventListener(new ChildEventListener() {
-//            @Override
-//            public void onChildAdded(DataSnapshot dataSnapshot, String s) {
-//
-//            }
-//
-//            @Override
-//            public void onChildChanged(DataSnapshot dataSnapshot, String s) {
-//                healthTextView.setText(dataSnapshot.child("health").getValue().toString());
-//            }
-//
-//            @Override
-//            public void onChildRemoved(DataSnapshot dataSnapshot) {
-//
-//            }
-//
-//            @Override
-//            public void onChildMoved(DataSnapshot dataSnapshot, String s) {
-//
-//            }
-//
-//            @Override
-//            public void onCancelled(FirebaseError firebaseError) {
-//
-//            }
-//        });
-
+        setupListeners();
         return view;
     }
 
+    private void setupListeners() {
+        mPlayerID = mCharacter.getPlayerId();
+
+        Firebase teammateFirebase = new Firebase(Constants.FIREBASE_URL_USERS + "/" + mPlayerID);
+
+        teammateFirebase.addValueEventListener(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                mCharacter = new Character(dataSnapshot.child("character").getValue(Character.class));
+                mCharacter.setPlayerId(mPlayerID);
+                dailyGoal = Integer.parseInt(dataSnapshot.child("dailyGoal").getValue().toString());
+                dailySteps = Integer.parseInt(dataSnapshot.child("dailySteps").getValue().toString());
+
+
+                healthTextView.setText("Health: " + Integer.toString(mCharacter.getHealth()));
+                updateUi();
+            }
+
+            @Override
+            public void onCancelled(FirebaseError firebaseError) {
+
+            }
+        });
+    }
+    public void updateUi() {
+        teamStepProgressBar.setProgress(dailySteps);
+        teamStepProgressBar.setMax(dailyGoal);
+        teamDailyGoalTextView.setText(dailySteps + "/" + dailyGoal);
+        teamHealthProgressBar.setProgress(mCharacter.getHealth());
+        healthTextView.setText(mCharacter.getHealth() + "HP");
+        teamEnergyProgressBar.setProgress(mCharacter.getFullnessLevel());
+        teamEnergyTextView.setText(mCharacter.getFullnessLevel() + "%");
+    }
 }

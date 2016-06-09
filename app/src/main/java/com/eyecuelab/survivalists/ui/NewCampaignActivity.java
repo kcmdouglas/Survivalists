@@ -690,6 +690,7 @@ public class NewCampaignActivity extends BaseGameActivity implements View.OnClic
         for (int i = 0; i < invitedPlayers.size(); i++) {
             Firebase userRef = new Firebase(Constants.FIREBASE_URL_USERS + "/" + invitedPlayers.get(i));
             userRef.child("dailyGoal").setValue(mDifficultyLevel);
+            userRef.child("dailySteps").setValue(0);
         }
 
     }
