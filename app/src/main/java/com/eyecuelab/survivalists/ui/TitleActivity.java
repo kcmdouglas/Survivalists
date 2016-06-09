@@ -52,11 +52,6 @@ public class TitleActivity extends BaseGameActivity implements GoogleApiClient.C
 
     private String mCurrentPlayerId;
     private String mCurrentMatchId;
-    private ArrayList<Weapon> allWeapons;
-    private ArrayList<Item> allItems;
-    private ArrayList<Weapon> userWeaponInventory;
-    private ArrayList<Item> userItemInventory;
-    private int mStackLevel;
 
     @Bind(R.id.currentCampaignButton) Button currentCampaignButton;
     @Bind(R.id.startCampaignButton) Button startCampaignButton;
@@ -67,10 +62,7 @@ public class TitleActivity extends BaseGameActivity implements GoogleApiClient.C
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         Firebase.setAndroidContext(this);
-        allWeapons = new ArrayList<>();
-        allItems = new ArrayList<>();
-        userItemInventory = new ArrayList<>();
-        userWeaponInventory = new ArrayList<>();
+
         setFullScreen();
 
         //set content view AFTER ABOVE sequence (to avoid crash)
@@ -134,8 +126,6 @@ public class TitleActivity extends BaseGameActivity implements GoogleApiClient.C
                 campaignEditorIntent.putExtra("statusTag", Constants.JOIN_CAMPAIGN_INTENT);
                 startActivity(campaignEditorIntent);
                 break;
-            case R.id.merchantTest:
-
         }
     }
 

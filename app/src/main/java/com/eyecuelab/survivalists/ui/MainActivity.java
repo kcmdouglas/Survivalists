@@ -2,6 +2,7 @@ package com.eyecuelab.survivalists.ui;
 
 import android.app.ActivityManager;
 import android.app.AlarmManager;
+import android.os.Build;
 import android.support.v4.app.DialogFragment;
 import android.app.PendingIntent;
 import android.content.Context;
@@ -36,6 +37,7 @@ import com.eyecuelab.survivalists.models.Item;
 import com.eyecuelab.survivalists.models.SafeHouse;
 import com.eyecuelab.survivalists.models.Weapon;
 import com.eyecuelab.survivalists.services.BackgroundStepService;
+import com.eyecuelab.survivalists.util.CampaignEndAlarmReceiver;
 import com.eyecuelab.survivalists.util.StepResetAlarmReceiver;
 import com.firebase.client.ChildEventListener;
 import com.firebase.client.DataSnapshot;
@@ -114,6 +116,8 @@ public class MainActivity extends FragmentActivity
     ArrayList<Item> allItems;
     ArrayList<Weapon> userWeapons;
     ArrayList<Item> userItems;
+    private int mDifficultyLevel;
+    private int mCampaignLength;
 
     ArrayList<InventoryEntity> userInventory;
 
@@ -144,6 +148,55 @@ public class MainActivity extends FragmentActivity
         //Create Shared Preferences
         mSharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
         mEditor = mSharedPreferences.edit();
+
+        boolean initiateMatch = mSharedPreferences.getBoolean(Constants.PREFERENCES_INITIALIZE_GAME_BOOLEAN, false);
+
+        mCurrentMatchId = mSharedPreferences.getString(Constants.PREFERENCES_MATCH_ID, null);
+        mCurrentPlayerId = mSharedPreferences.getString(Constants.PREFERENCES_GOOGLE_PLAYER_ID, null);
+
+        if (!initiateMatch) {
+            mEditor.putBoolean(Constants.PREFERENCES_INITIALIZE_GAME_BOOLEAN, true);
+            mEditor.putInt(Constants.PREFERENCES_EVENT_1_STEPS, 100);
+            mEditor.putInt(Constants.PREFERENCES_EVENT_2_STEPS, 200);
+            mEditor.putInt(Constants.PREFERENCES_EVENT_3_STEPS, 300);
+            mEditor.putInt(Constants.PREFERENCES_EVENT_4_STEPS, 400);
+            mEditor.putInt(Constants.PREFERENCES_EVENT_5_STEPS, 500);
+            mEditor.putInt(Constants.PREFERENCES_DAILY_STEPS, 0);
+            mEditor.putBoolean(Constants.PREFERENCES_REACHED_SAFEHOUSE_BOOLEAN, false);
+            mEditor.putInt(Constants.PREFERENCES_DAILY_STEPS, 0);
+            mEditor.putBoolean(Constants.PREFERENCES_INITIALIZE_GAME_BOOLEAN, true);
+            mEditor.apply();
+            int stepsInSensor = mSharedPreferences.getInt(Constants.PREFERENCES_STEPS_IN_SENSOR_KEY, -1);
+            if (stepsInSensor > 0) {
+                mEditor.putInt(Constants.PREFERENCES_PREVIOUS_STEPS_KEY, stepsInSensor);
+            }
+
+            Firebase teamFirebase = new Firebase(Constants.FIREBASE_URL_TEAM + "/" + mCurrentMatchId);
+
+            teamFirebase.addListenerForSingleValueEvent(new ValueEventListener() {
+                @Override
+                public void onDataChange(DataSnapshot dataSnapshot) {
+                    long campaignLength = (long) dataSnapshot.child("matchDuration").getValue();
+                    long difficulty = (long) dataSnapshot.child("difficultyLevel").getValue();
+                    mCampaignLength = (int) campaignLength;
+                    mDifficultyLevel = (int) difficulty;
+                    createCampaign(mCampaignLength);
+                    mEditor.putInt(Constants.PREFERENCES_DURATION_SETTING, mCampaignLength);
+                    mEditor.putInt(Constants.PREFERENCES_DEFAULT_DAILY_GOAL_SETTING, mDifficultyLevel);
+                    mEditor.commit();
+                }
+
+                @Override
+                public void onCancelled(FirebaseError firebaseError) {
+
+                }
+            });
+            dailySteps = mSharedPreferences.getInt(Constants.PREFERENCES_DAILY_STEPS, 0);
+
+        }
+
+
+
 
         campaignButton.setOnClickListener(this);
         mapButton.setOnClickListener(this);
@@ -209,6 +262,8 @@ public class MainActivity extends FragmentActivity
         userFirebase.addValueEventListener(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
+                dailyGoal = Integer.valueOf(dataSnapshot.child("dailyGoal").getValue().toString());
+                mEditor.putInt(Constants.PREFERENCES_DAILY_GOAL, dailyGoal).apply();
                 updateStepsUi();
             }
 
@@ -887,5 +942,19 @@ public class MainActivity extends FragmentActivity
         });
     }
 
-
+    public void createCampaign(int campaignLength) {
+        Calendar campaignCalendar = Calendar.getInstance();
+        campaignCalendar.add(Calendar.MINUTE, 10);
+        Intent intent = new Intent(this, CampaignEndAlarmReceiver.class);
+        PendingIntent pendingIntent = PendingIntent.getBroadcast(this, CampaignEndAlarmReceiver.REQUEST_CODE, intent, 0);
+        AlarmManager am = (AlarmManager) getApplicationContext().getSystemService(ALARM_SERVICE);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            am.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, campaignCalendar.getTimeInMillis(), pendingIntent);
+        } else {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
+                am.setExact(AlarmManager.RTC_WAKEUP, campaignCalendar.getTimeInMillis(), pendingIntent);
+            }
+        }
+        Log.d("CreateCampaign", "Campaign Created");
+    }
 }

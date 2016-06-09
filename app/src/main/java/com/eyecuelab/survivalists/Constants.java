@@ -56,4 +56,5 @@ public class Constants {
     public static final int ITEM_TAG = 99999999;
     public static final String ITEM_REMOVED= "itemRemovedString";
     public static final String PREFERENCES_SENSOR_SET_BOOLEAN = "listenerSetBoolean";
+    public static final String PREFERENCES_INITIALIZE_GAME_BOOLEAN = "campaignAlarmSetBoolean";
 }

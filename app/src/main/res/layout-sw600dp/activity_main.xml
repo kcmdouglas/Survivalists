@@ -224,6 +224,19 @@
             android:inputType="number"
             android:singleLine="true" />
 
+        <Button
+            android:id="@+id/merchantButton"
+            app:layout_widthPercent="40%"
+            app:layout_heightPercent="50%"
+            app:layout_marginLeftPercent="5%"
+            app:layout_marginTopPercent="15%"
+            android:layout_toRightOf="@+id/stepEditText"
+            android:background="@drawable/blank_notebook_interaction_btn"
+            android:text="Trade for Goods"
+            android:textColor="@android:color/white"
+            android:textAllCaps="true"
+            android:textStyle="bold"/>
+
     </android.support.percent.PercentRelativeLayout>
 
 </android.support.percent.PercentRelativeLayout>
