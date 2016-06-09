@@ -52,7 +52,7 @@ android:focusable="false">
     android:layout_toRightOf="@+id/sideTabs">
 
     <ProgressBar
-        android:id="@+id/stepProgressBar"
+        android:id="@+id/teamStepProgressBar"
         android:layout_marginTop="15dp"
         android:layout_width="150dp"
         android:layout_height="10dp"
@@ -72,7 +72,7 @@ android:focusable="false">
         android:textStyle="bold" />
 
     <TextView
-        android:id="@+id/dailyGoalTextView"
+        android:id="@+id/teamDailyGoalTextView"
         android:layout_height="wrap_content"
         android:layout_width="wrap_content"
         app:layout_marginTopPercent="15%"
@@ -89,7 +89,7 @@ android:focusable="false">
         android:textStyle="bold" />
 
     <ProgressBar
-        android:id="@+id/healthProgressBar"
+        android:id="@+id/teamHealthProgressBar"
         android:layout_below="@+id/goalTitle"
         android:layout_marginTop="25dp"
         android:layout_width="150dp"
@@ -130,7 +130,7 @@ android:focusable="false">
         android:textStyle="bold" />
 
     <ProgressBar
-        android:id="@+id/energyProgressBar"
+        android:id="@+id/teamEnergyProgressBar"
         android:layout_below="@+id/healthTitle"
         android:layout_marginTop="28dp"
         android:layout_width="150dp"
@@ -140,7 +140,7 @@ android:focusable="false">
         android:progress="1"/>
 
     <TextView
-        android:id="@+id/energyTitle"
+        android:id="@+id/teamEnergyTitle"
         android:layout_height="wrap_content"
         android:layout_width="wrap_content"
         android:layout_below="@+id/healthTitle"
@@ -152,7 +152,7 @@ android:focusable="false">
         android:textStyle="bold" />
 
     <TextView
-        android:id="@+id/energyTextView"
+        android:id="@+id/teamEnergyTextView"
         android:layout_height="wrap_content"
         android:layout_width="wrap_content"
         android:layout_toRightOf="@+id/healthTitle"
