@@ -2,6 +2,7 @@ package com.eyecuelab.survivalists.ui;
 
 import android.app.ActivityManager;
 import android.app.AlarmManager;
+import android.graphics.Typeface;
 import android.os.Build;
 import android.support.v4.app.DialogFragment;
 import android.app.PendingIntent;
@@ -20,11 +21,13 @@ import android.view.MotionEvent;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.Button;
+import android.widget.CompoundButton;
 import android.widget.EditText;
 import android.widget.GridView;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
+import android.widget.ToggleButton;
 
 import com.eyecuelab.survivalists.Constants;
 import com.eyecuelab.survivalists.R;
@@ -58,13 +61,12 @@ import butterknife.Bind;
 import butterknife.ButterKnife;
 
 public class MainActivity extends FragmentActivity
-        implements View.OnClickListener, SharedPreferences.OnSharedPreferenceChangeListener {
+        implements View.OnClickListener, SharedPreferences.OnSharedPreferenceChangeListener, CompoundButton.OnCheckedChangeListener {
 
     private static final String TAG = "MainActivity";
 
     @Bind(R.id.tabCampaignButton) Button campaignButton;
     @Bind(R.id.mapTabButton) Button mapButton;
-    @Bind(R.id.rightInteractionBUtton) Button rightInteractionButton;
     @Bind(R.id.stepProgressBar) ProgressBar stepProgressBar;
     @Bind(R.id.healthProgressBar) ProgressBar healthProgressBar;
     @Bind(R.id.energyProgressBar) ProgressBar energyProgressBar;
@@ -72,8 +74,12 @@ public class MainActivity extends FragmentActivity
     @Bind(R.id.healthTextView) TextView healthTextView;
     @Bind(R.id.energyTextView) TextView energyTextView;
     @Bind(R.id.merchantButton) Button merchantButton;
+    @Bind(R.id.playerStatusTitle) TextView playerStatusTitle;
+    @Bind(R.id.backpackContentTitle) TextView backpackContentTitle;
 
     //TODO: Remove after testing
+    @Bind(R.id.rightInteractionBUtton) Button rightInteractionButton;
+    @Bind(R.id.testingToggle) ToggleButton testingToggle;
     @Bind(R.id.stepEditText) EditText stepEditText;
 
     private int dailySteps;
@@ -139,6 +145,7 @@ public class MainActivity extends FragmentActivity
 
         mContext = this;
         ButterKnife.bind(this);
+        setCustomFonts();
 
         allWeapons = new ArrayList<>();
         allItems = new ArrayList<>();
@@ -254,6 +261,8 @@ public class MainActivity extends FragmentActivity
         loadCharacter();
         checkDailyGoal();
         startUserListener();
+
+        testingToggle.setOnCheckedChangeListener(this);
     }
 
     private void startUserListener() {
@@ -289,9 +298,7 @@ public class MainActivity extends FragmentActivity
             }
 
             @Override
-            public void onCancelled(FirebaseError firebaseError) {
-
-            }
+            public void onCancelled(FirebaseError firebaseError) {}
         });
 
     }
@@ -369,7 +376,8 @@ public class MainActivity extends FragmentActivity
                 }
                 break;
             case R.id.mapTabButton:
-                Toast.makeText(this, "Inflate map here", Toast.LENGTH_SHORT).show();
+                Intent homeIntent = new Intent(MainActivity.this, TitleActivity.class);
+                startActivity(homeIntent);
                 break;
             case R.id.rightInteractionBUtton:
                 String inputtedSteps = stepEditText.getText().toString();
@@ -939,6 +947,28 @@ public class MainActivity extends FragmentActivity
             @Override
             public void onCancelled(FirebaseError firebaseError) {}
         });
+    }
+
+
+    @Override
+    public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+        if (isChecked) {
+            rightInteractionButton.setVisibility(View.VISIBLE);
+            stepEditText.setVisibility(View.VISIBLE);
+        } else {
+            rightInteractionButton.setVisibility(View.GONE);
+            stepEditText.setVisibility(View.GONE);
+        }
+    }
+
+    public void setCustomFonts() {
+        Typeface buttonText = Typeface.createFromAsset(getAssets(), "BebasNeue.ttf");
+        Typeface titleText = Typeface.createFromAsset(getAssets(), "WindowMarkers.ttf");
+        playerStatusTitle.setTypeface(titleText);
+        backpackContentTitle.setTypeface(titleText);
+        mapButton.setTypeface(buttonText);
+        campaignButton.setTypeface(buttonText);
+        merchantButton.setTypeface(buttonText);
     }
 
     public void createCampaign(int campaignLength) {

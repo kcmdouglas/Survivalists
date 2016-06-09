@@ -13,10 +13,46 @@
         android:src="@drawable/blank_notebook_page"
         android:scaleType="centerCrop"/>
 
+    <android.support.percent.PercentRelativeLayout
+        app:layout_widthPercent="15%"
+        android:layout_height="match_parent"
+        android:id="@+id/sideTabs">
+
+        <Button
+            app:layout_widthPercent="100%"
+            app:layout_heightPercent="9%"
+            app:layout_marginTopPercent="17%"
+            android:id="@+id/topTabButton"
+            android:layout_alignParentLeft="true"
+            android:layout_alignParentStart="true"
+            android:background="@android:color/transparent"
+            android:textSize="19sp"
+            android:text="Home"
+            android:rotation="-90"
+            android:textColor="@android:color/black" />
+
+        <Button
+            app:layout_widthPercent="110%"
+            app:layout_heightPercent="21%"
+            android:id="@+id/lowerTabButton"
+            app:layout_marginTopPercent="2%"
+            android:background="@android:color/transparent"
+            android:textSize="19sp"
+            android:rotation="-90"
+            android:textColor="@android:color/white"
+            android:layout_below="@+id/topTabButton"
+            android:layout_alignParentLeft="true"
+            android:layout_alignParentStart="true"
+            android:text="Campaign"
+            />
+
+
+    </android.support.percent.PercentRelativeLayout>
+
     <!--Settings layout, visible on init-->
     <android.support.percent.PercentRelativeLayout
         android:id="@+id/settingsField"
-        app:layout_heightPercent="35%"
+        app:layout_heightPercent="38%"
         app:layout_widthPercent="85%"
         app:layout_marginTopPercent="9%"
         android:layout_alignParentEnd="true"
@@ -31,7 +67,7 @@
             android:layout_centerHorizontal="true"
             android:textColor="@android:color/black"
             android:textStyle="bold"
-            android:textSize="18sp"
+            android:textSize="30sp"
             android:text="Campaign Settings"
             />
 
@@ -51,7 +87,10 @@
             app:layout_marginRightPercent="3%"
             app:layout_marginTopPercent="25%"
             android:max="2"
-            android:background="@drawable/status_field_one"/>
+            android:progressDrawable="@drawable/custom_progress_bar_1"
+            android:background="@drawable/status_field_one"
+            android:thumb="@drawable/abc_seekbar_thumb_material"
+            android:thumbTint="#a83a3a" />
 
         <TextView
             android:id="@+id/difficultyTitle"
@@ -60,11 +99,12 @@
             android:layout_toLeftOf="@+id/difficultySeekBar"
             android:layout_toStartOf="@+id/difficultySeekBar"
             app:layout_marginTopPercent="30%"
-            app:layout_marginRightPercent="3%"
+            app:layout_marginRightPercent="5%"
             android:textColor="@android:color/black"
             android:textAllCaps="true"
             android:textStyle="bold"
-            android:text="Diffculty" />
+            android:text="Diffculty"
+            android:textSize="20sp" />
 
         <TextView
             android:id="@+id/difficultyDescription"
@@ -77,7 +117,7 @@
             android:textColor="@android:color/black"
             android:textAllCaps="true"
             android:textStyle="bold"
-            android:textSize="12sp"
+            android:textSize="13sp"
             android:layout_below="@+id/difficultySeekBar"/>
 
         <SeekBar
@@ -88,8 +128,11 @@
             android:layout_width="230dp"
             app:layout_marginTopPercent="50%"
             app:layout_marginRightPercent="3%"
+            android:progressDrawable="@drawable/custom_progress_bar_2"
             android:max="2"
-            android:background="@drawable/status_field_two"/>
+            android:background="@drawable/status_field_two"
+            android:thumb="@drawable/abc_seekbar_thumb_material"
+            android:thumbTint="#4338df" />
 
         <TextView
             android:id="@+id/lengthTitle"
@@ -99,11 +142,12 @@
             android:layout_below="@+id/difficultyTitle"
             android:layout_alignStart="@+id/difficultyTitle"
             android:layout_alignLeft="@+id/difficultyTitle"
-            app:layout_marginTopPercent="18%"
+            app:layout_marginTopPercent="15%"
             app:layout_marginRightPercent="3%"
             android:text="Length"
             android:textAllCaps="true"
-            android:textStyle="bold" />
+            android:textStyle="bold"
+            android:textSize="20sp" />
 
         <TextView
             android:id="@+id/lengthText"
@@ -116,7 +160,7 @@
             android:textColor="@android:color/black"
             android:textAllCaps="true"
             android:textStyle="bold"
-            android:textSize="12sp"
+            android:textSize="13sp"
             android:layout_below="@+id/campaignLengthSeekBar"/>
 
         <SeekBar
@@ -127,8 +171,11 @@
             android:layout_width="230dp"
             app:layout_marginTopPercent="75%"
             app:layout_marginRightPercent="3%"
+            android:progressDrawable="@drawable/custom_progress_bar_3"
             android:max="3"
-            android:background="@drawable/status_field_three"/>
+            android:background="@drawable/status_field_three"
+            android:thumb="@drawable/abc_seekbar_thumb_material"
+            android:thumbTint="#3e8c59" />
 
         <TextView
             android:layout_width="wrap_content"
@@ -141,7 +188,9 @@
             app:layout_marginRightPercent="3%"
             android:text="Party Size"
             android:textAllCaps="true"
-            android:textStyle="bold" />
+            android:textStyle="bold"
+            android:id="@+id/partSizeTitle"
+            android:textSize="20sp" />
 
         <TextView
             android:id="@+id/partySizeText"
@@ -154,7 +203,7 @@
             android:textColor="@android:color/black"
             android:textAllCaps="true"
             android:textStyle="bold"
-            android:textSize="12sp"
+            android:textSize="15sp"
             android:layout_below="@+id/partySizeSeekBar"/>
 
     </android.support.percent.PercentRelativeLayout>
@@ -177,7 +226,7 @@
             android:layout_centerHorizontal="true"
             android:textColor="@android:color/black"
             android:textStyle="bold"
-            android:textSize="18sp"
+            android:textSize="30sp"
             android:text="Current Campaign Settings"
             />
 
@@ -191,6 +240,7 @@
             android:textColor="@android:color/black"
             android:textAllCaps="true"
             android:textStyle="bold"
+            android:textSize="18sp"
             android:text="Diffculty: " />
 
         <TextView
@@ -203,6 +253,7 @@
             app:layout_marginRightPercent="3%"
             android:textAllCaps="true"
             android:textStyle="bold"
+            android:textSize="18sp"
             android:text="Length: " />
 
     </android.support.percent.PercentRelativeLayout>
@@ -259,7 +310,8 @@
             app:layout_marginLeftPercent="30%"
             android:textColor="@android:color/black"
             android:textStyle="bold"
-            android:textSize="18sp"
+            android:textSize="30sp"
+            android:layout_centerHorizontal="true"
             android:text="Players Available"
             />
 
@@ -290,7 +342,7 @@
         android:id="@+id/bottomButtons"
         app:layout_heightPercent="10%"
         app:layout_widthPercent="83%"
-        app:layout_marginBottomPercent="10%"
+        app:layout_marginBottomPercent="8%"
         android:layout_alignParentEnd="true"
         android:layout_alignParentRight="true"
         android:layout_alignParentBottom="true">

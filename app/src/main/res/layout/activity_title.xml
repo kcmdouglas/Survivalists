@@ -19,7 +19,10 @@
             android:layout_marginRight="22dp"
             android:layout_marginEnd="22dp"
             android:layout_marginTop="22dp"
-            android:background="@drawable/games_controller_white"/>
+            android:background="@drawable/games_controller_white"
+            android:textStyle="bold"
+            style="@android:style/TextAppearance.DeviceDefault.Large"
+            android:textSize="30sp" />
 
         <Button
             android:id="@+id/currentCampaignButton"
@@ -29,12 +32,13 @@
             android:layout_marginTop="440dp"
             android:background="@drawable/blank_red_btn"
             android:scaleType="centerCrop"
-            android:text="Return to current campaign"
+            android:text="Return to campaign"
             android:textColor="@android:color/white"
             android:textAllCaps="true"
             android:textStyle="bold"
-            android:textSize="22sp"
-            android:fontFamily="sans-serif-condensed"/>
+            android:textSize="30sp"
+            android:fontFamily="sans-serif-condensed"
+            style="@android:style/TextAppearance.DeviceDefault.Large" />
 
         <Button
             android:id="@+id/startCampaignButton"
@@ -48,8 +52,9 @@
             android:textColor="@android:color/white"
             android:textAllCaps="true"
             android:textStyle="bold"
-            android:textSize="22sp"
-            android:fontFamily="sans-serif-condensed"/>
+            android:textSize="30sp"
+            android:fontFamily="sans-serif-condensed"
+            style="@android:style/TextAppearance.DeviceDefault.Large" />
 
         <Button
             android:id="@+id/joinCampaignButton"
@@ -63,8 +68,9 @@
             android:textColor="@android:color/white"
             android:textAllCaps="true"
             android:textStyle="bold"
-            android:textSize="22sp"
-            android:fontFamily="sans-serif-condensed"/>
+            android:textSize="30sp"
+            android:fontFamily="sans-serif-condensed"
+            style="@android:style/TextAppearance.DeviceDefault.Large" />
 
         <Button
             android:layout_width="wrap_content"

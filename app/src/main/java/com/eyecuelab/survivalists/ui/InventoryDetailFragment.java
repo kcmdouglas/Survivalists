@@ -4,6 +4,7 @@ package com.eyecuelab.survivalists.ui;
 import android.app.Activity;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.graphics.Typeface;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.support.v4.app.DialogFragment;
@@ -98,6 +99,13 @@ public class InventoryDetailFragment extends DialogFragment implements View.OnCl
         closeButton.setOnClickListener(this);
         negativeButton.setOnClickListener(this);
         affirmativeButton.setOnClickListener(this);
+
+        Typeface typeface = Typeface.createFromAsset(getContext().getAssets(), "BebasNeue.ttf");
+        closeButton.setTypeface(typeface);
+        negativeButton.setTypeface(typeface);
+        affirmativeButton.setTypeface(typeface);
+        dialogTitle.setTypeface(typeface);
+        dialogDescription.setTypeface(typeface);
 
         return view;
     }
