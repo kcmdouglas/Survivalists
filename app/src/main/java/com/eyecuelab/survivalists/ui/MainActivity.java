@@ -693,14 +693,13 @@ public class MainActivity extends FragmentActivity
         Intent intent = new Intent(this, StepResetAlarmReceiver.class);
         //Sets a recurring alarm just before midnight daily to trigger BroadcastReceiver
         Calendar calendar = Calendar.getInstance();
-//        calendar.set(Calendar.HOUR_OF_DAY, 23);
-//        calendar.set(Calendar.MINUTE, 59);
-//        calendar.set(Calendar.SECOND, 0);
-//        calendar.set(Calendar.MILLISECOND, 0);
-//        calendar.add(Calendar.MINUTE, 30);
+        calendar.set(Calendar.HOUR_OF_DAY, 23);
+        calendar.set(Calendar.MINUTE, 59);
+        calendar.set(Calendar.SECOND, 0);
+        calendar.set(Calendar.MILLISECOND, 0);
         PendingIntent pi = PendingIntent.getBroadcast(this, StepResetAlarmReceiver.REQUEST_CODE, intent, PendingIntent.FLAG_UPDATE_CURRENT);
         AlarmManager am = (AlarmManager) getApplicationContext().getSystemService(Context.ALARM_SERVICE);
-        am.setRepeating(AlarmManager.RTC_WAKEUP, calendar.getTimeInMillis(), AlarmManager.INTERVAL_HALF_HOUR, pi);
+        am.setRepeating(AlarmManager.RTC_WAKEUP, calendar.getTimeInMillis(), AlarmManager.INTERVAL_DAY, pi);
     }
 
     public void instantiatePlayerIDs() {
@@ -944,7 +943,7 @@ public class MainActivity extends FragmentActivity
 
     public void createCampaign(int campaignLength) {
         Calendar campaignCalendar = Calendar.getInstance();
-        campaignCalendar.add(Calendar.MINUTE, 10);
+        campaignCalendar.add(Calendar.DATE, campaignLength);
         Intent intent = new Intent(this, CampaignEndAlarmReceiver.class);
         PendingIntent pendingIntent = PendingIntent.getBroadcast(this, CampaignEndAlarmReceiver.REQUEST_CODE, intent, 0);
         AlarmManager am = (AlarmManager) getApplicationContext().getSystemService(ALARM_SERVICE);

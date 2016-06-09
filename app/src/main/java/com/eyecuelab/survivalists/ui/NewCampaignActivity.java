@@ -86,8 +86,8 @@ public class NewCampaignActivity extends BaseGameActivity implements View.OnClic
     private String mCurrentPlayerId;
     private ArrayList<String> difficultyDescriptions = new ArrayList<>();
     private ArrayList<String> invitedPlayers = new ArrayList<>();
-    Integer[] campaignDuration = {3, 10, 15};
-    Integer[] defaultDailyGoal = {50, 7000, 10000};
+    Integer[] campaignDuration = {5, 10, 15};
+    Integer[] defaultDailyGoal = {5000, 7000, 10000};
 
     private Context mContext;
     private ListView mInvitePlayersListView;
