@@ -148,7 +148,7 @@ public class BackgroundStepService extends Service implements SensorEventListene
             public void onDataChange(DataSnapshot dataSnapshot) {
                 long fullnessLevelLong = (long) dataSnapshot.getValue();
                 mFullnessLevel = (int) fullnessLevelLong;
-                if (mFullnessLevel < 25) {
+                if (mFullnessLevel < 25 && mFullnessLevel > 16) {
                     Intent intent = new Intent(getApplicationContext(), MainActivity.class);
                     long[] pattern = {0, 300, 0};
                     PendingIntent pi = PendingIntent.getActivity(getApplicationContext(), 12345, intent, 0);
