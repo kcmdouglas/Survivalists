@@ -19,6 +19,7 @@ import android.util.Log;
 
 import com.eyecuelab.survivalists.Constants;
 import com.eyecuelab.survivalists.ui.MainActivity;
+import com.eyecuelab.survivalists.ui.TitleActivity;
 
 /**
  * Created by eyecuelab on 5/19/16.
@@ -50,16 +51,17 @@ public class CampaignEndAlarmService extends Service {
         mEditor.putInt(Constants.PREFERENCES_EVENT_3_STEPS, -1);
         mEditor.putInt(Constants.PREFERENCES_EVENT_4_STEPS, -1);
         mEditor.putInt(Constants.PREFERENCES_EVENT_5_STEPS, -1);
+        mEditor.putBoolean(Constants.PREFERENCES_INITIALIZE_GAME_BOOLEAN, false);
         mEditor.putString("matchId", null);
         mEditor.apply();
         Log.d("Here I am???", "In the alarm service??");
-        Intent intent = new Intent(this, MainActivity.class);
+        Intent intent = new Intent(this, TitleActivity.class);
         long[] pattern = {0, 300, 0};
         PendingIntent pi = PendingIntent.getActivity(this, 12345, intent, 0);
         NotificationCompat.Builder mBuilder = new NotificationCompat.Builder(this)
                 .setSmallIcon(android.R.drawable.sym_def_app_icon)
-                .setContentTitle("Your game ended!")
-                .setContentText("Your game is all done, no one made it, life is a meaningless series of events")
+                .setContentTitle("Your Campaign has Completed!")
+                .setContentText("Was your campaign successful? Did you meet friends along the way?")
                 .setVibrate(pattern)
                 .setAutoCancel(true);
 

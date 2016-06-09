@@ -10,6 +10,7 @@ import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.database.DataSetObserver;
 import android.net.Uri;
+import android.os.Build;
 import android.preference.PreferenceManager;
 import android.support.annotation.NonNull;
 import android.support.percent.PercentRelativeLayout;
@@ -85,8 +86,8 @@ public class NewCampaignActivity extends BaseGameActivity implements View.OnClic
     private String mCurrentPlayerId;
     private ArrayList<String> difficultyDescriptions = new ArrayList<>();
     private ArrayList<String> invitedPlayers = new ArrayList<>();
-    Integer[] campaignDuration = {3, 10, 15};
-    Integer[] defaultDailyGoal = {50, 7000, 10000};
+    Integer[] campaignDuration = {5, 10, 15};
+    Integer[] defaultDailyGoal = {5000, 7000, 10000};
 
     private Context mContext;
     private ListView mInvitePlayersListView;
@@ -176,52 +177,6 @@ public class NewCampaignActivity extends BaseGameActivity implements View.OnClic
         if (navigationFlag == Constants.JOIN_CAMPAIGN_INTENT) {
             setupJoinMatchesUi();
         }
-        Firebase itemRef = new Firebase(Constants.FIREBASE_URL_ITEMS);
-
-        itemRef.child("weapons").addListenerForSingleValueEvent(new ValueEventListener() {
-            @Override
-            public void onDataChange(DataSnapshot dataSnapshot) {
-                for(DataSnapshot child: dataSnapshot.getChildren()) {
-                    Weapon weapon = child.getValue(Weapon.class);
-                    allWeapons.add(weapon);
-                }
-            }
-
-            @Override
-            public void onCancelled(FirebaseError firebaseError) {
-
-            }
-        });
-
-        itemRef.child("food").addListenerForSingleValueEvent(new ValueEventListener() {
-            @Override
-            public void onDataChange(DataSnapshot dataSnapshot) {
-                for(DataSnapshot child: dataSnapshot.getChildren()) {
-                    Item item = child.getValue(Item.class);
-                    allFood.add(item);
-                }
-            }
-
-            @Override
-            public void onCancelled(FirebaseError firebaseError) {
-
-            }
-        });
-
-        itemRef.child("medicine").addListenerForSingleValueEvent(new ValueEventListener() {
-            @Override
-            public void onDataChange(DataSnapshot dataSnapshot) {
-                for(DataSnapshot child: dataSnapshot.getChildren()) {
-                    Item item = child.getValue(Item.class);
-                    allMedicine.add(item);
-                }
-            }
-
-            @Override
-            public void onCancelled(FirebaseError firebaseError) {
-
-            }
-        });
 
         LocalBroadcastManager broadcastManager = LocalBroadcastManager.getInstance(this);
         IntentFilter intentFilter = new IntentFilter();
@@ -488,6 +443,8 @@ public class NewCampaignActivity extends BaseGameActivity implements View.OnClic
         mEditor.putInt(Constants.PREFERENCES_EVENT_5_STEPS, 500);
         mEditor.putInt(Constants.PREFERENCES_DAILY_STEPS, 0);
         mEditor.putBoolean(Constants.PREFERENCES_REACHED_SAFEHOUSE_BOOLEAN, false);
+        mEditor.putInt(Constants.PREFERENCES_DAILY_STEPS, 0);
+        mEditor.putBoolean(Constants.PREFERENCES_INITIALIZE_GAME_BOOLEAN, true);
         mEditor.apply();
         int stepsInSensor = mSharedPreferences.getInt(Constants.PREFERENCES_STEPS_IN_SENSOR_KEY, -1);
         if (stepsInSensor > 0) {
@@ -502,7 +459,7 @@ public class NewCampaignActivity extends BaseGameActivity implements View.OnClic
             if (wholeParty != null) {
                 wholeParty.add(mCurrentPlayerId);
             }
-            removeOldInventory();
+            getAndAssignAllItems();
 
             mEditor.putString(Constants.PREFERENCES_MATCH_ID, mCurrentMatchId);
             mEditor.putInt(Constants.PREFERENCES_LAST_SAFEHOUSE_ID, 0);
@@ -563,11 +520,17 @@ public class NewCampaignActivity extends BaseGameActivity implements View.OnClic
 
     public void createCampaign(int campaignLength) {
         Calendar campaignCalendar = Calendar.getInstance();
-        campaignCalendar.add(Calendar.MINUTE, 120);
+        campaignCalendar.add(Calendar.MINUTE, 10);
         Intent intent = new Intent(this, CampaignEndAlarmReceiver.class);
         PendingIntent pendingIntent = PendingIntent.getBroadcast(this, CampaignEndAlarmReceiver.REQUEST_CODE, intent, 0);
         AlarmManager am = (AlarmManager) getApplicationContext().getSystemService(ALARM_SERVICE);
-        am.set(AlarmManager.RTC_WAKEUP, campaignCalendar.getTimeInMillis(), pendingIntent);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            am.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, campaignCalendar.getTimeInMillis(), pendingIntent);
+        } else {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
+                am.setExact(AlarmManager.RTC_WAKEUP, campaignCalendar.getTimeInMillis(), pendingIntent);
+            }
+        }
         Log.d("CreateCampaign", "Campaign Created");
     }
 
@@ -695,62 +658,6 @@ public class NewCampaignActivity extends BaseGameActivity implements View.OnClic
 
     }
 
-    private void removeOldInventory() {
-        try {
-            for (int i = 0; i < invitedPlayers.size(); i++) {
-                final String playerBeingAssignId = invitedPlayers.get(i);
-                Collections.shuffle(allWeapons);
-                Collections.shuffle(allMedicine);
-                Collections.shuffle(allFood);
-                final ArrayList<Item> itemsToPush = new ArrayList<>();
-                final Weapon freebieWeapon = allWeapons.get(0);
-                Item freebieFoodOne = allFood.get(0);
-                itemsToPush.add(freebieFoodOne);
-                Item freebieFoodTwo = allFood.get(1);
-                itemsToPush.add(freebieFoodTwo);
-                Item freebieMedicineOne = allMedicine.get(0);
-                itemsToPush.add(freebieMedicineOne);
-                Item freebieMedicineTwo = allMedicine.get(1);
-                itemsToPush.add(freebieMedicineTwo);
-
-
-                Firebase playerRef = new Firebase(Constants.FIREBASE_URL_USERS + "/" + playerBeingAssignId);
-                playerRef.addListenerForSingleValueEvent(new ValueEventListener() {
-                    @Override
-                    public void onDataChange(DataSnapshot dataSnapshot) {
-                        dataSnapshot.child("items").getRef().removeValue();
-                        dataSnapshot.child("weapons").getRef().removeValue();
-
-                        for (int j = 0; j < itemsToPush.size(); j++) {
-                            Item item = itemsToPush.get(j);
-                            Firebase itemRef = new Firebase(Constants.FIREBASE_URL_USERS + "/" + playerBeingAssignId + "/items");
-                            Firebase newItemRef = itemRef.push();
-                            String itemPushId = newItemRef.getKey();
-                            item.setPushId(itemPushId);
-                            newItemRef.setValue(item);
-                        }
-
-
-                        Firebase weaponRef = new Firebase(Constants.FIREBASE_URL_USERS + "/" + playerBeingAssignId + "/weapons");
-                        Firebase newWeaponRef = weaponRef.push();
-                        String weaponPushId = newWeaponRef.getKey();
-
-                        freebieWeapon.setPushId(weaponPushId);
-                        newWeaponRef.setValue(freebieWeapon);
-                    }
-
-                    @Override
-                    public void onCancelled(FirebaseError firebaseError) {
-
-                    }
-                });
-
-            }
-        } catch (NullPointerException np) {
-            Log.e(TAG, np.getMessage());
-        }
-    }
-
     public void saveCampaignSettings() {
         mEditor.putInt(Constants.PREFERENCES_DURATION_SETTING, mCampaignLength);
         mEditor.putInt(Constants.PREFERENCES_DEFAULT_DAILY_GOAL_SETTING, mDifficultyLevel);
@@ -768,6 +675,7 @@ public class NewCampaignActivity extends BaseGameActivity implements View.OnClic
                 long difficulty = (long) dataSnapshot.child("difficultyLevel").getValue();
                 mCampaignLength = (int) campaignLength;
                 mDifficultyLevel = (int) difficulty;
+                createCampaign(mCampaignLength);
             }
 
             @Override
@@ -842,6 +750,111 @@ public class NewCampaignActivity extends BaseGameActivity implements View.OnClic
         });
         Intent goToNotebook = new Intent(NewCampaignActivity.this, MainActivity.class);
         startActivity(goToNotebook);
+    }
+
+    public void getAndAssignAllItems() {
+        Firebase itemRef = new Firebase(Constants.FIREBASE_URL_ITEMS);
+
+        itemRef.child("weapons").addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                for(DataSnapshot child: dataSnapshot.getChildren()) {
+                    Weapon weapon = child.getValue(Weapon.class);
+                    allWeapons.add(weapon);
+                }
+            }
+
+            @Override
+            public void onCancelled(FirebaseError firebaseError) {
+
+            }
+        });
+
+        itemRef.child("food").addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                for(DataSnapshot child: dataSnapshot.getChildren()) {
+                    Item item = child.getValue(Item.class);
+                    allFood.add(item);
+                }
+            }
+
+            @Override
+            public void onCancelled(FirebaseError firebaseError) {
+
+            }
+        });
+
+        itemRef.child("medicine").addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                for(DataSnapshot child: dataSnapshot.getChildren()) {
+                    Item item = child.getValue(Item.class);
+                    allMedicine.add(item);
+
+                }
+                try {
+                    for (int i = 0; i < invitedPlayers.size(); i++) {
+                        final String playerBeingAssignId = invitedPlayers.get(i);
+                        Collections.shuffle(allWeapons);
+                        Collections.shuffle(allMedicine);
+                        Collections.shuffle(allFood);
+                        final ArrayList<Item> itemsToPush = new ArrayList<>();
+                        final Weapon freebieWeapon = allWeapons.get(0);
+                        Item freebieFoodOne = allFood.get(0);
+                        itemsToPush.add(freebieFoodOne);
+                        Item freebieFoodTwo = allFood.get(1);
+                        itemsToPush.add(freebieFoodTwo);
+                        Item freebieMedicineOne = allMedicine.get(0);
+                        itemsToPush.add(freebieMedicineOne);
+                        Item freebieMedicineTwo = allMedicine.get(1);
+                        itemsToPush.add(freebieMedicineTwo);
+
+
+                        Firebase playerRef = new Firebase(Constants.FIREBASE_URL_USERS + "/" + playerBeingAssignId);
+                        playerRef.addListenerForSingleValueEvent(new ValueEventListener() {
+                            @Override
+                            public void onDataChange(DataSnapshot dataSnapshot) {
+                                dataSnapshot.child("items").getRef().removeValue();
+                                dataSnapshot.child("weapons").getRef().removeValue();
+
+                                for (int j = 0; j < itemsToPush.size(); j++) {
+                                    Item item = itemsToPush.get(j);
+                                    Firebase itemRef = new Firebase(Constants.FIREBASE_URL_USERS + "/" + playerBeingAssignId + "/items");
+                                    Firebase newItemRef = itemRef.push();
+                                    String itemPushId = newItemRef.getKey();
+                                    item.setPushId(itemPushId);
+                                    newItemRef.setValue(item);
+                                }
+
+
+                                Firebase weaponRef = new Firebase(Constants.FIREBASE_URL_USERS + "/" + playerBeingAssignId + "/weapons");
+                                Firebase newWeaponRef = weaponRef.push();
+                                String weaponPushId = newWeaponRef.getKey();
+
+                                freebieWeapon.setPushId(weaponPushId);
+                                newWeaponRef.setValue(freebieWeapon);
+                            }
+
+                            @Override
+                            public void onCancelled(FirebaseError firebaseError) {
+
+                            }
+                        });
+
+                    }
+                } catch (NullPointerException np) {
+                    Log.e(TAG, np.getMessage());
+                }
+            }
+
+            @Override
+            public void onCancelled(FirebaseError firebaseError) {
+
+            }
+        });
+
+
     }
 
     public Context getContext() {
