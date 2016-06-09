@@ -2,6 +2,7 @@ package com.eyecuelab.survivalists.ui;
 
 import android.app.ActivityManager;
 import android.app.AlarmManager;
+import android.app.ProgressDialog;
 import android.graphics.Typeface;
 import android.os.Build;
 import android.support.v4.app.DialogFragment;
@@ -137,7 +138,6 @@ public class MainActivity extends FragmentActivity
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         Firebase.setAndroidContext(this);
-
         setFullScreen();
 
         //set content view AFTER ABOVE sequence (to avoid crash)

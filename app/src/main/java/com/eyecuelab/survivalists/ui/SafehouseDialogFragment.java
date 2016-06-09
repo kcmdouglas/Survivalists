@@ -4,6 +4,7 @@ import android.app.Dialog;
 import android.app.DialogFragment;
 import android.content.SharedPreferences;
 import android.content.res.Resources;
+import android.graphics.Typeface;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.support.annotation.Nullable;
@@ -67,6 +68,10 @@ public class SafehouseDialogFragment extends android.support.v4.app.DialogFragme
         safehouseDescription.setText(mSafeHouse.getDescription());
 
         safehouseCloseButton.setOnClickListener(this);
+
+        Typeface typeface = Typeface.createFromAsset(getContext().getAssets(), "BebasNeue.ttf");
+        safehouseTitle.setTypeface(typeface);
+        safehouseDescription.setTypeface(typeface);
 
         return view;
     }
