@@ -321,7 +321,8 @@ public class MainActivity extends FragmentActivity
                 }
                 break;
             case R.id.mapTabButton:
-                Toast.makeText(this, "Inflate map here", Toast.LENGTH_SHORT).show();
+                Intent homeIntent = new Intent(MainActivity.this, TitleActivity.class);
+                startActivity(homeIntent);
                 break;
             case R.id.rightInteractionBUtton:
                 String inputtedSteps = stepEditText.getText().toString();

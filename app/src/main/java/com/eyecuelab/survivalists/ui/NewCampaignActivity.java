@@ -9,6 +9,7 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.database.DataSetObserver;
+import android.graphics.Typeface;
 import android.net.Uri;
 import android.preference.PreferenceManager;
 import android.support.annotation.NonNull;
@@ -16,6 +17,7 @@ import android.support.percent.PercentRelativeLayout;
 import android.os.Bundle;
 import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
+import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
@@ -120,6 +122,8 @@ public class NewCampaignActivity extends BaseGameActivity implements View.OnClic
     @Bind(R.id.infoListView) ListView infoListView;
     @Bind(R.id.confirmationButton) Button confirmationButton;
     @Bind(R.id.searchButton) Button searchButton;
+    @Bind(R.id.lowerTabButton) Button lowerTabButton;
+    @Bind(R.id.topTabButton) Button topTabButton;
     @Bind(R.id.settingsField) PercentRelativeLayout settingsLayout;
     @Bind(R.id.settingsConfirmedSection) PercentRelativeLayout settingConfirmationLayout;
     @Bind(R.id.infoSection) PercentRelativeLayout generalInfoLayout;
@@ -128,6 +132,12 @@ public class NewCampaignActivity extends BaseGameActivity implements View.OnClic
     @Bind(R.id.lengthConfirmedText) TextView lengthConfirmedTextView;
     @Bind(R.id.partySizeText) TextView partyTextView;
     @Bind(R.id.pendingTeamTitle) TextView pendingTeamTitle;
+    @Bind(R.id.settingsTitle) TextView settingsTitle;
+    @Bind(R.id.difficultyTitle) TextView difficultyTitle;
+    @Bind(R.id.lengthTitle) TextView lengthTitle;
+    @Bind(R.id.partSizeTitle) TextView partSizeTitle;
+    @Bind(R.id.confirmedSettingsTitle) TextView confirmedSettingsTitle;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -144,6 +154,7 @@ public class NewCampaignActivity extends BaseGameActivity implements View.OnClic
 
         ButterKnife.bind(this);
         mContext = this;
+        setCustomFonts();
 
         //Create Shared Preferences
         mSharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
@@ -151,6 +162,8 @@ public class NewCampaignActivity extends BaseGameActivity implements View.OnClic
 
         confirmationButton.setOnClickListener(this);
         searchButton.setOnClickListener(this);
+        topTabButton.setOnClickListener(this);
+        lowerTabButton.setOnClickListener(this);
 
         difficultyDescriptions.add("Walk in the park");
         difficultyDescriptions.add("Walk the line");
@@ -262,6 +275,11 @@ public class NewCampaignActivity extends BaseGameActivity implements View.OnClic
             case R.id.searchButton:
                 Intent searchPlayersIntent = Games.Players.getPlayerSearchIntent(mGoogleApiClient);
                 startActivityForResult(searchPlayersIntent, SEARCH_PLAYERS_TAG);
+                break;
+            case R.id.topTabButton:
+                Intent homeIntent = new Intent(NewCampaignActivity.this, TitleActivity.class);
+                startActivity(homeIntent);
+                break;
         }
     }
 
@@ -432,6 +450,17 @@ public class NewCampaignActivity extends BaseGameActivity implements View.OnClic
             }
 
             invitePlayerListView.setAdapter(new PlayerAdapter(this, matchUsers, R.layout.player_list_item));
+
+            //This stops the list view from being scrollable.
+            invitePlayerListView.setOnTouchListener(new View.OnTouchListener() {
+                @Override
+                public boolean onTouch(View v, MotionEvent event) {
+                    if (event.getAction() == MotionEvent.ACTION_MOVE) {
+                        return true;
+                    }
+                    return false;
+                }
+            });
         }
     }
 
@@ -845,5 +874,23 @@ public class NewCampaignActivity extends BaseGameActivity implements View.OnClic
 
     public Context getContext() {
         return mContext;
+    }
+
+    public void setCustomFonts() {
+        Typeface titleFont = Typeface.createFromAsset(getAssets(), "WindowMarkers.ttf");
+        Typeface bodyFont = Typeface.createFromAsset(getAssets(), "BebasNeue.ttf");
+
+        pendingTeamTitle.setTypeface(titleFont);
+        settingsTitle.setTypeface(titleFont);
+        confirmedSettingsTitle.setTypeface(titleFont);
+
+        topTabButton.setTypeface(bodyFont);
+        lowerTabButton.setTypeface(bodyFont);
+        difficultyConfirmedTextView.setTypeface(bodyFont);
+        lengthConfirmedTextView.setTypeface(bodyFont);
+        partyTextView.setTypeface(bodyFont);
+        difficultyTitle.setTypeface(bodyFont);
+        lengthTitle.setTypeface(bodyFont);
+        partSizeTitle.setTypeface(bodyFont);
     }
 }
