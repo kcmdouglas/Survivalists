@@ -203,27 +203,50 @@
         android:layout_toEndOf="@+id/sideTabs">
 
         <Button
-            android:id="@+id/rightInteractionBUtton"
+            android:id="@+id/merchantButton"
             app:layout_widthPercent="40%"
             app:layout_heightPercent="50%"
             app:layout_marginLeftPercent="5%"
             app:layout_marginTopPercent="15%"
-            android:layout_toRightOf="@+id/stepEditText"
+            android:layout_centerHorizontal="true"
             android:background="@drawable/blank_notebook_interaction_btn"
-            android:text="Set Steps"
+            android:text="Trade for Goods"
             android:textColor="@android:color/white"
             android:textAllCaps="true"
             android:textStyle="bold"/>
 
-        <EditText
-            app:layout_widthPercent="40%"
-            app:layout_heightPercent="50%"
-            app:layout_marginLeftPercent="5%"
-            app:layout_marginTopPercent="15%"
-            android:id="@+id/stepEditText"
-            android:inputType="number"
-            android:singleLine="true" />
-
     </android.support.percent.PercentRelativeLayout>
+
+    <Button
+        android:id="@+id/rightInteractionBUtton"
+        android:layout_height="30dp"
+        android:layout_width="50dp"
+        android:layout_toRightOf="@+id/stepEditText"
+        android:layout_alignParentBottom="true"
+        android:background="@drawable/blank_notebook_interaction_btn"
+        android:text="Set Steps"
+        android:textColor="@android:color/white"
+        android:textAllCaps="true"
+        android:textStyle="bold"
+        android:visibility="invisible"/>
+
+    <EditText
+        android:layout_height="30dp"
+        android:layout_width="50dp"
+        android:layout_centerHorizontal="true"
+        android:id="@+id/stepEditText"
+        android:layout_alignParentBottom="true"
+        android:inputType="number"
+        android:singleLine="true"
+        android:visibility="invisible"/>
+
+    <ToggleButton
+        android:id="@+id/testingToggle"
+        android:layout_width="100dp"
+        android:layout_height="100dp"
+        android:layout_alignParentBottom="true"
+        android:background="@android:color/transparent"
+        android:textOff=" "
+        android:textOn=" "/>
 
 </android.support.percent.PercentRelativeLayout>

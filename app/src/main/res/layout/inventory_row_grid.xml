@@ -5,10 +5,25 @@
     android:layout_width="wrap_content"
     android:layout_height="wrap_content">
 
-    <ImageView
-        android:id="@+id/item_image"
-        android:layout_width="48dp"
-        android:layout_height="48dp"/>
+    <RelativeLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content">
+
+        <ImageView
+            android:layout_width="80dp"
+            android:layout_height="70dp"
+            android:src="@drawable/item_back_1"
+            android:alpha=".7"
+            android:scaleType="centerInside"/>
+
+        <ImageView
+            android:id="@+id/item_image"
+            android:layout_centerInParent="true"
+            android:layout_width="48dp"
+            android:layout_height="48dp"/>
+    </RelativeLayout>
+
+
 
     <TextView
         android:id="@+id/item_text"
