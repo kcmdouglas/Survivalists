@@ -111,7 +111,7 @@
             android:layout_alignParentEnd="true"
             android:layout_alignParentRight="true"
             app:layout_marginRightPercent="20%"
-            android:text="3 Days"
+            android:text="5 Days"
             android:textColor="@android:color/black"
             android:textAllCaps="true"
             android:textStyle="bold"
