@@ -477,9 +477,8 @@ public class NewCampaignActivity extends BaseGameActivity implements View.OnClic
         mEditor.apply();
         int stepsInSensor = mSharedPreferences.getInt(Constants.PREFERENCES_STEPS_IN_SENSOR_KEY, -1);
         if (stepsInSensor > 0) {
-            mEditor.putInt(Constants.PREFERENCES_PREVIOUS_STEPS_KEY, stepsInSensor);
+            mEditor.putInt(Constants.PREFERENCES_PREVIOUS_STEPS_KEY, stepsInSensor).apply();
         }
-
 
         //First turn
         if (turnData == null) {
@@ -549,7 +548,7 @@ public class NewCampaignActivity extends BaseGameActivity implements View.OnClic
 
     public void createCampaign(int campaignLength) {
         Calendar campaignCalendar = Calendar.getInstance();
-        campaignCalendar.add(Calendar.MINUTE, 10);
+        campaignCalendar.add(Calendar.DATE, campaignLength);
         Intent intent = new Intent(this, CampaignEndAlarmReceiver.class);
         PendingIntent pendingIntent = PendingIntent.getBroadcast(this, CampaignEndAlarmReceiver.REQUEST_CODE, intent, 0);
         AlarmManager am = (AlarmManager) getApplicationContext().getSystemService(ALARM_SERVICE);

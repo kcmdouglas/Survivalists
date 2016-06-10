@@ -80,7 +80,6 @@ public class TitleActivity extends BaseGameActivity implements GoogleApiClient.C
         mSharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
         mEditor = mSharedPreferences.edit();
 
-        mCurrentMatchId = mSharedPreferences.getString(Constants.PREFERENCES_MATCH_ID, null);
 
         if(mCurrentMatchId == null) {
             currentCampaignButton.setVisibility(View.INVISIBLE);
@@ -90,6 +89,41 @@ public class TitleActivity extends BaseGameActivity implements GoogleApiClient.C
         startCampaignButton.setOnClickListener(this);
         loginButton.setOnClickListener(this);
         joinCampaignButton.setOnClickListener(this);
+
+        boolean endedCampaign = mSharedPreferences.getBoolean(Constants.PREFERENCES_COMPLETED_CAMPAIGN_BOOLEAN, false);
+
+        if(endedCampaign) {
+            String matchId = mSharedPreferences.getString(Constants.PREFERENCES_MATCH_ID, null);
+            Firebase firebaseTeamRef = new Firebase(Constants.FIREBASE_URL_TEAM + "/ChEKCQjch9LVgRUQAhACGAAgARC85dO9ssaP0PYB");
+            firebaseTeamRef.addListenerForSingleValueEvent(new ValueEventListener() {
+                @Override
+                public void onDataChange(DataSnapshot dataSnapshot) {
+                    int matchDuration = Integer.valueOf(dataSnapshot.child("matchDuration").getValue().toString());
+                    int nextSafehouseId = Integer.valueOf(dataSnapshot.child("nextSafehouseId").getValue().toString());
+                    FragmentTransaction ft = getSupportFragmentManager().beginTransaction();
+
+                    ft.addToBackStack(null);
+                    DialogFragment frag = CampaignEndFragment.newInstance(matchDuration, nextSafehouseId);
+
+                    frag.show(ft, "fragment_campaign_end");
+
+                    mEditor.putBoolean(Constants.PREFERENCES_COMPLETED_CAMPAIGN_BOOLEAN, false);
+                    mEditor.putString(Constants.PREFERENCES_MATCH_ID, null);
+                    mEditor.apply();
+
+                }
+
+                @Override
+                public void onCancelled(FirebaseError firebaseError) {
+
+                }
+            });
+
+
+        }
+
+        mCurrentMatchId = mSharedPreferences.getString(Constants.PREFERENCES_MATCH_ID, null);
+
     }
 
     @Override
@@ -103,6 +137,8 @@ public class TitleActivity extends BaseGameActivity implements GoogleApiClient.C
         super.onResume();
         setFullScreen();
         mGoogleApiClient.reconnect();
+        mCurrentMatchId = mSharedPreferences.getString(Constants.PREFERENCES_MATCH_ID, null);
+
     }
 
     @Override

@@ -57,4 +57,5 @@ public class Constants {
     public static final String ITEM_REMOVED= "itemRemovedString";
     public static final String PREFERENCES_SENSOR_SET_BOOLEAN = "listenerSetBoolean";
     public static final String PREFERENCES_INITIALIZE_GAME_BOOLEAN = "campaignAlarmSetBoolean";
+    public static final String PREFERENCES_COMPLETED_CAMPAIGN_BOOLEAN = "completedCampaignBoolean";
 }
