@@ -1,6 +1,7 @@
 package com.eyecuelab.survivalists.ui;
 
 import android.content.Context;
+import android.graphics.Typeface;
 import android.net.Uri;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
@@ -24,7 +25,7 @@ import org.parceler.Parcels;
 import butterknife.Bind;
 import butterknife.ButterKnife;
 
-public class CharacterDetailFragment extends Fragment {
+public class CharacterDetailFragment extends Fragment implements View.OnClickListener {
     @Bind(R.id.nameTextView) TextView nameTextView;
     @Bind(R.id.ageTextView) TextView ageTextView;
     @Bind(R.id.healthTextView) TextView healthTextView;
@@ -33,6 +34,8 @@ public class CharacterDetailFragment extends Fragment {
     @Bind(R.id.teamStepProgressBar) ProgressBar teamStepProgressBar;
     @Bind(R.id.teamEnergyProgressBar) ProgressBar teamEnergyProgressBar;
     @Bind(R.id.teamEnergyTextView) TextView teamEnergyTextView;
+    @Bind(R.id.playerStatusTitle) TextView playerStatusTitle;
+    @Bind(R.id.backpackContentTitle) TextView backpackContentTitle;
 
 
     private Character mCharacter;
@@ -70,7 +73,16 @@ public class CharacterDetailFragment extends Fragment {
 
         nameTextView.setText("Name: " + mCharacter.getName());
         ageTextView.setText("Age: " + Integer.toString(mCharacter.getAge()));
-        healthTextView.setText("Health: " + Integer.toString(mCharacter.getHealth()));
+        healthTextView.setText(mCharacter.getHealth() + "HP");
+
+        Typeface titleTypeface = Typeface.createFromAsset(getContext().getAssets(), "WindowMarkers.ttf");
+        Typeface bodyTypeface = Typeface.createFromAsset(getContext().getAssets(), "BebasNeue.ttf");
+
+        playerStatusTitle.setTypeface(titleTypeface);
+        backpackContentTitle.setTypeface(titleTypeface);
+        nameTextView.setTypeface(bodyTypeface);
+        ageTextView.setTypeface(bodyTypeface);
+        healthTextView.setTypeface(bodyTypeface);
 
         setupListeners();
         return view;
@@ -108,5 +120,10 @@ public class CharacterDetailFragment extends Fragment {
         healthTextView.setText(mCharacter.getHealth() + "HP");
         teamEnergyProgressBar.setProgress(mCharacter.getFullnessLevel());
         teamEnergyTextView.setText(mCharacter.getFullnessLevel() + "%");
+    }
+
+    @Override
+    public void onClick(View v) {
+
     }
 }

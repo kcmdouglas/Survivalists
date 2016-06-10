@@ -66,12 +66,12 @@ public class MainActivity extends FragmentActivity
 
     @Bind(R.id.tabLargeButton) Button campaignButton;
     @Bind(R.id.upperTabButton) Button mapButton;
-    @Bind(R.id.stepProgressBar) ProgressBar stepProgressBar;
-    @Bind(R.id.healthProgressBar) ProgressBar healthProgressBar;
-    @Bind(R.id.energyProgressBar) ProgressBar energyProgressBar;
-    @Bind(R.id.dailyGoalTextView) TextView dailyGoalTextView;
+    @Bind(R.id.teamStepProgressBar) ProgressBar stepProgressBar;
+    @Bind(R.id.teamHealthProgressBar) ProgressBar healthProgressBar;
+    @Bind(R.id.teamEnergyProgressBar) ProgressBar energyProgressBar;
+    @Bind(R.id.teamDailyGoalTextView) TextView dailyGoalTextView;
     @Bind(R.id.healthTextView) TextView healthTextView;
-    @Bind(R.id.energyTextView) TextView energyTextView;
+    @Bind(R.id.teamEnergyTextView) TextView energyTextView;
     @Bind(R.id.merchantButton) Button merchantButton;
     @Bind(R.id.playerStatusTitle) TextView playerStatusTitle;
     @Bind(R.id.backpackContentTitle) TextView backpackContentTitle;
