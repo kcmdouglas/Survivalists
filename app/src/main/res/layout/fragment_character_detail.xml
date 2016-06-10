@@ -51,19 +51,21 @@ android:focusable="false">
         android:layout_alignParentLeft="true"
         android:layout_alignParentStart="true"
         android:background="@android:color/transparent"
-        android:text="Home"
+        android:text="Back"
+        android:textSize="20sp"
         android:textColor="@android:color/black"
         android:rotation="-90"
         />
 
     <Button
         app:layout_widthPercent="100%"
-        app:layout_heightPercent="21%"
+        app:layout_heightPercent="18%"
         android:id="@+id/tabLargeButton"
         app:layout_marginTopPercent="3.5%"
         android:background="@android:color/transparent"
         android:layout_below="@+id/upperTabButton"
         android:text="Team"
+        android:textSize="20sp"
         android:rotation="-90"
         android:textColor="@android:color/white"
         android:layout_alignParentLeft="true"

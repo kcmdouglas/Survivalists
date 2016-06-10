@@ -19,9 +19,9 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="Player Status"
-        android:textSize="25sp"
+        android:textSize="40sp"
         android:textColor="@android:color/black"
-        app:layout_marginTopPercent="11.5%"
+        app:layout_marginTopPercent="8%"
         app:layout_marginLeftPercent="20%"
         android:rotation="-3"
         />
@@ -31,7 +31,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="Backpack Content"
-        android:textSize="25sp"
+        android:textSize="30sp"
         android:textColor="@android:color/black"
         app:layout_marginTopPercent="36%"
         app:layout_marginLeftPercent="20%"
@@ -56,7 +56,8 @@
             app:layout_marginBottomPercent="13%"
             app:layout_marginLeftPercent="5%"
             android:text="Player Name"
-            android:textColor="@android:color/black"/>
+            android:textColor="@android:color/black"
+            android:rotation="2"/>
 
         <TextView
             android:id="@+id/ageTextView"
@@ -66,7 +67,8 @@
             app:layout_marginLeftPercent="5%"
             app:layout_marginBottomPercent="6%"
             android:text="Player Age"
-            android:textColor="@android:color/black"/>
+            android:textColor="@android:color/black"
+            android:rotation="2"/>
 
 
     </android.support.percent.PercentRelativeLayout>
@@ -79,7 +81,7 @@
         <Button
             app:layout_widthPercent="100%"
             app:layout_heightPercent="9%"
-            app:layout_marginTopPercent="17%"
+            app:layout_marginTopPercent="13%"
             android:id="@+id/upperTabButton"
             android:layout_alignParentLeft="true"
             android:layout_alignParentStart="true"
@@ -91,14 +93,14 @@
 
         <Button
             app:layout_widthPercent="100%"
-            app:layout_heightPercent="21%"
+            app:layout_heightPercent="22%"
             android:id="@+id/tabLargeButton"
-            app:layout_marginTopPercent="2%"
+            app:layout_marginTopPercent="3%"
             android:background="@android:color/transparent"
             android:textSize="20sp"
             android:text="Team"
             android:rotation="-90"
-            android:textColor="@android:color/black"
+            android:textColor="@android:color/white"
             android:layout_below="@+id/upperTabButton"
             android:layout_alignParentLeft="true"
             android:layout_alignParentStart="true" />
@@ -108,7 +110,7 @@
     <RelativeLayout
         app:layout_widthPercent="7%"
         app:layout_heightPercent="24%"
-        app:layout_marginTopPercent="15%"
+        app:layout_marginTopPercent="13%"
         app:layout_marginLeftPercent="0%"
         android:layout_alignParentTop="true"
         android:layout_toRightOf="@+id/sideTabs"
@@ -128,7 +130,7 @@
             android:src="@drawable/heart_icon"
             android:layout_alignParentEnd="true"
             android:layout_alignParentRight="true"
-            android:layout_marginTop="55dp"
+            android:layout_marginTop="65dp"
             />
 
         <ImageView
@@ -137,7 +139,7 @@
             android:src="@drawable/food_icon"
             android:layout_alignParentEnd="true"
             android:layout_alignParentRight="true"
-            android:layout_marginTop="110dp"
+            android:layout_marginTop="130dp"
             />
 
 
@@ -145,8 +147,8 @@
 
     <android.support.percent.PercentRelativeLayout
         app:layout_widthPercent="35%"
-        app:layout_heightPercent="24%"
-        app:layout_marginTopPercent="15%"
+        app:layout_heightPercent="27%"
+        app:layout_marginTopPercent="13%"
         app:layout_marginLeftPercent="8%"
         android:id="@+id/playerStatus"
         android:layout_alignParentTop="true"
@@ -157,7 +159,7 @@
             android:layout_height="wrap_content">
 
             <ImageView
-                android:layout_width="160dp"
+                android:layout_width="match_parent"
                 android:layout_height="30dp"
                 android:layout_marginTop="4dp"
                 android:scaleType="centerInside"
@@ -165,9 +167,9 @@
 
             <ProgressBar
                 android:id="@+id/teamStepProgressBar"
-                android:layout_marginTop="7dp"
-                android:layout_width="250dp"
-                android:layout_height="20dp"
+                android:layout_marginTop="2dp"
+                android:layout_width="200dp"
+                android:layout_height="30dp"
                 android:progressDrawable="@drawable/custom_progress_bar_1"
                 style="?android:attr/progressBarStyleHorizontal"
                 android:max="5000"
@@ -179,7 +181,7 @@
             android:id="@+id/goalTitle"
             android:layout_height="wrap_content"
             android:layout_width="wrap_content"
-            app:layout_marginTopPercent="15%"
+            app:layout_marginTopPercent="13%"
             android:textSize="10sp"
             android:text="Daily Goal"
             android:textColor="@android:color/black"
@@ -190,7 +192,7 @@
             android:id="@+id/teamDailyGoalTextView"
             android:layout_height="wrap_content"
             android:layout_width="wrap_content"
-            app:layout_marginTopPercent="15%"
+            app:layout_marginTopPercent="13%"
             android:layout_alignParentEnd="true"
             android:layout_alignParentRight="true"
             android:textAlignment="textEnd"
@@ -209,7 +211,7 @@
             android:layout_below="@+id/goalTitle">
 
             <ImageView
-                android:layout_width="160dp"
+                android:layout_width="match_parent"
                 android:layout_height="30dp"
                 android:layout_marginTop="14dp"
                 android:scaleType="centerInside"
@@ -217,9 +219,9 @@
 
             <ProgressBar
                 android:id="@+id/teamHealthProgressBar"
-                android:layout_marginTop="17dp"
-                android:layout_width="250dp"
-                android:layout_height="20dp"
+                android:layout_marginTop="12dp"
+                android:layout_width="200dp"
+                android:layout_height="30dp"
                 android:progressDrawable="@drawable/custom_progress_bar_2"
                 style="?android:attr/progressBarStyleHorizontal"
                 android:max="100"
@@ -232,7 +234,7 @@
             android:layout_height="wrap_content"
             android:layout_width="wrap_content"
             android:layout_below="@+id/goalTitle"
-            app:layout_marginTopPercent="22%"
+            app:layout_marginTopPercent="19%"
             android:textSize="10sp"
             android:text="Health"
             android:textColor="@android:color/black"
@@ -245,7 +247,7 @@
             android:layout_width="wrap_content"
             android:layout_toRightOf="@+id/healthTitle"
             android:layout_below="@+id/goalTitle"
-            app:layout_marginTopPercent="22%"
+            app:layout_marginTopPercent="19%"
             app:layout_marginLeftPercent="43%"
             android:layout_alignParentEnd="true"
             android:layout_alignParentRight="true"
@@ -264,7 +266,7 @@
             android:layout_below="@+id/healthTitle">
 
             <ImageView
-                android:layout_width="160dp"
+                android:layout_width="match_parent"
                 android:layout_height="30dp"
                 android:layout_marginTop="14dp"
                 android:scaleType="centerInside"
@@ -272,9 +274,9 @@
 
             <ProgressBar
                 android:id="@+id/teamEnergyProgressBar"
-                android:layout_marginTop="17dp"
-                android:layout_width="250dp"
-                android:layout_height="20dp"
+                android:layout_marginTop="12dp"
+                android:layout_width="200dp"
+                android:layout_height="30dp"
                 android:progressDrawable="@drawable/custom_progress_bar_3"
                 style="?android:attr/progressBarStyleHorizontal"
                 android:max="100"
@@ -289,7 +291,7 @@
             android:layout_height="wrap_content"
             android:layout_width="wrap_content"
             android:layout_below="@+id/healthTitle"
-            app:layout_marginTopPercent="24%"
+            app:layout_marginTopPercent="19%"
             android:textSize="10sp"
             android:text="Energy Level"
             android:textColor="@android:color/black"
@@ -302,7 +304,7 @@
             android:layout_width="wrap_content"
             android:layout_toRightOf="@+id/healthTitle"
             android:layout_below="@+id/healthTitle"
-            app:layout_marginTopPercent="24%"
+            app:layout_marginTopPercent="19%"
             app:layout_marginLeftPercent="45%"
             android:layout_alignParentEnd="true"
             android:layout_alignParentRight="true"
@@ -335,15 +337,6 @@
             android:numColumns="4">
         </GridView>
 
-        <TextView
-            android:id="@+id/loadingTextView"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_centerInParent="true"
-            android:textColor="@android:color/black"
-            android:textSize="35sp"
-            android:text="Loading..."/>
-
     </android.support.percent.PercentRelativeLayout>
 
     <android.support.percent.PercentRelativeLayout
@@ -357,51 +350,17 @@
         android:layout_toEndOf="@+id/sideTabs">
 
         <Button
-            android:id="@+id/merchantButton"
+            android:id="@+id/rightInteractionBUtton"
             app:layout_widthPercent="40%"
             app:layout_heightPercent="50%"
             app:layout_marginLeftPercent="5%"
             app:layout_marginTopPercent="15%"
-            android:layout_centerHorizontal="true"
             android:background="@drawable/blank_notebook_interaction_btn"
-            android:textSize="20sp"
-            android:text="Trade for Goods"
+            android:text="Interact"
             android:textColor="@android:color/white"
             android:textAllCaps="true"
             android:textStyle="bold"/>
 
     </android.support.percent.PercentRelativeLayout>
-
-    <Button
-        android:id="@+id/rightInteractionBUtton"
-        android:layout_height="30dp"
-        android:layout_width="50dp"
-        android:layout_toRightOf="@+id/stepEditText"
-        android:layout_alignParentBottom="true"
-        android:background="@drawable/blank_notebook_interaction_btn"
-        android:text="Set Steps"
-        android:textColor="@android:color/white"
-        android:textAllCaps="true"
-        android:textStyle="bold"
-        android:visibility="invisible"/>
-
-    <EditText
-        android:layout_height="30dp"
-        android:layout_width="50dp"
-        android:layout_centerHorizontal="true"
-        android:id="@+id/stepEditText"
-        android:layout_alignParentBottom="true"
-        android:inputType="number"
-        android:singleLine="true"
-        android:visibility="invisible"/>
-
-    <ToggleButton
-        android:id="@+id/testingToggle"
-        android:layout_width="100dp"
-        android:layout_height="100dp"
-        android:layout_alignParentBottom="true"
-        android:background="@android:color/transparent"
-        android:textOff=" "
-        android:textOn=" "/>
 
 </android.support.percent.PercentRelativeLayout>

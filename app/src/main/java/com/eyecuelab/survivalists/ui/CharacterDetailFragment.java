@@ -1,6 +1,7 @@
 package com.eyecuelab.survivalists.ui;
 
 import android.content.Context;
+import android.content.Intent;
 import android.graphics.Typeface;
 import android.net.Uri;
 import android.os.Bundle;
@@ -8,6 +9,7 @@ import android.support.v4.app.Fragment;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Button;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 
@@ -36,6 +38,8 @@ public class CharacterDetailFragment extends Fragment implements View.OnClickLis
     @Bind(R.id.teamEnergyTextView) TextView teamEnergyTextView;
     @Bind(R.id.playerStatusTitle) TextView playerStatusTitle;
     @Bind(R.id.backpackContentTitle) TextView backpackContentTitle;
+    @Bind(R.id.upperTabButton) Button upperTabButton;
+    @Bind(R.id.tabLargeButton) Button tabLargeButton;
 
 
     private Character mCharacter;
@@ -70,6 +74,7 @@ public class CharacterDetailFragment extends Fragment implements View.OnClickLis
                              Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_character_detail, container, false);
         ButterKnife.bind(this, view);
+        upperTabButton.setOnClickListener(this);
 
         nameTextView.setText("Name: " + mCharacter.getName());
         ageTextView.setText("Age: " + Integer.toString(mCharacter.getAge()));
@@ -83,6 +88,8 @@ public class CharacterDetailFragment extends Fragment implements View.OnClickLis
         nameTextView.setTypeface(bodyTypeface);
         ageTextView.setTypeface(bodyTypeface);
         healthTextView.setTypeface(bodyTypeface);
+        upperTabButton.setTypeface(bodyTypeface);
+        tabLargeButton.setTypeface(bodyTypeface);
 
         setupListeners();
         return view;
@@ -123,7 +130,12 @@ public class CharacterDetailFragment extends Fragment implements View.OnClickLis
     }
 
     @Override
-    public void onClick(View v) {
-
+    public void onClick(View view) {
+        switch (view.getId()) {
+            case R.id.upperTabButton:
+                Intent backIntent = new Intent(getContext(), MainActivity.class);
+                startActivity(backIntent);
+                break;
+        }
     }
 }
