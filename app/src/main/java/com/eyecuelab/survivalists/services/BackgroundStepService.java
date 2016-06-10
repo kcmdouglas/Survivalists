@@ -91,14 +91,17 @@ public class BackgroundStepService extends Service implements SensorEventListene
     //STEP SENSOR LOGIC AND FIREBASE CALLS
     @Override
     public void onSensorChanged(SensorEvent event) {
-        previousDayStepCount = mSharedPreferences.getInt(Constants.PREFERENCES_PREVIOUS_STEPS_KEY, 0);
+        previousDayStepCount = mSharedPreferences.getInt(Constants.PREFERENCES_PREVIOUS_STEPS_KEY, -1);
 
         int stepsInSensor = (int) event.values[0];
 
         if(stepsInSensor < previousDayStepCount) {
             dailySteps =+ stepsInSensor;
+        } else if (previousDayStepCount == -1){
+            dailySteps++;
         } else {
             dailySteps = Math.round(event.values[0] - previousDayStepCount);
+
         }
 
         mEditor.putInt(Constants.PREFERENCES_STEPS_IN_SENSOR_KEY, stepsInSensor);

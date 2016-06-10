@@ -477,7 +477,9 @@ public class NewCampaignActivity extends BaseGameActivity implements View.OnClic
         mEditor.apply();
         int stepsInSensor = mSharedPreferences.getInt(Constants.PREFERENCES_STEPS_IN_SENSOR_KEY, -1);
         if (stepsInSensor > 0) {
-            mEditor.putInt(Constants.PREFERENCES_PREVIOUS_STEPS_KEY, stepsInSensor);
+            mEditor.putInt(Constants.PREFERENCES_PREVIOUS_STEPS_KEY, stepsInSensor).apply();
+        } else {
+            //mEditor.putInt(Constants.PREFERENCES_PREVIOUS_STEPS_KEY, -1);
         }
 
 
