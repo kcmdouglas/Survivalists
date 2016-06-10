@@ -11,8 +11,67 @@
     <ImageView
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:src="@drawable/campaign_main_background"
+        android:src="@drawable/page_2_tabs"
         android:scaleType="centerCrop"/>
+
+    <TextView
+        android:id="@+id/playerStatusTitle"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Player Status"
+        android:textSize="40sp"
+        android:textColor="@android:color/black"
+        app:layout_marginTopPercent="8%"
+        app:layout_marginLeftPercent="20%"
+        android:rotation="-3"
+        />
+
+    <TextView
+        android:id="@+id/backpackContentTitle"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Backpack Content"
+        android:textSize="30sp"
+        android:textColor="@android:color/black"
+        app:layout_marginTopPercent="36%"
+        app:layout_marginLeftPercent="20%"
+        android:rotation="-3"
+        />
+
+    <android.support.percent.PercentRelativeLayout
+        android:id="@+id/photoLayout"
+        app:layout_widthPercent="42%"
+        app:layout_heightPercent="26%"
+        app:layout_marginTopPercent="10%"
+        app:layout_marginLeftPercent="3%"
+        android:layout_alignParentRight="true"
+        android:layout_alignParentEnd="true"
+        android:background="@drawable/photo_frame">
+
+        <TextView
+            android:id="@+id/nameTextView"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentBottom="true"
+            app:layout_marginBottomPercent="13%"
+            app:layout_marginLeftPercent="5%"
+            android:text="Player Name"
+            android:textColor="@android:color/black"
+            android:rotation="2"/>
+
+        <TextView
+            android:id="@+id/ageTextView"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentBottom="true"
+            app:layout_marginLeftPercent="5%"
+            app:layout_marginBottomPercent="6%"
+            android:text="Player Age"
+            android:textColor="@android:color/black"
+            android:rotation="2"/>
+
+
+    </android.support.percent.PercentRelativeLayout>
 
     <android.support.percent.PercentRelativeLayout
         app:layout_widthPercent="15%"
@@ -21,13 +80,16 @@
 
         <Button
             app:layout_widthPercent="100%"
-            app:layout_heightPercent="10%"
-            app:layout_marginTopPercent="12%"
+            app:layout_heightPercent="9%"
+            app:layout_marginTopPercent="13%"
             android:id="@+id/upperTabButton"
             android:layout_alignParentLeft="true"
             android:layout_alignParentStart="true"
             android:background="@android:color/transparent"
-            android:alpha="0" />
+            android:textSize="20sp"
+            android:text="Home"
+            android:rotation="-90"
+            android:textColor="@android:color/black" />
 
         <Button
             app:layout_widthPercent="100%"
@@ -35,36 +97,91 @@
             android:id="@+id/tabLargeButton"
             app:layout_marginTopPercent="3%"
             android:background="@android:color/transparent"
-            android:alpha="0"
+            android:textSize="20sp"
+            android:text="Team"
+            android:rotation="-90"
+            android:textColor="@android:color/black"
             android:layout_below="@+id/upperTabButton"
             android:layout_alignParentLeft="true"
             android:layout_alignParentStart="true" />
 
     </android.support.percent.PercentRelativeLayout>
 
-    <android.support.percent.PercentRelativeLayout
-        app:layout_widthPercent="30%"
+    <RelativeLayout
+        app:layout_widthPercent="7%"
         app:layout_heightPercent="24%"
-        app:layout_marginTopPercent="9%"
-        app:layout_marginLeftPercent="11%"
+        app:layout_marginTopPercent="13%"
+        app:layout_marginLeftPercent="0%"
+        android:layout_alignParentTop="true"
+        android:layout_toRightOf="@+id/sideTabs"
+        >
+
+        <ImageView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:src="@drawable/runner_icon"
+            android:layout_alignParentEnd="true"
+            android:layout_alignParentRight="true"
+            />
+
+        <ImageView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:src="@drawable/heart_icon"
+            android:layout_alignParentEnd="true"
+            android:layout_alignParentRight="true"
+            android:layout_marginTop="65dp"
+            />
+
+        <ImageView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:src="@drawable/food_icon"
+            android:layout_alignParentEnd="true"
+            android:layout_alignParentRight="true"
+            android:layout_marginTop="130dp"
+            />
+
+
+    </RelativeLayout>
+
+    <android.support.percent.PercentRelativeLayout
+        app:layout_widthPercent="35%"
+        app:layout_heightPercent="27%"
+        app:layout_marginTopPercent="13%"
+        app:layout_marginLeftPercent="8%"
         android:id="@+id/playerStatus"
         android:layout_alignParentTop="true"
         android:layout_toRightOf="@+id/sideTabs">
 
-        <ProgressBar
-            android:id="@+id/teamStepProgressBar"
-            android:layout_marginTop="45dp"
-            android:layout_width="match_parent"
-            android:layout_height="10dp"
-            style="?android:attr/progressBarStyleHorizontal"
-            android:max="5000"
-            android:progress="100"/>
+        <RelativeLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content">
+
+            <ImageView
+                android:layout_width="match_parent"
+                android:layout_height="30dp"
+                android:layout_marginTop="4dp"
+                android:scaleType="centerInside"
+                android:src="@drawable/status_field_one"/>
+
+            <ProgressBar
+                android:id="@+id/teamStepProgressBar"
+                android:layout_marginTop="2dp"
+                android:layout_width="200dp"
+                android:layout_height="30dp"
+                android:progressDrawable="@drawable/custom_progress_bar_1"
+                style="?android:attr/progressBarStyleHorizontal"
+                android:max="5000"
+                android:progress="100"/>
+
+        </RelativeLayout>
 
         <TextView
             android:id="@+id/goalTitle"
             android:layout_height="wrap_content"
             android:layout_width="wrap_content"
-            app:layout_marginTopPercent="25%"
+            app:layout_marginTopPercent="13%"
             android:textSize="10sp"
             android:text="Daily Goal"
             android:textColor="@android:color/black"
@@ -75,7 +192,7 @@
             android:id="@+id/teamDailyGoalTextView"
             android:layout_height="wrap_content"
             android:layout_width="wrap_content"
-            app:layout_marginTopPercent="25%"
+            app:layout_marginTopPercent="13%"
             android:layout_alignParentEnd="true"
             android:layout_alignParentRight="true"
             android:textAlignment="textEnd"
@@ -88,22 +205,36 @@
             android:textAllCaps="true"
             android:textStyle="bold" />
 
-        <ProgressBar
-            android:id="@+id/teamHealthProgressBar"
-            android:layout_below="@+id/goalTitle"
-            android:layout_marginTop="43dp"
-            android:layout_width="match_parent"
-            android:layout_height="10dp"
-            style="?android:attr/progressBarStyleHorizontal"
-            android:max="100"
-            android:progress="1"/>
+        <RelativeLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_below="@+id/goalTitle">
+
+            <ImageView
+                android:layout_width="match_parent"
+                android:layout_height="30dp"
+                android:layout_marginTop="14dp"
+                android:scaleType="centerInside"
+                android:src="@drawable/status_field_one"/>
+
+            <ProgressBar
+                android:id="@+id/teamHealthProgressBar"
+                android:layout_marginTop="12dp"
+                android:layout_width="200dp"
+                android:layout_height="30dp"
+                android:progressDrawable="@drawable/custom_progress_bar_2"
+                style="?android:attr/progressBarStyleHorizontal"
+                android:max="100"
+                android:progress="1"/>
+
+        </RelativeLayout>
 
         <TextView
             android:id="@+id/healthTitle"
             android:layout_height="wrap_content"
             android:layout_width="wrap_content"
             android:layout_below="@+id/goalTitle"
-            app:layout_marginTopPercent="26%"
+            app:layout_marginTopPercent="19%"
             android:textSize="10sp"
             android:text="Health"
             android:textColor="@android:color/black"
@@ -116,8 +247,8 @@
             android:layout_width="wrap_content"
             android:layout_toRightOf="@+id/healthTitle"
             android:layout_below="@+id/goalTitle"
-            app:layout_marginTopPercent="26%"
-            app:layout_marginLeftPercent="45%"
+            app:layout_marginTopPercent="19%"
+            app:layout_marginLeftPercent="43%"
             android:layout_alignParentEnd="true"
             android:layout_alignParentRight="true"
             android:textAlignment="textEnd"
@@ -129,22 +260,38 @@
             android:textAllCaps="true"
             android:textStyle="bold" />
 
-        <ProgressBar
-            android:id="@+id/teamEnergyProgressBar"
-            android:layout_below="@+id/healthTitle"
-            android:layout_marginTop="48dp"
-            android:layout_width="match_parent"
-            android:layout_height="10dp"
-            style="?android:attr/progressBarStyleHorizontal"
-            android:max="100"
-            android:progress="1"/>
+        <RelativeLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_below="@+id/healthTitle">
+
+            <ImageView
+                android:layout_width="match_parent"
+                android:layout_height="30dp"
+                android:layout_marginTop="14dp"
+                android:scaleType="centerInside"
+                android:src="@drawable/status_field_one"/>
+
+            <ProgressBar
+                android:id="@+id/teamEnergyProgressBar"
+                android:layout_marginTop="12dp"
+                android:layout_width="200dp"
+                android:layout_height="30dp"
+                android:progressDrawable="@drawable/custom_progress_bar_3"
+                style="?android:attr/progressBarStyleHorizontal"
+                android:max="100"
+                android:progress="1"/>
+
+        </RelativeLayout>
+
+
 
         <TextView
             android:id="@+id/energyTitle"
             android:layout_height="wrap_content"
             android:layout_width="wrap_content"
             android:layout_below="@+id/healthTitle"
-            app:layout_marginTopPercent="28%"
+            app:layout_marginTopPercent="19%"
             android:textSize="10sp"
             android:text="Energy Level"
             android:textColor="@android:color/black"
@@ -157,7 +304,7 @@
             android:layout_width="wrap_content"
             android:layout_toRightOf="@+id/healthTitle"
             android:layout_below="@+id/healthTitle"
-            app:layout_marginTopPercent="28%"
+            app:layout_marginTopPercent="19%"
             app:layout_marginLeftPercent="45%"
             android:layout_alignParentEnd="true"
             android:layout_alignParentRight="true"
@@ -174,9 +321,8 @@
 
     <android.support.percent.PercentRelativeLayout
         android:id="@+id/backpackContent"
-        app:layout_widthPercent="85%"
-        app:layout_heightPercent="45%"
-        app:layout_marginTopPercent="7%"
+        app:layout_widthPercent="82%"
+        app:layout_heightPercent="41%"
         android:layout_below="@+id/playerStatus"
         android:layout_toRightOf="@+id/sideTabs"
         android:layout_toEndOf="@+id/sideTabs">
@@ -185,17 +331,27 @@
             android:id="@+id/backpackGridView"
             app:layout_widthPercent="100%"
             app:layout_heightPercent="100%"
-            app:layout_marginLeftPercent="7%"
+            app:layout_marginLeftPercent="3%"
             android:horizontalSpacing="20dp"
-            android:verticalSpacing="43dp"
+            android:verticalSpacing="10dp"
             android:numColumns="4">
         </GridView>
+
+        <TextView
+            android:id="@+id/loadingTextView"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_centerInParent="true"
+            android:textColor="@android:color/black"
+            android:textSize="30sp"
+            android:text="Loading..."/>
 
     </android.support.percent.PercentRelativeLayout>
 
     <android.support.percent.PercentRelativeLayout
         android:id="@+id/interactionButtons"
         app:layout_heightPercent="13%"
+        app:layout_marginTopPercent="0%"
         android:layout_alignParentRight="true"
         android:layout_alignParentEnd="true"
         android:layout_below="@+id/backpackContent"
@@ -210,6 +366,7 @@
             app:layout_marginTopPercent="15%"
             android:layout_centerHorizontal="true"
             android:background="@drawable/blank_notebook_interaction_btn"
+            android:textSize="20sp"
             android:text="Trade for Goods"
             android:textColor="@android:color/white"
             android:textAllCaps="true"

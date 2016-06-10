@@ -75,6 +75,9 @@ public class MainActivity extends FragmentActivity
     @Bind(R.id.merchantButton) Button merchantButton;
     @Bind(R.id.playerStatusTitle) TextView playerStatusTitle;
     @Bind(R.id.backpackContentTitle) TextView backpackContentTitle;
+    @Bind(R.id.nameTextView) TextView nameTextView;
+    @Bind(R.id.ageTextView) TextView ageTextView;
+    @Bind(R.id.loadingTextView) TextView loadingTextView;
 
     //TODO: Remove after testing
     @Bind(R.id.rightInteractionBUtton) Button rightInteractionButton;
@@ -782,6 +785,7 @@ public class MainActivity extends FragmentActivity
                         currentItem.setImageId((int) imageId);
                         userItems.add(currentItem);
                         userInventory.add(currentItem);
+                        loadingTextView.setVisibility(View.INVISIBLE);
                     }
                 }
 
@@ -846,6 +850,11 @@ public class MainActivity extends FragmentActivity
                     healthTextView.setText(mCurrentCharacter.getHealth() + "HP");
                     energyProgressBar.setProgress(mCurrentCharacter.getFullnessLevel());
                     energyTextView.setText(mCurrentCharacter.getFullnessLevel() + "%");
+                    ageTextView.setText(mCurrentCharacter.getAge().toString());
+                    nameTextView.setText(mCurrentCharacter.getName());
+
+                    Log.e(TAG, mCurrentCharacter.getName());
+                    Log.e(TAG, mCurrentCharacter.getAge().toString());
 
                     Gson gson = new Gson();
                     String currentCharacter = gson.toJson(mCurrentCharacter);
@@ -964,6 +973,9 @@ public class MainActivity extends FragmentActivity
         mapButton.setTypeface(buttonText);
         campaignButton.setTypeface(buttonText);
         merchantButton.setTypeface(buttonText);
+        nameTextView.setTypeface(buttonText);
+        ageTextView.setTypeface(buttonText);
+        loadingTextView.setTypeface(buttonText);
     }
 
     public void createCampaign(int campaignLength) {

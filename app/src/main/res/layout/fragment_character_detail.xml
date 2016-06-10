@@ -131,9 +131,9 @@ android:focusable="false">
 
         <ProgressBar
             android:id="@+id/teamStepProgressBar"
-            android:layout_marginTop="15dp"
+            android:layout_marginTop="7dp"
             android:layout_width="250dp"
-            android:layout_height="10dp"
+            android:layout_height="20dp"
             android:progressDrawable="@drawable/custom_progress_bar_1"
             style="?android:attr/progressBarStyleHorizontal"
             android:max="5000"
@@ -183,9 +183,9 @@ android:focusable="false">
 
         <ProgressBar
             android:id="@+id/teamHealthProgressBar"
-            android:layout_marginTop="25dp"
+            android:layout_marginTop="17dp"
             android:layout_width="250dp"
-            android:layout_height="10dp"
+            android:layout_height="20dp"
             android:progressDrawable="@drawable/custom_progress_bar_2"
             style="?android:attr/progressBarStyleHorizontal"
             android:max="100"
@@ -238,9 +238,9 @@ android:focusable="false">
 
         <ProgressBar
             android:id="@+id/teamEnergyProgressBar"
-            android:layout_marginTop="23dp"
+            android:layout_marginTop="17dp"
             android:layout_width="250dp"
-            android:layout_height="10dp"
+            android:layout_height="20dp"
             android:progressDrawable="@drawable/custom_progress_bar_3"
             style="?android:attr/progressBarStyleHorizontal"
             android:max="100"
@@ -302,7 +302,7 @@ android:focusable="false">
         app:layout_marginLeftPercent="5%"
         android:text="Player Name"
         android:textColor="@android:color/black"
-        android:rotation="3"/>
+        android:rotation="2"/>
 
     <TextView
         android:id="@+id/ageTextView"
@@ -313,7 +313,7 @@ android:focusable="false">
         app:layout_marginBottomPercent="6%"
         android:text="Player Age"
         android:textColor="@android:color/black"
-        android:rotation="3"/>
+        android:rotation="2"/>
 
 
 </android.support.percent.PercentRelativeLayout>

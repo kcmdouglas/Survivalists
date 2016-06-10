@@ -53,7 +53,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_alignParentBottom="true"
-            app:layout_marginBottomPercent="16%"
+            app:layout_marginBottomPercent="13%"
             app:layout_marginLeftPercent="5%"
             android:text="Player Name"
             android:textColor="@android:color/black"/>
@@ -105,6 +105,44 @@
 
     </android.support.percent.PercentRelativeLayout>
 
+    <RelativeLayout
+        app:layout_widthPercent="7%"
+        app:layout_heightPercent="24%"
+        app:layout_marginTopPercent="15%"
+        app:layout_marginLeftPercent="0%"
+        android:layout_alignParentTop="true"
+        android:layout_toRightOf="@+id/sideTabs"
+        >
+
+        <ImageView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:src="@drawable/runner_icon"
+            android:layout_alignParentEnd="true"
+            android:layout_alignParentRight="true"
+            />
+
+        <ImageView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:src="@drawable/heart_icon"
+            android:layout_alignParentEnd="true"
+            android:layout_alignParentRight="true"
+            android:layout_marginTop="55dp"
+            />
+
+        <ImageView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:src="@drawable/food_icon"
+            android:layout_alignParentEnd="true"
+            android:layout_alignParentRight="true"
+            android:layout_marginTop="110dp"
+            />
+
+
+    </RelativeLayout>
+
     <android.support.percent.PercentRelativeLayout
         app:layout_widthPercent="35%"
         app:layout_heightPercent="24%"
@@ -127,9 +165,9 @@
 
             <ProgressBar
                 android:id="@+id/teamStepProgressBar"
-                android:layout_marginTop="15dp"
+                android:layout_marginTop="7dp"
                 android:layout_width="250dp"
-                android:layout_height="10dp"
+                android:layout_height="20dp"
                 android:progressDrawable="@drawable/custom_progress_bar_1"
                 style="?android:attr/progressBarStyleHorizontal"
                 android:max="5000"
@@ -179,9 +217,9 @@
 
             <ProgressBar
                 android:id="@+id/teamHealthProgressBar"
-                android:layout_marginTop="25dp"
+                android:layout_marginTop="17dp"
                 android:layout_width="250dp"
-                android:layout_height="10dp"
+                android:layout_height="20dp"
                 android:progressDrawable="@drawable/custom_progress_bar_2"
                 style="?android:attr/progressBarStyleHorizontal"
                 android:max="100"
@@ -234,9 +272,9 @@
 
             <ProgressBar
                 android:id="@+id/teamEnergyProgressBar"
-                android:layout_marginTop="23dp"
+                android:layout_marginTop="17dp"
                 android:layout_width="250dp"
-                android:layout_height="10dp"
+                android:layout_height="20dp"
                 android:progressDrawable="@drawable/custom_progress_bar_3"
                 style="?android:attr/progressBarStyleHorizontal"
                 android:max="100"
@@ -296,6 +334,15 @@
             android:verticalSpacing="10dp"
             android:numColumns="4">
         </GridView>
+
+        <TextView
+            android:id="@+id/loadingTextView"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_centerInParent="true"
+            android:textColor="@android:color/black"
+            android:textSize="25sp"
+            android:text="Loading..."/>
 
     </android.support.percent.PercentRelativeLayout>
 
