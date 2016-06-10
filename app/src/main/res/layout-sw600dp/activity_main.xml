@@ -23,7 +23,7 @@
             app:layout_widthPercent="100%"
             app:layout_heightPercent="10%"
             app:layout_marginTopPercent="12%"
-            android:id="@+id/mapTabButton"
+            android:id="@+id/upperTabButton"
             android:layout_alignParentLeft="true"
             android:layout_alignParentStart="true"
             android:background="@android:color/transparent"
@@ -32,11 +32,11 @@
         <Button
             app:layout_widthPercent="100%"
             app:layout_heightPercent="22%"
-            android:id="@+id/tabCampaignButton"
+            android:id="@+id/tabLargeButton"
             app:layout_marginTopPercent="3%"
             android:background="@android:color/transparent"
             android:alpha="0"
-            android:layout_below="@+id/mapTabButton"
+            android:layout_below="@+id/upperTabButton"
             android:layout_alignParentLeft="true"
             android:layout_alignParentStart="true" />
 

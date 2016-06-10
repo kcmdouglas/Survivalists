@@ -2,7 +2,6 @@ package com.eyecuelab.survivalists.ui;
 
 import android.app.ActivityManager;
 import android.app.AlarmManager;
-import android.app.ProgressDialog;
 import android.graphics.Typeface;
 import android.os.Build;
 import android.support.v4.app.DialogFragment;
@@ -43,7 +42,6 @@ import com.eyecuelab.survivalists.models.Weapon;
 import com.eyecuelab.survivalists.services.BackgroundStepService;
 import com.eyecuelab.survivalists.util.CampaignEndAlarmReceiver;
 import com.eyecuelab.survivalists.util.StepResetAlarmReceiver;
-import com.firebase.client.ChildEventListener;
 import com.firebase.client.DataSnapshot;
 import com.firebase.client.Firebase;
 import com.firebase.client.FirebaseError;
@@ -66,8 +64,8 @@ public class MainActivity extends FragmentActivity
 
     private static final String TAG = "MainActivity";
 
-    @Bind(R.id.tabCampaignButton) Button campaignButton;
-    @Bind(R.id.mapTabButton) Button mapButton;
+    @Bind(R.id.tabLargeButton) Button campaignButton;
+    @Bind(R.id.upperTabButton) Button mapButton;
     @Bind(R.id.stepProgressBar) ProgressBar stepProgressBar;
     @Bind(R.id.healthProgressBar) ProgressBar healthProgressBar;
     @Bind(R.id.energyProgressBar) ProgressBar energyProgressBar;
@@ -145,16 +143,20 @@ public class MainActivity extends FragmentActivity
 
         mContext = this;
         ButterKnife.bind(this);
-        setCustomFonts();
 
-        allWeapons = new ArrayList<>();
-        allItems = new ArrayList<>();
-        mPlayerIDs = new ArrayList<>();
-
+        testingToggle.setOnCheckedChangeListener(this);
+        campaignButton.setOnClickListener(this);
+        mapButton.setOnClickListener(this);
+        rightInteractionButton.setOnClickListener(this);
+        merchantButton.setOnClickListener(this);
 
         //Create Shared Preferences
         mSharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
         mEditor = mSharedPreferences.edit();
+
+        allWeapons = new ArrayList<>();
+        allItems = new ArrayList<>();
+        mPlayerIDs = new ArrayList<>();
 
         boolean initiateMatch = mSharedPreferences.getBoolean(Constants.PREFERENCES_INITIALIZE_GAME_BOOLEAN, false);
 
@@ -202,14 +204,6 @@ public class MainActivity extends FragmentActivity
 
         }
 
-
-
-
-        campaignButton.setOnClickListener(this);
-        mapButton.setOnClickListener(this);
-        rightInteractionButton.setOnClickListener(this);
-        merchantButton.setOnClickListener(this);
-
         mCurrentMatchId = mSharedPreferences.getString(Constants.PREFERENCES_MATCH_ID, null);
         mCurrentPlayerId = mSharedPreferences.getString(Constants.PREFERENCES_GOOGLE_PLAYER_ID, null);
         mUserFirebaseRef = new Firebase (Constants.FIREBASE_URL_USERS + "/" + mCurrentPlayerId);
@@ -232,7 +226,7 @@ public class MainActivity extends FragmentActivity
         //Set recurring alarm
         isRecurringAlarmSet = mSharedPreferences.getBoolean("recurringAlarmBoolean", false);
         if(!isRecurringAlarmSet) {
-            mEditor.putBoolean("recurringAlarmBoolean", true).commit();
+            mEditor.putBoolean("recurringAlarmBoolean", true).apply();
             isRecurringAlarmSet = mSharedPreferences.getBoolean("recurringAlarmBoolean", true);
             initiateDailyCountResetService();
         }
@@ -256,13 +250,13 @@ public class MainActivity extends FragmentActivity
         if(mCurrentMatchId != null) {
             instantiatePlayerIDs();
         }
-        setupBackpackContent();
+
+        setUpBackpackContent();
         instantiateAllItems();
         loadCharacter();
         checkDailyGoal();
         startUserListener();
-
-        testingToggle.setOnCheckedChangeListener(this);
+        setCustomFonts();
     }
 
     private void startUserListener() {
@@ -365,7 +359,7 @@ public class MainActivity extends FragmentActivity
     @Override
     public void onClick(View view) {
         switch (view.getId()) {
-            case R.id.tabCampaignButton:
+            case R.id.tabLargeButton:
                 if (mCharacters != null) {
                     Intent intent = new Intent(mContext, CharacterDetailActivity.class);
                     intent.putExtra("position", 0);
@@ -375,7 +369,7 @@ public class MainActivity extends FragmentActivity
                     Toast.makeText(this, "Players have not yet joined.", Toast.LENGTH_SHORT).show();
                 }
                 break;
-            case R.id.mapTabButton:
+            case R.id.upperTabButton:
                 Intent homeIntent = new Intent(MainActivity.this, TitleActivity.class);
                 startActivity(homeIntent);
                 break;
@@ -768,7 +762,7 @@ public class MainActivity extends FragmentActivity
         mEditor.commit();
     }
 
-    public void setupBackpackContent () {
+    public void setUpBackpackContent() {
         userWeapons = new ArrayList<>();
         userItems = new ArrayList<>();
         userInventory = new ArrayList<>();
@@ -815,6 +809,7 @@ public class MainActivity extends FragmentActivity
             setupGridView();
         }
     }
+
 
     public void setupGridView() {
         GridView inventoryGridView = (GridView) findViewById(R.id.backpackGridView);
