@@ -11,8 +11,32 @@ android:focusable="false">
 <ImageView
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:src="@drawable/campaign_main_background"
+    android:src="@drawable/page_2_tabs"
     android:scaleType="centerCrop"/>
+
+<TextView
+    android:id="@+id/playerStatusTitle"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:text="Player Status"
+    app:layout_marginTopPercent="11%"
+    app:layout_marginLeftPercent="20%"
+    android:textColor="@android:color/black"
+    android:rotation="-3"
+    android:textSize="25sp"
+    />
+
+<TextView
+    android:id="@+id/backpackContentTitle"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:text="Backpack Content"
+    app:layout_marginTopPercent="37%"
+    app:layout_marginLeftPercent="20%"
+    android:textColor="@android:color/black"
+    android:rotation="-3"
+    android:textSize="25sp"
+    />
 
 <android.support.percent.PercentRelativeLayout
     app:layout_widthPercent="15%"
@@ -22,25 +46,70 @@ android:focusable="false">
     <Button
         app:layout_widthPercent="100%"
         app:layout_heightPercent="9%"
-        app:layout_marginTopPercent="14%"
-        android:id="@+id/mapTabButton"
+        app:layout_marginTopPercent="17%"
+        android:id="@+id/upperTabButton"
         android:layout_alignParentLeft="true"
         android:layout_alignParentStart="true"
         android:background="@android:color/transparent"
-        android:alpha="0" />
+        android:text="Back"
+        android:textSize="20sp"
+        android:textColor="@android:color/black"
+        android:rotation="-90"
+        />
 
     <Button
         app:layout_widthPercent="100%"
-        app:layout_heightPercent="21%"
-        android:id="@+id/tabCampaignButton"
+        app:layout_heightPercent="18%"
+        android:id="@+id/tabLargeButton"
         app:layout_marginTopPercent="3.5%"
         android:background="@android:color/transparent"
-        android:alpha="0"
-        android:layout_below="@+id/mapTabButton"
+        android:layout_below="@+id/upperTabButton"
+        android:text="Team"
+        android:textSize="20sp"
+        android:rotation="-90"
+        android:textColor="@android:color/white"
         android:layout_alignParentLeft="true"
         android:layout_alignParentStart="true" />
 
 </android.support.percent.PercentRelativeLayout>
+
+    <RelativeLayout
+        app:layout_widthPercent="11%"
+        app:layout_heightPercent="24%"
+        app:layout_marginTopPercent="15%"
+        app:layout_marginLeftPercent="0%"
+        android:layout_alignParentTop="true"
+        android:layout_toRightOf="@+id/sideTabs"
+        >
+
+        <ImageView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:src="@drawable/runner_icon"
+            android:layout_alignParentEnd="true"
+            android:layout_alignParentRight="true"
+            />
+
+        <ImageView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:src="@drawable/heart_icon"
+            android:layout_alignParentEnd="true"
+            android:layout_alignParentRight="true"
+            android:layout_marginTop="55dp"
+            />
+
+        <ImageView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:src="@drawable/food_icon"
+            android:layout_alignParentEnd="true"
+            android:layout_alignParentRight="true"
+            android:layout_marginTop="110dp"
+            />
+
+
+    </RelativeLayout>
 
 <android.support.percent.PercentRelativeLayout
     app:layout_widthPercent="30%"
@@ -51,14 +120,28 @@ android:focusable="false">
     android:layout_alignParentTop="true"
     android:layout_toRightOf="@+id/sideTabs">
 
-    <ProgressBar
-        android:id="@+id/teamStepProgressBar"
-        android:layout_marginTop="15dp"
-        android:layout_width="150dp"
-        android:layout_height="10dp"
-        style="?android:attr/progressBarStyleHorizontal"
-        android:max="5000"
-        android:progress="100"/>
+    <RelativeLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content">
+
+        <ImageView
+            android:layout_width="160dp"
+            android:layout_height="30dp"
+            android:layout_marginTop="4dp"
+            android:scaleType="centerInside"
+            android:src="@drawable/status_field_one"/>
+
+        <ProgressBar
+            android:id="@+id/teamStepProgressBar"
+            android:layout_marginTop="7dp"
+            android:layout_width="250dp"
+            android:layout_height="20dp"
+            android:progressDrawable="@drawable/custom_progress_bar_1"
+            style="?android:attr/progressBarStyleHorizontal"
+            android:max="5000"
+            android:progress="100"/>
+
+    </RelativeLayout>
 
     <TextView
         android:id="@+id/goalTitle"
@@ -88,15 +171,29 @@ android:focusable="false">
         android:textAllCaps="true"
         android:textStyle="bold" />
 
-    <ProgressBar
-        android:id="@+id/teamHealthProgressBar"
-        android:layout_below="@+id/goalTitle"
-        android:layout_marginTop="25dp"
-        android:layout_width="150dp"
-        android:layout_height="10dp"
-        style="?android:attr/progressBarStyleHorizontal"
-        android:max="100"
-        android:progress="1"/>
+    <RelativeLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/goalTitle">
+
+        <ImageView
+            android:layout_width="160dp"
+            android:layout_height="30dp"
+            android:layout_marginTop="14dp"
+            android:scaleType="centerInside"
+            android:src="@drawable/status_field_one"/>
+
+        <ProgressBar
+            android:id="@+id/teamHealthProgressBar"
+            android:layout_marginTop="17dp"
+            android:layout_width="250dp"
+            android:layout_height="20dp"
+            android:progressDrawable="@drawable/custom_progress_bar_2"
+            style="?android:attr/progressBarStyleHorizontal"
+            android:max="100"
+            android:progress="1"/>
+
+    </RelativeLayout>
 
     <TextView
         android:id="@+id/healthTitle"
@@ -129,18 +226,34 @@ android:focusable="false">
         android:textAllCaps="true"
         android:textStyle="bold" />
 
-    <ProgressBar
-        android:id="@+id/teamEnergyProgressBar"
-        android:layout_below="@+id/healthTitle"
-        android:layout_marginTop="28dp"
-        android:layout_width="150dp"
-        android:layout_height="10dp"
-        style="?android:attr/progressBarStyleHorizontal"
-        android:max="100"
-        android:progress="1"/>
+    <RelativeLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/healthTitle">
+
+        <ImageView
+            android:layout_width="160dp"
+            android:layout_height="30dp"
+            android:layout_marginTop="14dp"
+            android:scaleType="centerInside"
+            android:src="@drawable/status_field_one"/>
+
+        <ProgressBar
+            android:id="@+id/teamEnergyProgressBar"
+            android:layout_marginTop="17dp"
+            android:layout_width="250dp"
+            android:layout_height="20dp"
+            android:progressDrawable="@drawable/custom_progress_bar_3"
+            style="?android:attr/progressBarStyleHorizontal"
+            android:max="100"
+            android:progress="1"/>
+
+    </RelativeLayout>
+
+
 
     <TextView
-        android:id="@+id/teamEnergyTitle"
+        android:id="@+id/energyTitle"
         android:layout_height="wrap_content"
         android:layout_width="wrap_content"
         android:layout_below="@+id/healthTitle"
@@ -179,17 +292,19 @@ android:focusable="false">
     app:layout_marginTopPercent="10%"
     app:layout_marginLeftPercent="3%"
     android:layout_alignParentRight="true"
-    android:layout_alignParentEnd="true">
+    android:layout_alignParentEnd="true"
+    android:background="@drawable/photo_frame">
 
     <TextView
         android:id="@+id/nameTextView"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_alignParentBottom="true"
-        app:layout_marginBottomPercent="16%"
+        app:layout_marginBottomPercent="14%"
         app:layout_marginLeftPercent="5%"
         android:text="Player Name"
-        android:textColor="@android:color/black"/>
+        android:textColor="@android:color/black"
+        android:rotation="2"/>
 
     <TextView
         android:id="@+id/ageTextView"
@@ -199,7 +314,8 @@ android:focusable="false">
         app:layout_marginLeftPercent="5%"
         app:layout_marginBottomPercent="6%"
         android:text="Player Age"
-        android:textColor="@android:color/black"/>
+        android:textColor="@android:color/black"
+        android:rotation="2"/>
 
 
 </android.support.percent.PercentRelativeLayout>

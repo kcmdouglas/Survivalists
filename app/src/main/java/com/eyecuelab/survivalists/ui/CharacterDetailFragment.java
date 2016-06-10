@@ -1,12 +1,15 @@
 package com.eyecuelab.survivalists.ui;
 
 import android.content.Context;
+import android.content.Intent;
+import android.graphics.Typeface;
 import android.net.Uri;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Button;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 
@@ -24,7 +27,7 @@ import org.parceler.Parcels;
 import butterknife.Bind;
 import butterknife.ButterKnife;
 
-public class CharacterDetailFragment extends Fragment {
+public class CharacterDetailFragment extends Fragment implements View.OnClickListener {
     @Bind(R.id.nameTextView) TextView nameTextView;
     @Bind(R.id.ageTextView) TextView ageTextView;
     @Bind(R.id.healthTextView) TextView healthTextView;
@@ -33,6 +36,10 @@ public class CharacterDetailFragment extends Fragment {
     @Bind(R.id.teamStepProgressBar) ProgressBar teamStepProgressBar;
     @Bind(R.id.teamEnergyProgressBar) ProgressBar teamEnergyProgressBar;
     @Bind(R.id.teamEnergyTextView) TextView teamEnergyTextView;
+    @Bind(R.id.playerStatusTitle) TextView playerStatusTitle;
+    @Bind(R.id.backpackContentTitle) TextView backpackContentTitle;
+    @Bind(R.id.upperTabButton) Button upperTabButton;
+    @Bind(R.id.tabLargeButton) Button tabLargeButton;
 
 
     private Character mCharacter;
@@ -67,10 +74,22 @@ public class CharacterDetailFragment extends Fragment {
                              Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_character_detail, container, false);
         ButterKnife.bind(this, view);
+        upperTabButton.setOnClickListener(this);
 
         nameTextView.setText("Name: " + mCharacter.getName());
         ageTextView.setText("Age: " + Integer.toString(mCharacter.getAge()));
-        healthTextView.setText("Health: " + Integer.toString(mCharacter.getHealth()));
+        healthTextView.setText(mCharacter.getHealth() + "HP");
+
+        Typeface titleTypeface = Typeface.createFromAsset(getContext().getAssets(), "WindowMarkers.ttf");
+        Typeface bodyTypeface = Typeface.createFromAsset(getContext().getAssets(), "BebasNeue.ttf");
+
+        playerStatusTitle.setTypeface(titleTypeface);
+        backpackContentTitle.setTypeface(titleTypeface);
+        nameTextView.setTypeface(bodyTypeface);
+        ageTextView.setTypeface(bodyTypeface);
+        healthTextView.setTypeface(bodyTypeface);
+        upperTabButton.setTypeface(bodyTypeface);
+        tabLargeButton.setTypeface(bodyTypeface);
 
         setupListeners();
         return view;
@@ -108,5 +127,15 @@ public class CharacterDetailFragment extends Fragment {
         healthTextView.setText(mCharacter.getHealth() + "HP");
         teamEnergyProgressBar.setProgress(mCharacter.getFullnessLevel());
         teamEnergyTextView.setText(mCharacter.getFullnessLevel() + "%");
+    }
+
+    @Override
+    public void onClick(View view) {
+        switch (view.getId()) {
+            case R.id.upperTabButton:
+                Intent backIntent = new Intent(getContext(), MainActivity.class);
+                startActivity(backIntent);
+                break;
+        }
     }
 }

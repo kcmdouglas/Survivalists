@@ -33,7 +33,7 @@
             android:textColor="@android:color/white"
             android:textAllCaps="true"
             android:textStyle="bold"
-            android:textSize="40sp"
+            android:textSize="35sp"
             android:fontFamily="sans-serif-condensed"/>
 
         <Button
@@ -48,7 +48,7 @@
             android:textColor="@android:color/white"
             android:textAllCaps="true"
             android:textStyle="bold"
-            android:textSize="40sp"
+            android:textSize="35sp"
             android:fontFamily="sans-serif-condensed"/>
 
         <Button
@@ -63,7 +63,7 @@
             android:textColor="@android:color/white"
             android:textAllCaps="true"
             android:textStyle="bold"
-            android:textSize="40sp"
+            android:textSize="35sp"
             android:fontFamily="sans-serif-condensed"/>
 
     </RelativeLayout>
