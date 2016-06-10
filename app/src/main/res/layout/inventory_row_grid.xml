@@ -23,8 +23,6 @@
             android:layout_height="48dp"/>
     </RelativeLayout>
 
-
-
     <TextView
         android:id="@+id/item_text"
         android:maxLines="2"
@@ -32,7 +30,7 @@
         android:textAllCaps="true"
         android:textStyle="bold"
         android:layout_gravity="center_horizontal"
-        android:layout_below="@id/item_image"
+        android:textAlignment="center"
         android:textColor="@android:color/black"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"/>

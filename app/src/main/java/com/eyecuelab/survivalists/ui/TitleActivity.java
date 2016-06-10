@@ -1,5 +1,6 @@
 package com.eyecuelab.survivalists.ui;
 
+import android.app.ProgressDialog;
 import android.content.Intent;
 import android.content.IntentSender;
 import android.content.SharedPreferences;
@@ -89,7 +90,6 @@ public class TitleActivity extends BaseGameActivity implements GoogleApiClient.C
         startCampaignButton.setOnClickListener(this);
         loginButton.setOnClickListener(this);
         joinCampaignButton.setOnClickListener(this);
-//        merchantTest.setOnClickListener(this);
     }
 
     @Override
