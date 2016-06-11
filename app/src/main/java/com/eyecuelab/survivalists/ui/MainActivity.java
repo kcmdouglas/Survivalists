@@ -167,46 +167,53 @@ public class MainActivity extends FragmentActivity
         mCurrentMatchId = mSharedPreferences.getString(Constants.PREFERENCES_MATCH_ID, null);
         mCurrentPlayerId = mSharedPreferences.getString(Constants.PREFERENCES_GOOGLE_PLAYER_ID, null);
 
-        if (!initiateMatch) {
-            mEditor.putBoolean(Constants.PREFERENCES_INITIALIZE_GAME_BOOLEAN, true);
-            mEditor.putInt(Constants.PREFERENCES_EVENT_1_STEPS, 100);
-            mEditor.putInt(Constants.PREFERENCES_EVENT_2_STEPS, 200);
-            mEditor.putInt(Constants.PREFERENCES_EVENT_3_STEPS, 300);
-            mEditor.putInt(Constants.PREFERENCES_EVENT_4_STEPS, 400);
-            mEditor.putInt(Constants.PREFERENCES_EVENT_5_STEPS, 500);
-            mEditor.putInt(Constants.PREFERENCES_DAILY_STEPS, 0);
-            mEditor.putBoolean(Constants.PREFERENCES_REACHED_SAFEHOUSE_BOOLEAN, false);
-            mEditor.putInt(Constants.PREFERENCES_DAILY_STEPS, 0);
-            mEditor.putBoolean(Constants.PREFERENCES_INITIALIZE_GAME_BOOLEAN, true);
-            mEditor.apply();
-            int stepsInSensor = mSharedPreferences.getInt(Constants.PREFERENCES_STEPS_IN_SENSOR_KEY, -1);
-            if (stepsInSensor > 0) {
-                mEditor.putInt(Constants.PREFERENCES_PREVIOUS_STEPS_KEY, stepsInSensor);
+        if(mCurrentMatchId != null) {
+            if (!initiateMatch) {
+                mEditor.putBoolean(Constants.PREFERENCES_INITIALIZE_GAME_BOOLEAN, true);
+                mEditor.putInt(Constants.PREFERENCES_EVENT_1_STEPS, 100);
+                mEditor.putInt(Constants.PREFERENCES_EVENT_2_STEPS, 200);
+                mEditor.putInt(Constants.PREFERENCES_EVENT_3_STEPS, 300);
+                mEditor.putInt(Constants.PREFERENCES_EVENT_4_STEPS, 400);
+                mEditor.putInt(Constants.PREFERENCES_EVENT_5_STEPS, 500);
+                mEditor.putInt(Constants.PREFERENCES_DAILY_STEPS, 0);
+                mEditor.putBoolean(Constants.PREFERENCES_REACHED_SAFEHOUSE_BOOLEAN, false);
+                mEditor.putInt(Constants.PREFERENCES_DAILY_STEPS, 0);
+                mEditor.putBoolean(Constants.PREFERENCES_INITIALIZE_GAME_BOOLEAN, true);
+                mEditor.apply();
+                int stepsInSensor = mSharedPreferences.getInt(Constants.PREFERENCES_STEPS_IN_SENSOR_KEY, -1);
+                if (stepsInSensor > 0) {
+                    mEditor.putInt(Constants.PREFERENCES_PREVIOUS_STEPS_KEY, stepsInSensor);
+                }
+
+                Firebase teamFirebase = new Firebase(Constants.FIREBASE_URL_TEAM + "/" + mCurrentMatchId);
+
+                teamFirebase.addListenerForSingleValueEvent(new ValueEventListener() {
+                    @Override
+                    public void onDataChange(DataSnapshot dataSnapshot) {
+                        long campaignLength = (long) dataSnapshot.child("matchDuration").getValue();
+                        long difficulty = (long) dataSnapshot.child("difficultyLevel").getValue();
+                        mCampaignLength = (int) campaignLength;
+                        mDifficultyLevel = (int) difficulty;
+                        createCampaign(mCampaignLength);
+                        mEditor.putInt(Constants.PREFERENCES_DURATION_SETTING, mCampaignLength);
+                        mEditor.putInt(Constants.PREFERENCES_DEFAULT_DAILY_GOAL_SETTING, mDifficultyLevel);
+                        mEditor.apply();
+                    }
+
+                    @Override
+                    public void onCancelled(FirebaseError firebaseError) {
+
+                    }
+                });
+                dailySteps = mSharedPreferences.getInt(Constants.PREFERENCES_DAILY_STEPS, 0);
+
             }
-
-            Firebase teamFirebase = new Firebase(Constants.FIREBASE_URL_TEAM + "/" + mCurrentMatchId);
-
-            teamFirebase.addListenerForSingleValueEvent(new ValueEventListener() {
-                @Override
-                public void onDataChange(DataSnapshot dataSnapshot) {
-                    long campaignLength = (long) dataSnapshot.child("matchDuration").getValue();
-                    long difficulty = (long) dataSnapshot.child("difficultyLevel").getValue();
-                    mCampaignLength = (int) campaignLength;
-                    mDifficultyLevel = (int) difficulty;
-                    createCampaign(mCampaignLength);
-                    mEditor.putInt(Constants.PREFERENCES_DURATION_SETTING, mCampaignLength);
-                    mEditor.putInt(Constants.PREFERENCES_DEFAULT_DAILY_GOAL_SETTING, mDifficultyLevel);
-                    mEditor.commit();
-                }
-
-                @Override
-                public void onCancelled(FirebaseError firebaseError) {
-
-                }
-            });
-            dailySteps = mSharedPreferences.getInt(Constants.PREFERENCES_DAILY_STEPS, 0);
-
+        } else {
+            FragmentTransaction ft = getSupportFragmentManager().beginTransaction();
+            DialogFragment frag = JoinGameErrorDialog.newInstance();
+            frag.show(ft, "fragment_join_game_error");
         }
+
 
         mCurrentMatchId = mSharedPreferences.getString(Constants.PREFERENCES_MATCH_ID, null);
         mCurrentPlayerId = mSharedPreferences.getString(Constants.PREFERENCES_GOOGLE_PLAYER_ID, null);
