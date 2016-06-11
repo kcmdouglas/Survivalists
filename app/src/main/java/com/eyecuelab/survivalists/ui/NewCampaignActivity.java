@@ -138,6 +138,8 @@ public class NewCampaignActivity extends BaseGameActivity implements View.OnClic
     @Bind(R.id.lengthTitle) TextView lengthTitle;
     @Bind(R.id.partSizeTitle) TextView partSizeTitle;
     @Bind(R.id.confirmedSettingsTitle) TextView confirmedSettingsTitle;
+    @Bind(R.id.loadingTextView) TextView loadingTextView;
+    @Bind(R.id.tryAgainButton) Button tryAgainButton;
 
 
     @Override
@@ -166,6 +168,7 @@ public class NewCampaignActivity extends BaseGameActivity implements View.OnClic
         searchButton.setOnClickListener(this);
         topTabButton.setOnClickListener(this);
         lowerTabButton.setOnClickListener(this);
+        tryAgainButton.setOnClickListener(this);
 
         difficultyDescriptions.add("Walk in the park");
         difficultyDescriptions.add("Walk the line");
@@ -236,6 +239,9 @@ public class NewCampaignActivity extends BaseGameActivity implements View.OnClic
                 Intent homeIntent = new Intent(NewCampaignActivity.this, TitleActivity.class);
                 startActivity(homeIntent);
                 break;
+            case R.id.tryAgainButton:
+                setupJoinMatchesUi();
+                break;
         }
     }
 
@@ -264,6 +270,8 @@ public class NewCampaignActivity extends BaseGameActivity implements View.OnClic
         generalInfoLayout.setVisibility(View.GONE);
         playerInvitationLayout.setVisibility(View.VISIBLE);
         searchButton.setVisibility(View.VISIBLE);
+        loadingTextView.setVisibility(View.GONE);
+        tryAgainButton.setVisibility(View.GONE);
 
         int remainingInvites = mPartySize - invitedPlayers.size();
         confirmationButton.setVisibility(View.INVISIBLE);
@@ -427,6 +435,7 @@ public class NewCampaignActivity extends BaseGameActivity implements View.OnClic
         playerInvitationLayout.setVisibility(View.VISIBLE);
         confirmationButton.setVisibility(View.GONE);
         pendingTeamTitle.setText("Game Invitations");
+        loadingTextView.setText("Loading invitations...");
 
         //TODO: Need to pull these parameters from firebase or shared preferences
 //        difficultyConfirmedTextView.setText("Difficulty: " + difficultyDescriptions.get(mDifficultyLevel));
@@ -444,7 +453,14 @@ public class NewCampaignActivity extends BaseGameActivity implements View.OnClic
                     Participant inviter = invitation.getInviter();
                     invitationParticipants.add(inviter);
                 }
-                invitePlayerListView.setAdapter(new InvitationAdapter(NewCampaignActivity.this, invitationParticipants, invitationArrayList, R.layout.invitation_list_item, mGoogleApiClient));
+
+                if (invitationParticipants.size() > 0) {
+                    loadingTextView.setVisibility(View.GONE);
+                    tryAgainButton.setVisibility(View.GONE);
+                    invitePlayerListView.setAdapter(new InvitationAdapter(NewCampaignActivity.this, invitationParticipants, invitationArrayList, R.layout.invitation_list_item, mGoogleApiClient));
+                } else {
+                    loadingTextView.setText("No invitations found...");
+                }
             }
         });
     }
@@ -906,5 +922,6 @@ public class NewCampaignActivity extends BaseGameActivity implements View.OnClic
         difficultyTitle.setTypeface(bodyFont);
         lengthTitle.setTypeface(bodyFont);
         partSizeTitle.setTypeface(bodyFont);
+        loadingTextView.setTypeface(bodyFont);
     }
 }
