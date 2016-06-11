@@ -52,6 +52,7 @@ public class CampaignEndAlarmService extends Service {
         mEditor.putInt(Constants.PREFERENCES_EVENT_4_STEPS, -1);
         mEditor.putInt(Constants.PREFERENCES_EVENT_5_STEPS, -1);
         mEditor.putBoolean(Constants.PREFERENCES_INITIALIZE_GAME_BOOLEAN, false);
+        mEditor.putBoolean(Constants.PREFERENCES_COMPLETED_CAMPAIGN_BOOLEAN, true);
         mEditor.putString("matchId", null);
         mEditor.apply();
         Log.d("Here I am???", "In the alarm service??");

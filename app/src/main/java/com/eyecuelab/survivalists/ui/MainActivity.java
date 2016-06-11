@@ -600,54 +600,56 @@ public class MainActivity extends FragmentActivity
 
         //Gets the pseudo ID of the next safehouse
         final Firebase nextTeamSafehouse = new Firebase (Constants.FIREBASE_URL_TEAM +"/"+ mCurrentMatchId +"/");
-        nextTeamSafehouse.child("nextSafehouseId").addListenerForSingleValueEvent(new ValueEventListener() {
+        nextTeamSafehouse.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
-                if (dataSnapshot.getValue() != null) {
+                if (dataSnapshot.child("nextSafehouseId").getValue() != null) {
                     long safehousePseudoIdLong = (long) dataSnapshot.getValue();
+                    if (mCampaignLength == 0) {
+                        mCampaignLength = mSharedPreferences.getInt(Constants.PREFERENCES_DURATION_SETTING, 0);
+                    }
                     mReachedSafeHouseId = (int) safehousePseudoIdLong;
-                } else {
-                    mReachedSafeHouseId = (int) dataSnapshot.getValue();
                 }
 
-                //Gets the SafeHouse Node ID from the Safehouse ID Map
-                nextTeamSafehouse.child("safehouseIdMap/" + mReachedSafeHouseId).addListenerForSingleValueEvent(new ValueEventListener() {
-                    @Override
-                    public void onDataChange(DataSnapshot dataSnapshot) {
-                        long nextSafehouseId = (long) dataSnapshot.getValue();
-                        mReachedSafeHouseNodeId = (int) nextSafehouseId;
+                if (mCampaignLength < mReachedSafeHouseId) {
+                    //Gets the SafeHouse Node ID from the Safehouse ID Map
+                    nextTeamSafehouse.child("nextSafehouseId").child("safehouseIdMap/" + mReachedSafeHouseId).addListenerForSingleValueEvent(new ValueEventListener() {
+                        @Override
+                        public void onDataChange(DataSnapshot dataSnapshot) {
+                            long nextSafehouseId = (long) dataSnapshot.getValue();
+                            mReachedSafeHouseNodeId = (int) nextSafehouseId;
 
-                        //Creates safehouse object from the Safehouse Node ID
-                        Firebase safehouseFirebaseRef = new Firebase(Constants.FIREBASE_URL_SAFEHOUSES + "/" + mReachedSafeHouseNodeId + "/");
-                        safehouseFirebaseRef.addListenerForSingleValueEvent(new ValueEventListener() {
-                            @Override
-                            public void onDataChange(DataSnapshot dataSnapshot) {
-                                String houseName = dataSnapshot.child("houseName").getValue().toString();
-                                String description = dataSnapshot.child("description").getValue().toString();
+                            //Creates safehouse object from the Safehouse Node ID
+                            Firebase safehouseFirebaseRef = new Firebase(Constants.FIREBASE_URL_SAFEHOUSES + "/" + mReachedSafeHouseNodeId + "/");
+                            safehouseFirebaseRef.addListenerForSingleValueEvent(new ValueEventListener() {
+                                @Override
+                                public void onDataChange(DataSnapshot dataSnapshot) {
+                                    String houseName = dataSnapshot.child("houseName").getValue().toString();
+                                    String description = dataSnapshot.child("description").getValue().toString();
 
-                                // Build the current safehouse object and save it to shared preferences
-                                SafeHouse currentSafeHouse = new SafeHouse(mReachedSafeHouseNodeId, houseName, description);
-                                Gson gson = new Gson();
-                                String currentSafehouseJson = gson.toJson(currentSafeHouse);
-                                mEditor.putString(Constants.PREFERENCES_CURRENT_SAFEHOUSE, currentSafehouseJson);
-                                mEditor.commit();
-                                String safehouseJson = mSharedPreferences.getString(Constants.PREFERENCES_CURRENT_SAFEHOUSE, null);
-                                Gson safehouseGson = new Gson();
-                                mReachedSafehouse = safehouseGson.fromJson(safehouseJson, SafeHouse.class);
-                                showEventDialog(2);
-                            }
+                                    // Build the current safehouse object and save it to shared preferences
+                                    SafeHouse currentSafeHouse = new SafeHouse(mReachedSafeHouseNodeId, houseName, description);
+                                    Gson gson = new Gson();
+                                    String currentSafehouseJson = gson.toJson(currentSafeHouse);
+                                    mEditor.putString(Constants.PREFERENCES_CURRENT_SAFEHOUSE, currentSafehouseJson);
+                                    mEditor.commit();
+                                    String safehouseJson = mSharedPreferences.getString(Constants.PREFERENCES_CURRENT_SAFEHOUSE, null);
+                                    Gson safehouseGson = new Gson();
+                                    mReachedSafehouse = safehouseGson.fromJson(safehouseJson, SafeHouse.class);
+                                    showEventDialog(2);
+                                }
 
-                            @Override
-                            public void onCancelled(FirebaseError firebaseError) {}
-                        });
+                                @Override
+                                public void onCancelled(FirebaseError firebaseError) {
+                                }
+                            });
+                        }
 
-                    }
-
-                    @Override
-                    public void onCancelled(FirebaseError firebaseError) {
-
-                    }
-                });
+                        @Override
+                        public void onCancelled(FirebaseError firebaseError) {
+                        }
+                    });
+                }
             }
 
             @Override
@@ -655,6 +657,7 @@ public class MainActivity extends FragmentActivity
 
             }
         });
+
 
         //Sets boolean for reaching the safehouse so the dialog is only triggered once per day
         mEditor.putBoolean(Constants.PREFERENCES_REACHED_SAFEHOUSE_BOOLEAN, true).apply();
