@@ -335,6 +335,26 @@
             android:src="@drawable/divider_three"
             android:layout_alignParentBottom="true"/>
 
+        <TextView
+            android:id="@+id/loadingTextView"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Loading Invitations"
+            android:layout_centerInParent="true"
+            android:textColor="@android:color/black"
+            android:textStyle="bold"
+            android:textSize="30sp"
+            />
+
+        <Button
+            android:id="@+id/tryAgainButton"
+            android:layout_width="50dp"
+            android:layout_height="50dp"
+            android:layout_centerHorizontal="true"
+            android:layout_below="@+id/loadingTextView"
+            android:background="@drawable/blank_notebook_interaction_btn"
+            android:foreground="@android:drawable/ic_menu_rotate"/>
+
     </android.support.percent.PercentRelativeLayout>
 
     <!--Bottom buttons, always visible-->

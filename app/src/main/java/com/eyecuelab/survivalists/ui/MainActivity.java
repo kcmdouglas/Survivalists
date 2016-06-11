@@ -138,6 +138,7 @@ public class MainActivity extends FragmentActivity
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        overridePendingTransition(R.anim.pull_in_right, R.anim.push_out_left);
         Firebase.setAndroidContext(this);
         setFullScreen();
 
