@@ -73,6 +73,7 @@ public class CharacterDetailFragment extends Fragment implements View.OnClickLis
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_character_detail, container, false);
+        getActivity().overridePendingTransition(R.anim.pull_in_right, R.anim.push_out_left);
         ButterKnife.bind(this, view);
         upperTabButton.setOnClickListener(this);
 
