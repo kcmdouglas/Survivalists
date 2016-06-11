@@ -80,10 +80,8 @@ public class TitleActivity extends BaseGameActivity implements GoogleApiClient.C
         mSharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
         mEditor = mSharedPreferences.edit();
 
+        mCurrentMatchId = mSharedPreferences.getString(Constants.PREFERENCES_MATCH_ID, null);
 
-        if(mCurrentMatchId == null) {
-            currentCampaignButton.setVisibility(View.INVISIBLE);
-        }
 
         currentCampaignButton.setOnClickListener(this);
         startCampaignButton.setOnClickListener(this);
@@ -122,7 +120,6 @@ public class TitleActivity extends BaseGameActivity implements GoogleApiClient.C
 
         }
 
-        mCurrentMatchId = mSharedPreferences.getString(Constants.PREFERENCES_MATCH_ID, null);
 
     }
 
