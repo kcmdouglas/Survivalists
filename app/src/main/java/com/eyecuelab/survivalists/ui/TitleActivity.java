@@ -1,15 +1,12 @@
 package com.eyecuelab.survivalists.ui;
 
-import android.app.ProgressDialog;
+import android.app.ActivityOptions;
 import android.content.Intent;
 import android.content.IntentSender;
 import android.content.SharedPreferences;
 import android.graphics.Typeface;
 import android.preference.PreferenceManager;
 import android.support.annotation.NonNull;
-import android.support.v4.app.DialogFragment;
-import android.support.v4.app.Fragment;
-import android.support.v4.app.FragmentTransaction;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
@@ -18,25 +15,14 @@ import android.widget.Toast;
 
 import com.eyecuelab.survivalists.Constants;
 import com.eyecuelab.survivalists.R;
-import com.eyecuelab.survivalists.models.Item;
-import com.eyecuelab.survivalists.models.Weapon;
-import com.eyecuelab.survivalists.util.InvitationListener;
-import com.firebase.client.DataSnapshot;
 import com.firebase.client.Firebase;
-import com.firebase.client.FirebaseError;
-import com.firebase.client.ValueEventListener;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.common.api.ResultCallback;
 import com.google.android.gms.games.Games;
-import com.google.android.gms.games.multiplayer.Invitation;
-import com.google.android.gms.games.multiplayer.Invitations;
-import com.google.android.gms.games.multiplayer.OnInvitationReceivedListener;
 import com.google.android.gms.games.multiplayer.turnbased.TurnBasedMatch;
 import com.google.android.gms.games.multiplayer.turnbased.TurnBasedMultiplayer;
 import com.google.example.games.basegameutils.BaseGameActivity;
-
-import java.util.ArrayList;
 
 import butterknife.Bind;
 import butterknife.ButterKnife;
@@ -114,6 +100,7 @@ public class TitleActivity extends BaseGameActivity implements GoogleApiClient.C
                 Intent currentCampaignIntent = new Intent(this, MainActivity.class);
                 currentCampaignIntent.putExtra("mCurrentMatchId", mCurrentMatchId);
                 startActivity(currentCampaignIntent);
+
                 break;
             case R.id.startCampaignButton:
                 campaignEditorIntent.putExtra("statusTag", Constants.START_CAMPAIGN_INTENT);

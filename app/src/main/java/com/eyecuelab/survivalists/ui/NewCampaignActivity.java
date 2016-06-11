@@ -143,6 +143,7 @@ public class NewCampaignActivity extends BaseGameActivity implements View.OnClic
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        overridePendingTransition(R.anim.pull_in_right, R.anim.push_out_left);
         Firebase.setAndroidContext(this);
         allWeapons = new ArrayList<>();
         allMedicine = new ArrayList<>();
